@@ -9,6 +9,22 @@ stages:
   - build
   - test
   - deploy
+  - generate-time-spend-report
+
+generate-time-spend-report:
+  stage: generate-time-spend-report
+  image: python:3
+  script:
+    - cd ../.gitlab/time_track/
+    - pip3 install -r requirements.txt
+    - echo $CI_SERVER_URL
+    - echo $CI_PROJECT_URL
+    - echo $GITLAB_PERSONAL_ACCESS_TOKEN
+    - python3 time_track.py $CI_SERVER_URL $GITLAB_PERSONAL_ACCESS_TOKEN $CI_PROJECT_URL
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $CI_COMMIT_BRANCH == "dev"'
+      when: always
+    - when: never
 
 build:
   stage: build
