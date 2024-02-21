@@ -121,9 +121,9 @@ def main():
                                         if item_title in team_meets_per_user[user_id]:
                                             team_meets_per_user[user_id][item_title]['time_spent'] += time_spent_seconds
                                         else:
-                                            team_meets_per_user[user_id][item_title] = {'time_spent': time_spent_seconds, 'type': issue_type, 'number': item_iid, 'created_at': created_at}
+                                            team_meets_per_user[user_id][item_title] = {'first_last_name': note['author'].get('name'), 'time_spent': time_spent_seconds, 'type': issue_type, 'number': item_iid, 'created_at': created_at}
                                     else:
-                                        team_meets_per_user[user_id] = {item_title: {'time_spent': time_spent_seconds, 'type': issue_type, 'number': item_iid, 'created_at': created_at}}
+                                        team_meets_per_user[user_id] = {item_title: {'first_last_name': note['author'].get('name'), 'time_spent': time_spent_seconds, 'type': issue_type, 'number': item_iid, 'created_at': created_at}}
 
                                 # Add the time spent to the time_spent_per_user dictionary
                                 elif user_id in time_spent_per_user:
@@ -137,67 +137,80 @@ def main():
             
             page += 1
 
+    # Get the set of all user IDs
+    user_ids = set(list(time_spent_per_user.keys()) + list(team_meets_per_user.keys()))
+
     # Print the total time spent per user, the item names, the item numbers, the types, whether it's the user's own item, and whether the user is the assignee
-    for user_id, time_spent_dict in time_spent_per_user.items():
+    for user_id in user_ids:
+        time_spent_dict = time_spent_per_user.get(user_id)
+        team_meets_dict = team_meets_per_user.get(user_id)
         output = ""    
         
         # Print dates and user name
         date = f"{seven_days_ago.strftime('%Y-%m-%d')}/{now.strftime('%Y-%m-%d')}"
         output += date + "\n"
 
-        username = remove_lithuanian_letters(time_spent_dict[list(time_spent_dict.keys())[0]]["first_last_name"])
+        # Check if time_spent_dict is empty
+        if time_spent_dict:
+            username = remove_lithuanian_letters(time_spent_dict[list(time_spent_dict.keys())[0]]["first_last_name"])
+        elif team_meets_dict:
+            username = remove_lithuanian_letters(team_meets_dict[list(team_meets_dict.keys())[0]]["first_last_name"])
+        else:
+            print("Error: Both time_spent_dict and team_meets_dict are empty for user_id", user_id)
+            continue
 
         output += "\n**ISSUES & CODE:**\n"
         total_time = 0
-        for item, item_info in time_spent_dict.items():
-            if item_info['type'] == 'issues':
-                if item_info['is_own_item']:
-                    if item_info['is_assignee']:
-                        # check if item was created in the last 7 days
-                        if item_info['created_at'] >= seven_days_ago:
-                            # print that user created and worked on issue
-                            output += f"- Created and worked on issue {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({item_info['time_spent']/60:0.0f} min)\n"
+        if time_spent_dict is not None:
+            for item, item_info in time_spent_dict.items():
+                if item_info['type'] == 'issues':
+                    if item_info['is_own_item']:
+                        if item_info['is_assignee']:
+                            # check if item was created in the last 7 days
+                            if item_info['created_at'] >= seven_days_ago:
+                                # print that user created and worked on issue
+                                output += f"- Created and worked on issue {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({item_info['time_spent']/60:0.0f} min)\n"
+                            else:
+                                # print that user worked on issue
+                                output += f"- Worked on issue {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({item_info['time_spent']/60:0.0f} min)\n"
                         else:
-                            # print that user worked on issue
-                            output += f"- Worked on issue {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({item_info['time_spent']/60:0.0f} min)\n"
+                            # check if item was created in the last 7 days
+                            if item_info['created_at'] >= seven_days_ago:
+                                # print that user created an issue
+                                output += f"- Created issue {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({item_info['time_spent']/60:0.0f} min)\n"
+                            else:
+                                # print that user commented on issue
+                                output += f"- Commented on issue {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({item_info['time_spent']/60:0.0f} min)\n"
                     else:
-                        # check if item was created in the last 7 days
-                        if item_info['created_at'] >= seven_days_ago:
-                            # print that user created an issue
-                            output += f"- Created issue {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({item_info['time_spent']/60:0.0f} min)\n"
+                        if item_info['is_assignee']:
+                            # print that user is assignee
+                            output += f"- Worked on issue {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({item_info['time_spent']/60:0.0f} min)\n"
                         else:
                             # print that user commented on issue
                             output += f"- Commented on issue {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({item_info['time_spent']/60:0.0f} min)\n"
-                else:
-                    if item_info['is_assignee']:
-                        # print that user is assignee
-                        output += f"- Worked on issue {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({item_info['time_spent']/60:0.0f} min)\n"
-                    else:
-                        # print that user commented on issue
-                        output += f"- Commented on issue {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({item_info['time_spent']/60:0.0f} min)\n"
-            elif item_info['type'] == 'merge_requests':
-                if item_info['is_own_item']:
-                    if item_info['is_assignee']:
-                        # check if item was created in the last 7 days
-                        if item_info['created_at'] >= seven_days_ago:
-                            # print that user is assignee
-                            output += f"- Created merge request {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({item_info['time_spent']/60:0.0f} min)\n"
+                elif item_info['type'] == 'merge_requests':
+                    if item_info['is_own_item']:
+                        if item_info['is_assignee']:
+                            # check if item was created in the last 7 days
+                            if item_info['created_at'] >= seven_days_ago:
+                                # print that user is assignee
+                                output += f"- Created merge request {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({item_info['time_spent']/60:0.0f} min)\n"
+                            else:
+                                # print that user worked on merge request
+                                output += f"- Worked on merge request {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({item_info['time_spent']/60:0.0f} min)\n"
                         else:
-                            # print that user worked on merge request
-                            output += f"- Worked on merge request {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({item_info['time_spent']/60:0.0f} min)\n"
-                    else:
-                        # check if item was created in the last 7 days
-                        if item_info['created_at'] >= seven_days_ago:
-                            # print that user created an issue
-                            output += f"- Created merge request {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({item_info['time_spent']/60:0.0f} min)\n"
-                        else:
-                            # print that user commented on merge request
-                            output += f"- Reviewed merge request {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({item_info['time_spent']/60:0.0f} min)\n"
-                else:                    
-                    # print that user commented on merge request
-                    output += f"- Reviewed merge request {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({item_info['time_spent']/60:0.0f} min)\n"
-            
-            total_time += item_info['time_spent']
+                            # check if item was created in the last 7 days
+                            if item_info['created_at'] >= seven_days_ago:
+                                # print that user created an issue
+                                output += f"- Created merge request {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({item_info['time_spent']/60:0.0f} min)\n"
+                            else:
+                                # print that user commented on merge request
+                                output += f"- Reviewed merge request {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({item_info['time_spent']/60:0.0f} min)\n"
+                    else:                    
+                        # print that user commented on merge request
+                        output += f"- Reviewed merge request {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({item_info['time_spent']/60:0.0f} min)\n"
+                
+                total_time += item_info['time_spent']
 
         # Print the team meetings
         output += "\n**TEAM MEETS:**\n"
