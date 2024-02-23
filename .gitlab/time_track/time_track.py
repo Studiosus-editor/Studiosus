@@ -194,10 +194,10 @@ def main():
                             # check if item was created in the last 7 days
                             if item_info['created_at'] >= seven_days_ago:
                                 # print that user is assignee
-                                output += f"- Created merge request {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({item_info['time_spent']/60:0.0f} min)\n"
+                                output += f"- Spend {item_info['time_spent']/60:0.0f} min creating merge request ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) as well as replying to comments & modifing code\n"
                             else:
                                 # print that user worked on merge request
-                                output += f"- Worked on merge request {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({item_info['time_spent']/60:0.0f} min)\n"
+                                output += f"- Spend {item_info['time_spent']/60:0.0f} min on merge request ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) replying to comments & modifing code\n"
                         else:
                             # check if item was created in the last 7 days
                             if item_info['created_at'] >= seven_days_ago:
