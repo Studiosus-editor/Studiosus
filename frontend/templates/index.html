@@ -1,17 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="css/style.css">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="css/style.css" />
+    <script src="js/CodeEditor.js" defer></script>
     <title>Studiosus</title>
-</head>
-<body>
+  </head>
+  <body>
     <main>
-        <div class="main-component">
-            <h1>Studiosus</h1>
-            <p th:text="${message}"></p>
+      <div class="main-component">
+        <h1>Studiosus</h1>
+        <p th:text="${message}"></p>
+        <div class="editor">
+          <div id="line-numbers">
+            <span></span>
+          </div>
+          <textarea
+            id="editor-field"
+            cols="75"
+            rows="20"
+            placeholder="Start typing here..."
+            spellcheck="false"
+          ></textarea>
         </div>
+      </div>
     </main>
-</body>
+  </body>
 </html>
