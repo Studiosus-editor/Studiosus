@@ -39,7 +39,15 @@ def parse_and_validate_args():
     validate_urls([args.gitlab_url, args.project_url])
     return args
 
-
+def format_time_spent(time_spent_in_seconds):
+    hours, remainder = divmod(time_spent_in_seconds, 3600)
+    minutes, _ = divmod(remainder, 60)
+    if hours > 0:
+        if minutes > 0:
+            return f"{hours}h {minutes:0.0f} min"
+        return f"{hours}h"
+    else:
+        return f"{minutes:0.0f} min"
 
 def main():
     args = parse_and_validate_args()
@@ -64,7 +72,7 @@ def main():
     for issue_type in ['issues', 'merge_requests']:
         page = 1
         while True:
-            response = requests.get(f'{args.gitlab_url}/api/v4/projects/{project_id}/{issue_type}?private_token={args.private_token}&updated_after={seven_days_ago_str}&updated_before={now_str}&per_page=100&page={page}')
+            response = requests.get(f'{args.gitlab_url}/api/v4/projects/{project_id}/{issue_type}?private_token={args.private_token}&updated_after={seven_days_ago_str}&per_page=100&page={page}')
             items = response.json()
             if not items:
                 break
@@ -89,23 +97,33 @@ def main():
                     # Check if the note is a system note about time tracking
                     if note['system'] and 'time spent' in note['body']:
                         # Extract the time spent from the note body
-                        match = re.search(r'added (\d+)([hms]) of time spent at (\d{4}-\d{2}-\d{2})', note['body'])
+                        match_d = re.search(r'(\d+)\s*(d)', note['body'])
+                        match_h = re.search(r'(\d+)\s*(h)', note['body'])
+                        match_m = re.search(r'(\d+)\s*(m)', note['body'])
+                        match = re.search(r'(added|subtracted)\s*.*?of time spent at (\d{4}-\d{2}-\d{2})', note['body'])
                         if match:
-                            time_spent = match.group(1)
-                            unit = match.group(2)
-                            date = datetime.strptime(match.group(3), '%Y-%m-%d')
+                            action = match.group(1) # Get the action (added or subtracted)
+
+                            time_spent_d = match_d.group(1) if match_d else None
+                            time_spent_h = match_h.group(1) if match_h else None
+                            time_spent_m = match_m.group(1) if match_m else None
+                            date = datetime.strptime(match.group(2), '%Y-%m-%d')
+                
                             # Check if the date is within the last 7 days
-                            if date >= seven_days_ago:
+                            if date >= seven_days_ago and date <= now:
                                 # Convert the time spent to seconds
-                                if unit == 'd':
-                                    time_spent_seconds = int(time_spent) * 28800 # 8 hours
-                                elif unit == 'h':
-                                    time_spent_seconds = int(time_spent) * 3600 # 1 hour
-                                elif unit == 'm':
-                                    time_spent_seconds = int(time_spent) * 60 # 1 minute
-                                elif unit == 's':
-                                    time_spent_seconds = int(time_spent)
+                                time_spent_seconds = 0
+                                if time_spent_d:
+                                    time_spent_seconds += int(time_spent_d) * 86400 # 1 day
+                                if time_spent_h:
+                                    time_spent_seconds += int(time_spent_h) * 3600 # 1 hour
+                                if time_spent_m:
+                                    time_spent_seconds += int(time_spent_m) * 60 # 1 minute
                                 
+                                 # Subtract the time spent if the action was 'subtracted'
+                                if action == 'subtracted':
+                                    time_spent_seconds = -time_spent_seconds
+
                                 # Get the user ID
                                 user_id = note['author'].get('id')
 
@@ -169,46 +187,46 @@ def main():
                             # check if item was created in the last 7 days
                             if item_info['created_at'] >= seven_days_ago:
                                 # print that user created and worked on issue
-                                output += f"- Created and worked on issue {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({item_info['time_spent']/60:0.0f} min)\n"
+                                output += f"- Created and worked on issue {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({format_time_spent(item_info['time_spent'])})\n"
                             else:
                                 # print that user worked on issue
-                                output += f"- Worked on issue {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({item_info['time_spent']/60:0.0f} min)\n"
+                                output += f"- Worked on issue {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({format_time_spent(item_info['time_spent'])})\n"
                         else:
                             # check if item was created in the last 7 days
                             if item_info['created_at'] >= seven_days_ago:
                                 # print that user created an issue
-                                output += f"- Created issue {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({item_info['time_spent']/60:0.0f} min)\n"
+                                output += f"- Created issue {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({format_time_spent(item_info['time_spent'])})\n"
                             else:
                                 # print that user commented on issue
-                                output += f"- Commented on issue {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({item_info['time_spent']/60:0.0f} min)\n"
+                                output += f"- Commented on issue {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({format_time_spent(item_info['time_spent'])})\n"
                     else:
                         if item_info['is_assignee']:
                             # print that user is assignee
-                            output += f"- Worked on issue {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({item_info['time_spent']/60:0.0f} min)\n"
+                            output += f"- Worked on issue {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({format_time_spent(item_info['time_spent'])})\n"
                         else:
                             # print that user commented on issue
-                            output += f"- Commented on issue {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({item_info['time_spent']/60:0.0f} min)\n"
+                            output += f"- Commented on issue {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({format_time_spent(item_info['time_spent'])})\n"
                 elif item_info['type'] == 'merge_requests':
                     if item_info['is_own_item']:
                         if item_info['is_assignee']:
                             # check if item was created in the last 7 days
                             if item_info['created_at'] >= seven_days_ago:
                                 # print that user is assignee
-                                output += f"- Spend {item_info['time_spent']/60:0.0f} min creating merge request ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) as well as replying to comments & modifing code\n"
+                                output += f"- Created merge request {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({format_time_spent(item_info['time_spent'])})\n"
                             else:
                                 # print that user worked on merge request
-                                output += f"- Spend {item_info['time_spent']/60:0.0f} min on merge request ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) replying to comments & modifing code\n"
+                                output += f"- Worked on merge request {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({format_time_spent(item_info['time_spent'])})\n"
                         else:
                             # check if item was created in the last 7 days
                             if item_info['created_at'] >= seven_days_ago:
                                 # print that user created an issue
-                                output += f"- Created merge request {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({item_info['time_spent']/60:0.0f} min)\n"
+                                output += f"- Created merge request {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({format_time_spent(item_info['time_spent'])})\n"
                             else:
                                 # print that user commented on merge request
-                                output += f"- Reviewed merge request {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({item_info['time_spent']/60:0.0f} min)\n"
+                                output += f"- Reviewed merge request {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({format_time_spent(item_info['time_spent'])})\n"
                     else:                    
                         # print that user commented on merge request
-                        output += f"- Reviewed merge request {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({item_info['time_spent']/60:0.0f} min)\n"
+                        output += f"- Reviewed merge request {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({format_time_spent(item_info['time_spent'])})\n"
                 
                 total_time += item_info['time_spent']
 
@@ -217,24 +235,11 @@ def main():
         meeting_count = 1
         if user_id in team_meets_per_user:
             for item, item_info in team_meets_per_user[user_id].items():
-                output += f"- Meet {meeting_count}: {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({item_info['time_spent']/60:0.0f} min)\n"
-                total_time += item_info['time_spent']    
-        
-        # Convert total time from seconds to minutes
-        total_time_in_minutes = total_time / 60
+                output += f"- Meet {meeting_count}: {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({format_time_spent(item_info['time_spent'])})\n"
+                total_time += item_info['time_spent'] 
+                meeting_count += 1   
 
-        # Calculate the total time spent in hours and minutes
-        total_hours = int(total_time_in_minutes // 60)
-        total_minutes = int(total_time_in_minutes % 60)
-
-        # Print the total time spent this week
-        if total_hours > 0:
-            if total_minutes > 0:
-                output += f"\nOverall time spend this week: **{total_hours} h {total_minutes} min**"
-            else:
-                output += f"\nOverall time spend this week: **{total_hours} h**"
-        else:
-            output += f"\nOverall time spend this week: **{total_minutes} min**"
+        output += f"\nOverall time spend this week: **{format_time_spent(total_time)}**"
 
         username_no_whitespaces = username.replace(" ", "")
 
