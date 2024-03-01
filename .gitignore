@@ -8,6 +8,8 @@ backend/.gradle
 # Ignore Gradle build output directory
 backend/build
 backend/bin/*
+backend/src/main/resources/static
+backend/src/main/resources/templates
 
 # Ignore IDE specific settings
 .vscode

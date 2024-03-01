@@ -6,10 +6,10 @@ plugins {
 }
 
 group = 'lt.sus'
-version = '0.0.1-SNAPSHOT'
+// version = '0.0.1-SNAPSHOT'
 
 java {
-	sourceCompatibility = 20
+	sourceCompatibility = 21
 }
 
 configurations {
@@ -44,3 +44,25 @@ spotless {
 }
 
 compileJava.dependsOn('spotlessApply')
+
+task copyStatic(type: Copy) {
+    from '../frontend/static'
+    into 'src/main/resources/static'
+}
+
+task copyTemplates(type: Copy) {
+    from '../frontend/templates'
+    into 'src/main/resources/templates'
+}
+
+processResources {
+    dependsOn copyStatic, copyTemplates
+    filesMatching('application.properties') {
+        filter {
+            it.replace('file:../frontend/static/', 'classpath:/static/')
+               .replace('file:../frontend/templates/', 'classpath:/templates/')
+        }
+    }
+}
+
+bootJar.dependsOn processResources
