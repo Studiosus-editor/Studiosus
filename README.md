@@ -53,6 +53,6 @@ On Windows
 
 Then
 
-    java -jar build/libs/Studiosus-{version}.jar
+    java -jar build/libs/studiosus.jar
 
 After these steps the webserver should be acessible at `localhost:8080`
