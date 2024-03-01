@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/CodeEditor.css" />
+    <script src="js/FileManager.js" defer></script>
     <script src="js/CodeEditor.js" defer></script>
     <title>Studiosus</title>
   </head>
@@ -12,17 +14,21 @@
       <div class="main-component">
         <h1>Studiosus</h1>
         <p th:text="${message}"></p>
-        <div class="editor">
+        <div id="editor">
           <div id="line-numbers">
             <span></span>
           </div>
-          <textarea
-            id="editor-field"
-            cols="75"
-            rows="20"
-            placeholder="Start typing here..."
-            spellcheck="false"
-          ></textarea>
+          <div class="textarea-container">
+            <textarea
+              id="editor-field"
+              cols="75"
+              rows="30"
+              placeholder="Start typing here..."
+              spellcheck="false"
+            >
+            </textarea>
+            <div id="overlay" class="hidden">Drop your file here...</div>
+          </div>
         </div>
       </div>
     </main>

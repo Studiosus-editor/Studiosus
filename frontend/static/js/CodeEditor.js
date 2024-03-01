@@ -1,30 +1,36 @@
 class TextEditor {
-  constructor(textareaId, lineNumbersId) {
-    this.textarea = document.getElementById(textareaId);
-    this.lineNumbers = document.getElementById(lineNumbersId);
-
-    if (!this.textarea) {
-      throw new Error(`Textarea with id ${textareaId} not found`);
-    }
-    if (!this.lineNumbers) {
-      throw new Error(
-        `Line numbers element with id ${lineNumbersId} not found`
-      );
-    }
-
-    this.charObjects = this.loadFromLocalStorage();
+  constructor(editorId, textareaId, lineNumbersId, overlayId) {
+    this.getHtmlElements(editorId, textareaId, lineNumbersId, overlayId);
+    this.fileManager = new FileManager();
+    this.charObjects = this.fileManager.loadFromLocalStorage();
+    this.dragCounter = 0;
     this.textarea.value = this.charObjects.map((obj) => obj.char).join("");
     this.updateLineNumbers();
+    this.addEventListeners();
+  }
+
+  getHtmlElements(editorId, textareaId, lineNumbersId, overlayId) {
+    this.editor = document.getElementById(editorId);
+    this.textarea = document.getElementById(textareaId);
+    this.lineNumbers = document.getElementById(lineNumbersId);
+    this.overlay = document.getElementById(overlayId);
+
+    const missingElements = [];
+    if (!this.editor) missingElements.push("editor");
+    if (!this.textarea) missingElements.push("textarea");
+    if (!this.lineNumbers) missingElements.push("line numbers");
+    if (!this.overlay) missingElements.push("overlay");
+
+    if (missingElements.length > 0) {
+      throw new Error(`Missing elements: ${missingElements.join(", ")}`);
+    }
+  }
+
+  addEventListeners() {
     this.textarea.addEventListener("keyup", (event) => this.onKeyUp(event));
-  }
-
-  loadFromLocalStorage() {
-    const storedText = localStorage.getItem("text");
-    return storedText ? JSON.parse(storedText) : [];
-  }
-
-  saveToLocalStorage() {
-    localStorage.setItem("text", JSON.stringify(this.charObjects));
+    this.editor.addEventListener("dragenter", this.handleDragEvent);
+    this.editor.addEventListener("dragleave", this.handleDragEvent);
+    this.editor.addEventListener("drop", this.handleDropEvent);
   }
 
   updateLineNumbers() {
@@ -38,27 +44,86 @@ class TextEditor {
 
   onKeyUp(event) {
     const newText = this.textarea.value;
-    const newCharObjects = [];
+    this.charObjects = this.createCharObjects(newText, this.charObjects);
+    this.updateLineNumbers();
+    this.fileManager.saveToLocalStorage(this.charObjects);
+  }
 
-    for (let i = 0; i < newText.length; i++) {
-      const char = newText[i];
-
-      if (this.charObjects[i] && this.charObjects[i].char === char) {
-        newCharObjects.push(this.charObjects[i]);
-      } else {
-        newCharObjects.push({
-          char: char,
-          position: i,
-          user: "username", // Mock username
-          date: Date.now(),
-        });
+  handleDragEvent = (event) => {
+    event.preventDefault();
+    if (event.type === "dragenter") {
+      this.dragCounter++;
+      if (this.dragCounter === 1) {
+        this.textarea.style.filter = "blur(2px)";
+        this.overlay.classList.remove("hidden");
+      }
+    } else if (event.type === "dragleave" || event.type === "drop") {
+      this.dragCounter--;
+      if (this.dragCounter === 0) {
+        this.textarea.style.filter = "";
+        this.overlay.classList.add("hidden");
       }
     }
+  };
 
-    this.charObjects = newCharObjects;
-    this.updateLineNumbers();
-    this.saveToLocalStorage();
-  }
+  handleDropEvent = (event) => {
+    event.preventDefault();
+    this.handleDragEvent(event);
+
+    // If the textarea is not empty, ask the user for confirmation
+    if (
+      this.textarea.value.trim() !== "" &&
+      !confirm("Textarea has content. Replace with file content?")
+    ) {
+      return;
+    }
+
+    const { items, files } = event.dataTransfer;
+    const fileList = items ? [...items] : [...files];
+
+    if (fileList.length > 1) {
+      alert("Multiple file uploads are not supported yet.");
+      return;
+    }
+
+    fileList.forEach((item) => {
+      const file = items ? item.getAsFile() : item;
+      if (file) {
+        this.readFile(file);
+      } else {
+        alert("Dropped item is not a file");
+      }
+    });
+  };
+
+  createCharObjects = (text, existingCharObjects = []) => {
+    return Array.from(text).map((char, position) => {
+      if (
+        existingCharObjects[position] &&
+        existingCharObjects[position].char === char
+      ) {
+        return existingCharObjects[position];
+      } else {
+        return {
+          char: char,
+          position: position,
+          user: "username", // Mock username
+          date: Date.now(),
+        };
+      }
+    });
+  };
+
+  readFile = (file) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      this.textarea.value = e.target.result;
+      this.charObjects = this.createCharObjects(e.target.result);
+      this.updateLineNumbers();
+      this.fileManager.saveToLocalStorage(this.charObjects);
+    };
+    reader.readAsText(file);
+  };
 }
 
-new TextEditor("editor-field", "line-numbers");
+new TextEditor("editor", "editor-field", "line-numbers", "overlay");
