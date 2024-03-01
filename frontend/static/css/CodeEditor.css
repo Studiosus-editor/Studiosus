@@ -1,0 +1,79 @@
+.textarea-container {
+    width: 100%;
+    position: relative;
+}
+
+/* Container containing line-numbering, textarea, list of files */
+#editor {
+    margin-top: 20px;
+    font-family: monospace;
+    display: flex;
+    max-height: 400px;
+    line-height: 21px;
+    overflow: auto;
+}
+
+/* Textarea field responsible for typing the text */
+#editor-field {
+    line-height: 21px;
+    font-size: 1rem;
+    padding-left: 5px;
+    border: 0;
+    background: #f1f1f1;
+    outline: none;
+    resize: none;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+}
+
+#editor-field.dragover {
+    background: #eaeaea;
+    filter: blur(3px);
+}
+
+#editor-field::placeholder {
+    color: #000;
+    opacity: 0.5;
+}
+
+/* Container that displays the line numbers in the code editor. */
+#line-numbers {
+  background: #2b2b2b;
+  width: 23px;
+  padding: 0 15px;
+  height: 100%;
+  line-height: 21px;
+}
+
+/* Each span is responsbile for 1 line number field */
+#line-numbers span {
+  counter-increment: linenumber; /* Increment the counter */
+  display: flex; 
+  align-items: center;
+  justify-content: center;
+}
+
+#line-numbers span::before {
+  content: counter(linenumber); /* Display the counter */
+  color: #fff;
+}
+
+/* Container that appears when a file is dragged over the textarea. */
+#overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.2);
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 32px;
+    pointer-events: none;
+}
+
+#overlay.hidden {
+    display: none;
+}
