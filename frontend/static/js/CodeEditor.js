@@ -1,8 +1,18 @@
-class TextEditor {
-  constructor(editorId, textareaId, lineNumbersId, overlayId) {
+class CodeEditor {
+  constructor(
+    editorId,
+    textareaId,
+    lineNumbersId,
+    overlayId,
+    fileManager,
+    initialFileName = "main"
+  ) {
     this.getHtmlElements(editorId, textareaId, lineNumbersId, overlayId);
-    this.fileManager = new FileManager();
-    this.charObjects = this.fileManager.loadFromLocalStorage();
+    this.fileManager = fileManager;
+    this.currentFileName = this.fileManager.getCurrentFile() || initialFileName;
+    this.charObjects = this.fileManager.loadFromLocalStorage(
+      this.currentFileName
+    );
     this.dragCounter = 0;
     this.textarea.value = this.charObjects.map((obj) => obj.char).join("");
     this.updateLineNumbers();
@@ -46,7 +56,7 @@ class TextEditor {
     const newText = this.textarea.value;
     this.charObjects = this.createCharObjects(newText, this.charObjects);
     this.updateLineNumbers();
-    this.fileManager.saveToLocalStorage(this.charObjects);
+    this.fileManager.saveToLocalStorage(this.charObjects, this.currentFileName);
   }
 
   handleDragEvent = (event) => {
@@ -120,10 +130,22 @@ class TextEditor {
       this.textarea.value = e.target.result;
       this.charObjects = this.createCharObjects(e.target.result);
       this.updateLineNumbers();
-      this.fileManager.saveToLocalStorage(this.charObjects);
+      this.fileManager.saveToLocalStorage(
+        this.charObjects,
+        this.currentFileName
+      );
     };
     reader.readAsText(file);
   };
-}
 
-new TextEditor("editor", "editor-field", "line-numbers", "overlay");
+  loadFile(file) {
+    this.currentFileName = file;
+    this.charObjects = this.fileManager.loadFromLocalStorage(
+      this.currentFileName
+    );
+    this.textarea.value = this.charObjects.map((obj) => obj.char).join("");
+    // save highlighted file in local storage
+    this.fileManager.saveCurrentFile(file);
+    this.updateLineNumbers();
+  }
+}
