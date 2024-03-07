@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="css/CodeEditor.css" />
     <script src="js/FileManager.js" defer></script>
     <script src="js/CodeEditor.js" defer></script>
+    <script src="js/FileNavigator.js" defer></script>
     <title>Studiosus</title>
   </head>
   <body>
@@ -15,19 +16,27 @@
         <h1>Studiosus</h1>
         <p th:text="${message}"></p>
         <div id="editor">
-          <div id="line-numbers">
-            <span></span>
+          <div id="file-navigator">
+            <div id="file-selector"></div>
+            <button id="create-new-file">
+              <img src="icons/newFile.png" alt="Create new file" />
+            </button>
           </div>
-          <div class="textarea-container">
-            <textarea
-              id="editor-field"
-              cols="75"
-              rows="30"
-              placeholder="Start typing here..."
-              spellcheck="false"
-            >
-            </textarea>
-            <div id="overlay" class="hidden">Drop your file here...</div>
+          <div id="editor-content">
+            <div id="line-numbers">
+              <span></span>
+            </div>
+            <div class="textarea-container">
+              <textarea
+                id="editor-field"
+                cols="75"
+                rows="30"
+                placeholder="Start typing here..."
+                spellcheck="false"
+              >
+              </textarea>
+              <div id="overlay" class="hidden">Drop your file here...</div>
+            </div>
           </div>
         </div>
       </div>
