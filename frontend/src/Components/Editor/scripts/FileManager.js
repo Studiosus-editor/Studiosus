@@ -1,4 +1,4 @@
-class FileManager {
+export default class FileManager {
   constructor() {
     this.filePrefix = "code-editor-file-";
   }
@@ -27,8 +27,8 @@ class FileManager {
         files.push(fileData);
       }
     }
-    // Sort files by timestamp
-    files.sort((a, b) => a.timestamp - b.timestamp);
+    // Sort the files by their names
+    files.sort((a, b) => a.name.localeCompare(b.name));
     // Return file names
     return files.map((file) => file.name);
   }

@@ -1,3 +1,5 @@
+image: gradle:jdk21
+
 variables:
   GRADLE_OPTS: "-Dorg.gradle.daemon=false"
 
@@ -28,7 +30,8 @@ generate-time-spend-report:
 
 build:
   stage: build
-  script: gradle --build-cache assemble
+  script: 
+    - gradle --build-cache assemble
   cache:
     key: "$CI_COMMIT_REF_NAME"
     policy: push

@@ -29,30 +29,46 @@ These dependencies are automatically included in our program:
 
 TBA
 
-## To start the live server
+## How to run program (Devolopment)
 
 **Java version 21** or newer is needed to compile!
 
-#### Run the program using Gradle:
+#### Start the frontend server (Terminal 1)
+    cd frontend
+    npm run dev
 
+#### Start the backend server (Terminal 2):
     cd backend
     ./gradlew bootRun
 
-#### Or compile the program and then run:
+After these steps the webserver should be acessible at `localhost:8080`
 
+## How to compile program into JAR
+
+**Java version 21** or newer is needed to compile!
+
+#### Compile the Jar
 
     cd backend
+    ./gradlew bootJar
 
-On Linux, MacOS & Windows versions that support `shell` scripts
+#### Run the jar
 
-    ./gradlew build
+    java -jar backend/build/libs/studiosus.jar
 
-On Windows
+After these steps the webserver should be acessible at `localhost:8080`
 
-    gradlew.bat build
+## How to generate a docker container (Production)
 
-Then
+**Java version 21** or newer is needed to compile!
 
-    java -jar build/libs/studiosus.jar
+#### Generate a docker image
+
+    cd backend
+    ./gradlew bootBuildImage
+
+#### Start docker container with generated image 
+
+    docker run -it -p 8080:8080 studiosus
 
 After these steps the webserver should be acessible at `localhost:8080`

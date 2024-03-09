@@ -1,4 +1,4 @@
-class CodeEditor {
+export default class CodeEditor {
   constructor(
     editorId,
     textareaId,
@@ -15,7 +15,6 @@ class CodeEditor {
     );
     this.dragCounter = 0;
     this.textarea.value = this.charObjects.map((obj) => obj.char).join("");
-    this.updateLineNumbers();
     this.addEventListeners();
   }
 
@@ -43,19 +42,9 @@ class CodeEditor {
     this.editor.addEventListener("drop", this.handleDropEvent);
   }
 
-  updateLineNumbers() {
-    const numberOfLines = this.textarea.value.split("\n").length;
-    this.lineNumbers.innerHTML = Array(numberOfLines)
-      .fill("<span></span>")
-      .join("");
-    this.textarea.style.height = "auto"; // Reset, because textarea won't shrink
-    this.textarea.style.height = `${this.textarea.scrollHeight}px`;
-  }
-
   onKeyUp(event) {
     const newText = this.textarea.value;
     this.charObjects = this.createCharObjects(newText, this.charObjects);
-    this.updateLineNumbers();
     this.fileManager.saveToLocalStorage(this.charObjects, this.currentFileName);
   }
 
@@ -129,7 +118,6 @@ class CodeEditor {
     reader.onload = (e) => {
       this.textarea.value = e.target.result;
       this.charObjects = this.createCharObjects(e.target.result);
-      this.updateLineNumbers();
       this.fileManager.saveToLocalStorage(
         this.charObjects,
         this.currentFileName
@@ -146,6 +134,5 @@ class CodeEditor {
     this.textarea.value = this.charObjects.map((obj) => obj.char).join("");
     // save highlighted file in local storage
     this.fileManager.saveCurrentFile(file);
-    this.updateLineNumbers();
   }
 }
