@@ -1,4 +1,5 @@
 import commonjs from "@rollup/plugin-commonjs";
+import image from "@rollup/plugin-image";
 import resolve from "@rollup/plugin-node-resolve";
 import terser from "@rollup/plugin-terser";
 import { spawn } from "child_process";
@@ -38,6 +39,7 @@ export default {
     file: "public/static/build/bundle.js",
   },
   plugins: [
+    image(),
     svelte({
       compilerOptions: {
         // enable run-time checks when not in production

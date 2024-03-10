@@ -26,7 +26,8 @@ repositories {
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
-	compileOnly 'org.projectlombok:lombok'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.2'
@@ -57,11 +58,13 @@ task copyTemplates(type: Copy) {
 }
 
 processResources {
-    dependsOn copyStatic, copyTemplates
-    filesMatching('application.properties') {
-        filter {
-            it.replace('file:../frontend/public/static/', 'classpath:/static/')
-               .replace('file:../frontend/public/templates/', 'classpath:/templates/')
+    if (gradle.startParameter.taskNames.contains('bootJar')) {
+        dependsOn copyStatic, copyTemplates
+        filesMatching('application.properties') {
+            filter {
+                it.replace('file:../frontend/public/static/', 'classpath:/static/')
+                .replace('file:../frontend/public/templates/', 'classpath:/templates/')
+            }
         }
     }
 }

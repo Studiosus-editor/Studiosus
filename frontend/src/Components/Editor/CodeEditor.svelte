@@ -26,25 +26,82 @@
   });
 </script>
 
-<div id="editor">
-  <FileNavigator {codeEditor} {fileManager} {textareaValue} />
-  <div id="editor-content">
-    <LineNumbers {textareaValue} />
-    <div class="textarea-container">
-      <textarea
-        id="editor-field"
-        cols="75"
-        rows="30"
-        placeholder="Start typing here..."
-        spellcheck="false"
-        bind:value={$textareaValue}
-      ></textarea>
-      <div id="overlay" class="hidden">Drop your file here...</div>
+<div class="main-component">
+  <h1>Studiosus</h1>
+  <p>Universal Ansible Editor</p>
+  <div id="editor">
+    <FileNavigator {codeEditor} {fileManager} {textareaValue} />
+    <div id="editor-content">
+      <LineNumbers {textareaValue} />
+      <div class="textarea-container">
+        <textarea
+          id="editor-field"
+          cols="75"
+          rows="30"
+          placeholder="Start typing here..."
+          spellcheck="false"
+          bind:value={$textareaValue}
+        ></textarea>
+        <div id="overlay" class="hidden">Drop your file here...</div>
+      </div>
     </div>
   </div>
 </div>
 
 <style>
+  .main-component {
+    transition: all 0.3s ease;
+    position: relative;
+    padding: 15px;
+    border-radius: 5%;
+    border: 3px dashed #000;
+  }
+
+  .main-component:hover {
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .main-component p {
+    margin-top: 5px;
+    max-width: max-content;
+    white-space: nowrap;
+    overflow: hidden;
+    border-right: 0.15em solid #000; /* The typwriter cursor */
+    /* add typing & typewriter cursor effect */
+    animation:
+      typing 2s steps(40, end) forwards,
+      blink-caret 0.75s step-end 2s infinite;
+  }
+
+  /* The typing effect */
+  @keyframes typing {
+    from {
+      width: 0;
+    }
+    to {
+      width: 100%;
+    }
+  }
+
+  /* The typewriter cursor effect */
+  @keyframes blink-caret {
+    from,
+    to {
+      border-color: transparent;
+    }
+    50% {
+      border-color: #000;
+    }
+  }
+
+  /* On smaller devices, set main component width to 90% */
+  @media (max-width: 900px) {
+    .main-component {
+      width: 90%;
+    }
+  }
+
   .textarea-container {
     width: 100%;
     position: relative;
