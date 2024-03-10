@@ -10,7 +10,7 @@ backend/build
 backend/bin/*
 backend/src/main/resources/static
 backend/src/main/resources/templates
-
+backend/src/main/resources/secrets.properties
 # Ignore IDE specific settings
 .vscode
 
