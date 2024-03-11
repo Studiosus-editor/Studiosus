@@ -1,5 +1,7 @@
 <script>
   import { onMount } from "svelte";
+  import GitHubIcon from "../assets/svg/github-logo.svg";
+  import GitLabIcon from "../assets/svg/gitlab-logo.svg";
 
   let showGithubOAuth;
   let showGitlabOAuth;
@@ -32,7 +34,7 @@
         <div class="oauth-options">
           {#if showGithubOAuth}
             <a href="/oauth2/authorization/github">
-              <img src="icons/github-logo.png" alt="github logo" />Log in with
+              <img src={GitHubIcon} alt="github logo" />Log in with
               GitHub
             </a>
           {/if}
@@ -40,7 +42,7 @@
             <a href="/oauth2/authorization/gitlab">
               <img
                 class="gitlab"
-                src="icons/gitlab-logo.png"
+                src={GitLabIcon}
                 alt="gitlab logo"
               />Log in with GitLab
             </a>
@@ -113,7 +115,6 @@
     padding: 10px 0px 10px 0px;
     margin: 5px 0 5px 0px;
     width: 90%;
-    height: 50px;
     font-size: 1.5rem;
     background-color: rgb(217, 217, 217);
     border: #000 1px solid;
@@ -130,12 +131,6 @@
     width: 40px;
     top: 5px;
     left: 5px;
-  }
-
-  .oauth-options a img.gitlab {
-    top: -10px;
-    left: -10px;
-    width: 70px;
   }
 
   input {

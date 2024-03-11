@@ -3,12 +3,12 @@
   import CodeEditor from "./Components/Editor/CodeEditor.svelte";
   import Footer from "./Components/Footer.svelte";
   import Login from "./Components/Login.svelte";
-  import Navbar from "./Components/Navbar.svelte";
+  import TopNavigation from "./Components/TopNavigation.svelte";
   import NotFound from "./Components/NotFound.svelte";
   import Profile from "./Components/Profile.svelte";
 </script>
 
-<Navbar />
+<TopNavigation />
 <main>
   <Router>
     <Route path="/" let:params component={CodeEditor} />

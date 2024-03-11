@@ -1,10 +1,54 @@
 :root { 
-	--navbar-color: #ffa052;
 	--footer-color: #f08080; 
-  }
+  --dark-cerulean: #004D78;
+  --white: #FFFFFF; 
+  --maastricht-blue: #00263c;
+  --hippie-blue: #4C82A0;
+}
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+body {
+  margin: 0 auto;
+  height: 100vh;
+}
+
+main {
+  padding-top: 200px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: auto;
+}
+
+h1 {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 400;
+  font-size: 48px;
+}
+
+h2 {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 500;
+  font-size: 32px;
+}
+
+h3 {
+  font-family: "Rubik", sans-serif;
+  font-weight: 400;
+  font-size: 24px;
+}
+
+h4 {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 500;
+  font-size: 18px;
+}
+
+.button--default {
+  border: none; 
+  background: none; 
+  color: inherit; 
+  font: inherit; 
+  line-height: normal; 
+  overflow: visible; 
+  cursor: pointer; 
 }
