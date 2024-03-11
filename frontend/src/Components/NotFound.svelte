@@ -1,5 +1,5 @@
 <script>
-  import Error404 from "../svgs/error-404.svg";
+  import Error404 from "../assets/svg/error-404.svg";
 </script>
 
 <div>

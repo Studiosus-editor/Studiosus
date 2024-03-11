@@ -1,6 +1,7 @@
 <script>
   import { writable } from "svelte/store";
   import FileNavigator from "./scripts/FileNavigator.js";
+  import AddFileIcon from "../../assets/svg/add-file-icon.svg";
 
   export let codeEditor;
   export let fileManager;
@@ -62,7 +63,7 @@
     </ul>
   </div>
   <button id="create-new-file" on:click={createNewFile}>
-    <img src="icons/newFile.png" alt="Create new file" />
+    <img src={AddFileIcon} alt="Create new file" />
   </button>
 </div>
 
