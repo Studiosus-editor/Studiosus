@@ -115,6 +115,7 @@
 <style lang="scss">
 
 header {
+    height: 86px;
     a {
         text-decoration: none;
         color: var(--white);

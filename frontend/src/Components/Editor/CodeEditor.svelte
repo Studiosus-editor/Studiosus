@@ -55,6 +55,7 @@
     padding: 15px;
     border-radius: 5%;
     border: 3px dashed #000;
+    margin: 200px 0;
   }
 
   .main-component:hover {
