@@ -10,6 +10,7 @@
 
 <style>
   div {
+    margin: 200px 0;
     text-align: center;
   }
   img {

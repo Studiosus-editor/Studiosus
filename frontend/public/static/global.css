@@ -8,15 +8,6 @@
 
 body {
   margin: 0 auto;
-  height: 100vh;
-}
-
-main {
-  padding-top: 200px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: auto;
 }
 
 h1 {

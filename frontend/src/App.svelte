@@ -6,24 +6,15 @@
   import TopNavigation from "./Components/TopNavigation.svelte";
   import NotFound from "./Components/NotFound.svelte";
   import Profile from "./Components/Profile.svelte";
+  import LayoutManager from "./Components/LayoutManager.svelte";
 </script>
 
-<TopNavigation />
-<main>
+
+<LayoutManager header={TopNavigation} footer={Footer}>
   <Router>
     <Route path="/" let:params component={CodeEditor} />
     <Route path="/login" let:params component={Login} />
     <Route path="/profile" let:params component={Profile} />
     <Route path="*" let:params component={NotFound} />
   </Router>
-</main>
-<Footer />
-
-<style>
-  main {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-  }
-</style>
+</LayoutManager>
