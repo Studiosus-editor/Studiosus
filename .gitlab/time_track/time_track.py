@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-import requests, re, argparse, warnings
+import requests, argparse
 from datetime import datetime, timedelta
+from graphql_queries import TIME_LOGS_QUERY
 from urllib.parse import urlparse
 from wiki import create_wiki_page
 
@@ -39,15 +40,51 @@ def parse_and_validate_args():
     validate_urls([args.gitlab_url, args.project_url])
     return args
 
-def format_time_spent(time_spent_in_seconds):
-    hours, remainder = divmod(time_spent_in_seconds, 3600)
-    minutes, _ = divmod(remainder, 60)
-    if hours > 0:
-        if minutes > 0:
-            return f"{hours}h {minutes:0.0f} min"
-        return f"{hours}h"
+
+def format_time(seconds):
+    if seconds < 60:
+        return f"{seconds} s"
+    elif seconds < 3600:
+        minutes = seconds // 60
+        seconds_remaining = seconds % 60
+        if seconds_remaining == 0:
+            return f"{minutes} min"
+        else:
+            return f"{minutes} min {seconds_remaining} s"
     else:
-        return f"{minutes:0.0f} min"
+        hours = seconds // 3600
+        minutes = (seconds % 3600) // 60
+        if minutes == 0:
+            return f"{hours} h"
+        else:
+            return f"{hours} h {minutes} min"
+
+# Function to group time logs by user names and entities (issues or merge requests)
+def group_time_logs(nodes, start_date, end_date):
+    time_logs_by_user = {}
+    for node in nodes:
+        author = node['author']['name']
+        labels = [label['title'] for label in node['labels']['nodes']]
+        for time_log in node['timelogs']['nodes']:
+            time_log_date = datetime.strptime(time_log['spentAt'], "%Y-%m-%dT%H:%M:%SZ")
+            if time_log_date > start_date and time_log_date < end_date:
+                user_name = time_log['user']['name']
+                entity_title = node['title']
+                entity_id = node['iid']
+
+                if user_name not in time_logs_by_user:
+                    time_logs_by_user[user_name] = {"total_time": 0, "logs": []}
+                # Check if an entry with the same entity title and ID already exists for the user
+                existing_entry_index = next((i for i, entry in enumerate(time_logs_by_user[user_name]["logs"]) if entry["entity_title"] == entity_title and entry["entity"] == entity_id), None)
+                # If an entry already exists, update the time spent and spentAt list
+                if existing_entry_index is not None:
+                    time_logs_by_user[user_name]["logs"][existing_entry_index]["timeSpent"] += time_log['timeSpent']
+                else:
+                    # If no entry exists, add a new entry
+                    time_logs_by_user[user_name]["logs"].append({"timeSpent": time_log['timeSpent'], "entity": entity_id, "entity_title": entity_title, "labels": labels, "author": author})
+                # Update the total time spent for the user
+                time_logs_by_user[user_name]["total_time"] += time_log['timeSpent']
+    return time_logs_by_user
 
 def main():
     args = parse_and_validate_args()
@@ -57,207 +94,95 @@ def main():
     project = get_project_info(args.gitlab_url, args.private_token, project_path_encoded)
     project_id = project['id']
 
-    # Initialize the dictionary
-    time_spent_per_user = {}
-    team_meets_per_user = {}
+    # Define the variables for the query
+    end_date = datetime.now() # Timestamp representing the current date
+    start_date = end_date - timedelta(days=7) # Timestamp representing 7 days ago
 
-    now = datetime.now()
-    seven_days_ago = now - timedelta(days=7)
+    # Define the variables for the query
+    variables = {
+        "fullPath": "sus/Studiosus",
+        "since": start_date.isoformat() + "Z",  
+        "endDate": end_date.isoformat() + "Z"  
+    }
 
-    # Format dates for the API
-    now_str = now.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-    seven_days_ago_str = seven_days_ago.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+    # Define the GitLab GraphQL endpoint
+    endpoint = "https://git.mif.vu.lt/api/graphql"
 
-    # Get all issues and merge requests for the specific project updated in the last 7 days
-    for issue_type in ['issues', 'merge_requests']:
-        page = 1
-        while True:
-            response = requests.get(f'{args.gitlab_url}/api/v4/projects/{project_id}/{issue_type}?private_token={args.private_token}&updated_after={seven_days_ago_str}&per_page=100&page={page}')
-            items = response.json()
-            if not items:
-                break
-            for item in items:
-                item_iid = item['iid']
-                item_title = item['title']
-                item_author_id = item['author']['id']  # Get the author of the item
-                item_assignee_id = item['assignee']['id'] if item['assignee'] else None  # Get the assignee of the item
-                # Get the issue type
-                issue_types = item['labels']
-                if 'Team meet' in issue_types:
-                    isTeamMeeting = True
+    # Make the request
+    response = requests.post(endpoint, json={"query": TIME_LOGS_QUERY, "variables": variables})
+
+    # Parse the response JSON
+    data = response.json()
+
+    # Group time logs for issues by user names
+    issues_time_logs_by_user = group_time_logs(
+        data['data']['project']['issues']['nodes'],
+        start_date,
+        end_date
+    )
+
+    # Group time logs for merge requests by user names
+    merge_requests_time_logs_by_user = group_time_logs(
+        data['data']['project']['mergeRequests']['nodes'],
+        start_date,
+        end_date
+    )
+
+    users = set(issues_time_logs_by_user.keys()).union(merge_requests_time_logs_by_user.keys())
+    for user_name in users:
+        # Check if user_name exists in both dictionaries
+        issues_logs = issues_time_logs_by_user.get(user_name, {"total_time": 0, "logs": []})
+        merge_requests_logs = merge_requests_time_logs_by_user.get(user_name, {"total_time": 0, "logs": []})
+
+        output = ""
+        output += f"{start_date.strftime('%Y-%m-%d')}/{end_date.strftime('%Y-%m-%d')}\n"
+
+        output += f"\n**ISSUES & CODE:**\n"
+        for time_log in issues_logs["logs"]:
+            # check if labels dont have "Team Meeting"
+            if not any("Team meet" in s for s in time_log["labels"]):
+                if time_log["author"] == user_name:
+                    output += f"- Created and worked on issue {time_log['entity_title']} (#{time_log['entity']}) ({format_time(time_log['timeSpent'])})\n"
                 else:
-                    isTeamMeeting = False
-
-                # Get the creation date of the item
-                created_at = datetime.strptime(item['created_at'], '%Y-%m-%dT%H:%M:%S.%fZ')
-                # Get all notes for the issue or merge request
-                response = requests.get(f'{args.gitlab_url}/api/v4/projects/{project_id}/{issue_type}/{item_iid}/notes?private_token={args.private_token}')
-                notes = response.json()
-                for note in notes:
-                    # Check if the note is a system note about time tracking
-                    if note['system'] and 'time spent' in note['body']:
-                        # Extract the time spent from the note body
-                        match_d = re.search(r'(\d+)\s*(d)', note['body'])
-                        match_h = re.search(r'(\d+)\s*(h)', note['body'])
-                        match_m = re.search(r'(\d+)\s*(m)', note['body'])
-                        match = re.search(r'(added|subtracted)\s*.*?of time spent at (\d{4}-\d{2}-\d{2})', note['body'])
-                        if match:
-                            action = match.group(1) # Get the action (added or subtracted)
-
-                            time_spent_d = match_d.group(1) if match_d else None
-                            time_spent_h = match_h.group(1) if match_h else None
-                            time_spent_m = match_m.group(1) if match_m else None
-                            date = datetime.strptime(match.group(2), '%Y-%m-%d')
-                
-                            # Check if the date is within the last 7 days
-                            if date >= seven_days_ago and date <= now:
-                                # Convert the time spent to seconds
-                                time_spent_seconds = 0
-                                if time_spent_d:
-                                    time_spent_seconds += int(time_spent_d) * 86400 # 1 day
-                                if time_spent_h:
-                                    time_spent_seconds += int(time_spent_h) * 3600 # 1 hour
-                                if time_spent_m:
-                                    time_spent_seconds += int(time_spent_m) * 60 # 1 minute
-                                
-                                 # Subtract the time spent if the action was 'subtracted'
-                                if action == 'subtracted':
-                                    time_spent_seconds = -time_spent_seconds
-
-                                # Get the user ID
-                                user_id = note['author'].get('id')
-
-                                # Check if the user is the author of the item
-                                is_own_item = user_id == item_author_id
-
-                                # Check if the user is the assignee of the item
-                                is_assignee = user_id == item_assignee_id
-
-                                # If it's a team meeting, add it to the team_meets_per_user dictionary
-                                if isTeamMeeting:
-                                    if user_id in team_meets_per_user:
-                                        if item_title in team_meets_per_user[user_id]:
-                                            team_meets_per_user[user_id][item_title]['time_spent'] += time_spent_seconds
-                                        else:
-                                            team_meets_per_user[user_id][item_title] = {'first_last_name': note['author'].get('name'), 'time_spent': time_spent_seconds, 'type': issue_type, 'number': item_iid, 'created_at': created_at}
-                                    else:
-                                        team_meets_per_user[user_id] = {item_title: {'first_last_name': note['author'].get('name'), 'time_spent': time_spent_seconds, 'type': issue_type, 'number': item_iid, 'created_at': created_at}}
-
-                                # Add the time spent to the time_spent_per_user dictionary
-                                elif user_id in time_spent_per_user:
-                                    if item_title in time_spent_per_user[user_id]:
-                                        time_spent_per_user[user_id][item_title]['time_spent'] += time_spent_seconds
-                                    else:
-                                        time_spent_per_user[user_id][item_title] = {'first_last_name': note['author'].get('name'), 'time_spent': time_spent_seconds, 'type': issue_type, 'number': item_iid, 'is_own_item': is_own_item, 'is_assignee': is_assignee, 'created_at': created_at}
-                                else:
-                                    time_spent_per_user[user_id] = {item_title: {'first_last_name': note['author'].get('name'), 'time_spent': time_spent_seconds, 'type': issue_type, 'number': item_iid, 'is_own_item': is_own_item, 'is_assignee': is_assignee, 'created_at': created_at}}
-
+                    output += f"- Worked on issue {time_log['entity_title']} (#{time_log['entity']}) ({format_time(time_log['timeSpent'])})\n"
             
-            page += 1
+        for time_log in merge_requests_logs["logs"]:
+            if time_log["author"] == user_name:
+                output += f"- Created & worked on merge request {time_log['entity_title']} (!{time_log['entity']}) ({format_time(time_log['timeSpent'])})\n"
+            else:
+                output += f"- Reviewed merge request {time_log['entity_title']} (!{time_log['entity']}) ({format_time(time_log['timeSpent'])})\n"
 
-    # Get the set of all user IDs
-    user_ids = set(list(time_spent_per_user.keys()) + list(team_meets_per_user.keys()))
+        output += f"\n**TEAM MEETS:**\n"
+        for time_log in issues_logs["logs"]:
+            meeting_count = 1
+            # check if labels dont have "Team Meeting"
+            if any("Team meet" in s for s in time_log["labels"]):
+                output += f"- Meet {meeting_count}: {time_log['entity_title']} (#{time_log['entity']}) {format_time(time_log['timeSpent'])}\n"
+                meeting_count += 1
 
-    # Print the total time spent per user, the item names, the item numbers, the types, whether it's the user's own item, and whether the user is the assignee
-    for user_id in user_ids:
-        time_spent_dict = time_spent_per_user.get(user_id)
-        team_meets_dict = team_meets_per_user.get(user_id)
-        output = ""    
-        
-        # Print dates and user name
-        date = f"{seven_days_ago.strftime('%Y-%m-%d')}/{now.strftime('%Y-%m-%d')}"
-        output += date + "\n"
+        # Get total time spent for the user
+        total_time = issues_logs["total_time"] + merge_requests_logs["total_time"]
+        output += f"\nOverall time spend this week: **{format_time(total_time)}**"
 
-        # Check if time_spent_dict is empty
-        if time_spent_dict:
-            username = remove_lithuanian_letters(time_spent_dict[list(time_spent_dict.keys())[0]]["first_last_name"])
-        elif team_meets_dict:
-            username = remove_lithuanian_letters(team_meets_dict[list(team_meets_dict.keys())[0]]["first_last_name"])
-        else:
-            print("Error: Both time_spent_dict and team_meets_dict are empty for user_id", user_id)
-            continue
-
-        output += "\n**ISSUES & CODE:**\n"
-        total_time = 0
-        if time_spent_dict is not None:
-            for item, item_info in time_spent_dict.items():
-                if item_info['type'] == 'issues':
-                    if item_info['is_own_item']:
-                        if item_info['is_assignee']:
-                            # check if item was created in the last 7 days
-                            if item_info['created_at'] >= seven_days_ago:
-                                # print that user created and worked on issue
-                                output += f"- Created and worked on issue {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({format_time_spent(item_info['time_spent'])})\n"
-                            else:
-                                # print that user worked on issue
-                                output += f"- Worked on issue {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({format_time_spent(item_info['time_spent'])})\n"
-                        else:
-                            # check if item was created in the last 7 days
-                            if item_info['created_at'] >= seven_days_ago:
-                                # print that user created an issue
-                                output += f"- Created issue {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({format_time_spent(item_info['time_spent'])})\n"
-                            else:
-                                # print that user commented on issue
-                                output += f"- Commented on issue {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({format_time_spent(item_info['time_spent'])})\n"
-                    else:
-                        if item_info['is_assignee']:
-                            # print that user is assignee
-                            output += f"- Worked on issue {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({format_time_spent(item_info['time_spent'])})\n"
-                        else:
-                            # print that user commented on issue
-                            output += f"- Commented on issue {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({format_time_spent(item_info['time_spent'])})\n"
-                elif item_info['type'] == 'merge_requests':
-                    if item_info['is_own_item']:
-                        if item_info['is_assignee']:
-                            # check if item was created in the last 7 days
-                            if item_info['created_at'] >= seven_days_ago:
-                                # print that user is assignee
-                                output += f"- Created merge request {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({format_time_spent(item_info['time_spent'])})\n"
-                            else:
-                                # print that user worked on merge request
-                                output += f"- Worked on merge request {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({format_time_spent(item_info['time_spent'])})\n"
-                        else:
-                            # check if item was created in the last 7 days
-                            if item_info['created_at'] >= seven_days_ago:
-                                # print that user created an issue
-                                output += f"- Created merge request {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({format_time_spent(item_info['time_spent'])})\n"
-                            else:
-                                # print that user commented on merge request
-                                output += f"- Reviewed merge request {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({format_time_spent(item_info['time_spent'])})\n"
-                    else:                    
-                        # print that user commented on merge request
-                        output += f"- Reviewed merge request {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({format_time_spent(item_info['time_spent'])})\n"
-                
-                total_time += item_info['time_spent']
-
-        # Print the team meetings
-        output += "\n**TEAM MEETS:**\n"
-        meeting_count = 1
-        if user_id in team_meets_per_user:
-            for item, item_info in team_meets_per_user[user_id].items():
-                output += f"- Meet {meeting_count}: {item} ({('!' if item_info['type'] == 'merge_requests' else '#')}{item_info['number']}) ({format_time_spent(item_info['time_spent'])})\n"
-                total_time += item_info['time_spent'] 
-                meeting_count += 1   
-
-        output += f"\nOverall time spend this week: **{format_time_spent(total_time)}**"
-
-        username_no_whitespaces = username.replace(" ", "")
+        user_name = remove_lithuanian_letters(user_name)
+        username_no_whitespaces = user_name.replace(" ", "")
 
         # The title and content of the new wiki page
-        title = f"Weekly-reports/{username_no_whitespaces}/{now.strftime('%Y-%m-%d')}"
+        title = f"Weekly-reports/{username_no_whitespaces}/{end_date.strftime('%Y-%m-%d')}"
 
+        status_code = 0
         status_code = create_wiki_page(
-            args.gitlab_url,
-            args.private_token,
-            project_id,
-            title,
-            output
-        )
+                args.gitlab_url,
+                args.private_token,
+                project_id,
+                title,
+                output
+            )
 
         if status_code == 201:
-            print(f"Wiki page {title} created successfully.")
+                print(f"Wiki page {title} created successfully.")
         else:
-            print(f"Failed to create wiki page {title}. Status code: {status_code}")
+                print(f"Failed to create wiki page {title}. Status code: {status_code}")
 
 if __name__ == '__main__':
     main()
