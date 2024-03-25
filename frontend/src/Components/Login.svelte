@@ -5,10 +5,14 @@
 
   let showGithubOAuth;
   let showGitlabOAuth;
+  let errorMessage = "";
 
   onMount(async () => {
+    const params = new URLSearchParams(window.location.search);
+    errorMessage = params.get("error");
+
     try {
-      const response = await fetch("http://localhost:8080/api/loginOptions", {
+      const response = await fetch("/api/loginOptions", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -29,42 +33,36 @@
 <div class="main-component">
   <p>Studiosus</p>
   <div class="login-component">
+    {#if errorMessage}
+      <p class="error">{errorMessage}</p>
+    {/if}
     {#if showGithubOAuth || showGitlabOAuth}
       <div class="oauth-logins">
         <div class="oauth-options">
           {#if showGithubOAuth}
             <a href="/oauth2/authorization/github">
-              <img src={GitHubIcon} alt="github logo" />Log in with
-              GitHub
+              <img src={GitHubIcon} alt="github logo" />Log in with GitHub
             </a>
           {/if}
           {#if showGitlabOAuth}
             <a href="/oauth2/authorization/gitlab">
-              <img
-                class="gitlab"
-                src={GitLabIcon}
-                alt="gitlab logo"
-              />Log in with GitLab
+              <img class="gitlab" src={GitLabIcon} alt="gitlab logo" />Log in
+              with GitLab
             </a>
           {/if}
         </div>
       </div>
     {/if}
     <div class="password-login">
-      <form action="" method="post">
-        <input
-          type="email"
-          id="email-field"
-          name="email-field"
-          placeholder="Email"
-        />
+      <form action="/login" method="post">
+        <input type="email" id="username" name="username" placeholder="Email" />
         <input
           type="password"
-          id="password-field"
-          name="password-field"
+          id="password"
+          name="password"
           placeholder="Password"
         />
-        <button type="submit" disabled>Login</button>
+        <button type="submit">Login</button>
       </form>
       <a href="/register">Register</a>
     </div>
@@ -85,6 +83,11 @@
 
   .main-component p {
     font-size: 2rem;
+  }
+  .main-component .error {
+    font-family: "Courier New", Courier, monospace;
+    font-size: 1.5rem;
+    color: red;
   }
 
   .oauth-logins,
