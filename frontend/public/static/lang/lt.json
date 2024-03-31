@@ -1,0 +1,38 @@
+{
+  "navigation": {
+    "editor": "Redaguoti",
+    "projects": "Projektai",  
+    "templates": "Šablonai",
+    "login": "Prisijungti"
+  },
+  "login": {
+    "loginWithGithub": "Prisijungti su Github",
+    "loginWithGitLab": "Prisijungti su GitLab",
+    "register": "Registruotis",
+    "login": "Prisijungti",
+    "email": "El. paštas",
+    "password": "Slaptažodis",
+    "errorMessages": {
+      "invalidCredentials": "Neteisingas vartotojo vardas arba slaptažodis",
+      "accountLocked": "Jūsų paskyra užrakinta. Prašome susisiekti su klientų aptarnavimu",
+      "accountDisabled": "Jūsų paskyra išjungta. Prašome susisiekti su klientų aptarnavimu",
+      "accountExpired": "Jūsų paskyra baigė galioti. Prašome susisiekti su klientų aptarnavimu",
+      "undefinedError": "Įvyko klaida. Prašome susisiekti su klientų aptarnavimu"
+    }
+  },
+  "notFound": {
+    "error404": "Klaida 404",
+    "pageNotFound": "Puslapis nerastas! :/"
+  },
+  "register": {
+    "username": "Slapyvardis",
+    "email": "El. paštas",
+    "password": "Slaptažodis",
+    "register": "Registruotis",
+    "login": "Prisijungti",
+    "errorMessages": {
+      "emailAlreadyInUse": "Vartotojas su tokiu el. paštu jau egzistuoja",
+      "undefinedError": "Įvyko klaida. Prašome susisiekti su klientų aptarnavimu"
+    }
+  }
+}

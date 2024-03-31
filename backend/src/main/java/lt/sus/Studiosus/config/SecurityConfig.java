@@ -15,10 +15,6 @@ import org.springframework.core.env.Environment;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
-import org.springframework.security.authentication.AccountExpiredException;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.DisabledException;
-import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -149,19 +145,11 @@ class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationFailureH
   public void onAuthenticationFailure(
       HttpServletRequest request, HttpServletResponse response, AuthenticationException exception)
       throws IOException, ServletException {
-    String errorMessage = "Invalid username or password.";
-    if (exception instanceof LockedException) {
-      errorMessage = "Your account is locked. Please contact support.";
-    } else if (exception instanceof DisabledException) {
-      errorMessage = "Your account is disabled. Please contact support.";
-    } else if (exception instanceof BadCredentialsException) {
-      errorMessage = "Invalid username or password.";
-    } else if (exception instanceof AccountExpiredException) {
-      errorMessage = "Your account has expired. Please contact support.";
-    }
+    String exceptionType = exception.getClass().getSimpleName();
 
     String targetUrl =
-        "/login?error=" + URLEncoder.encode(errorMessage, StandardCharsets.UTF_8.toString());
+        "/login?exception=" + URLEncoder.encode(exceptionType, StandardCharsets.UTF_8.toString());
+
     response.sendRedirect(targetUrl);
   }
 }

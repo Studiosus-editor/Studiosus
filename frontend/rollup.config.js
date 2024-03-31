@@ -7,6 +7,7 @@ import css from "rollup-plugin-css-only";
 import livereload from "rollup-plugin-livereload";
 import svelte from "rollup-plugin-svelte";
 import preprocess from 'svelte-preprocess';
+import json from "@rollup/plugin-json";
 
 const production = !process.env.ROLLUP_WATCH;
 
@@ -35,11 +36,12 @@ export default {
   input: "src/main.js",
   output: {
     sourcemap: true,
-    format: "iife",
-    name: "app",
-    file: "public/static/build/bundle.js",
+    format: "esm",
+    dir: "public/static/build",
+    entryFileNames: "bundle.js",
   },
   plugins: [
+    json(),
     image(),
     svelte({
       compilerOptions: {

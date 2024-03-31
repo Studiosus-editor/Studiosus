@@ -3,6 +3,8 @@
     import ArrowDown from "../assets/svg/dropdown-arrow-icon-white.svg";
     import CloseIcon from "../assets/svg/exit-cross-white.svg";
     import HamburgerIcon from "../assets/svg/hamburger-menu-white.svg";
+    import { _, locale }  from 'svelte-i18n';
+    import { AVAILABLE_LOCALES, changeLocale } from '../services/i18n.js';
 
     let langDropdownVisible = false;
     let hamburgerDropdownVisible = false;
@@ -10,10 +12,6 @@
     let dropdownTopMenu;
     let hamburgerButton;
     let langDropdownButtonText;
-    // for now defined here, but will be implemented differntly once we have language support
-    let dropdownItems = {
-        option1: "LT",
-        option2: "EN"};
 
     onMount(() => {
         dropdownContainer = document.querySelector('.dropdown');
@@ -26,13 +24,17 @@
 
     // closes the dropdown menu when the window is resized & changes icons (hamburger/exit)
     function handleWindowResize() {
-        if (window.innerWidth > 768) {
+        if (window.innerWidth > 810) {
             hamburgerDropdownVisible = false;
             if (dropdownTopMenu.classList.contains('show-menu')) {
                 dropdownTopMenu.classList.remove('show-menu');
             }
             if (dropdownTopMenu.classList.contains('hide-menu')) {
                 dropdownTopMenu.classList.remove('hide-menu');
+            }
+            // closes the language dropdown menu when window is resized
+            if (langDropdownVisible) {
+                langDropdownVisible = false;
             }
         }
     }
@@ -70,6 +72,7 @@
     function handleLanguageSelect(event) {
         const selectedLanguage = event.target.textContent;
         langDropdownButtonText.textContent = selectedLanguage;
+        changeLocale(selectedLanguage);
     }
     // Changes background color if page is active
     function isActivePage(page) {
@@ -79,11 +82,13 @@
 </script>
 <header class="top-nav">
     <div class="top-nav__logo-container">
-        <a href="/">
-            <div class="top-nav__logo">
-                <h3>Studiosus</h3>
-            </div>
-        </a>
+        <div class="top-nav__route-wrapper">
+            <a href="/">
+                <div class="top-nav__logo">
+                    <h3>Studiosus</h3>
+                </div>
+            </a>
+        </div>
     </div>
     <div class="top-nav__button-container">
         <button type="button" class="hamburger--btn button--default" class:active={hamburgerDropdownVisible} on:click={handleHamburgerDropdownClick}>
@@ -92,17 +97,17 @@
         </button>
     </div>
     <menu class="top-nav__list">
-        <a href="/editor"><li class="top-nav__item {isActivePage('/editor') ? 'active' : ''}"><h3>Editor</h3></li></a>
-        <a href="/projects"><li class="top-nav__item {isActivePage('/projects') ? 'active' : ''}"><h3>Projects</h3></li></a>
-        <a href="/templates"><li class="top-nav__item {isActivePage('/templates') ? 'active' : ''}"><h3>Templates</h3></li></a>
-        <a href="/login"><li class="top-nav__item {isActivePage('/login') ? 'active' : ''}"><h3>Login</h3></li></a>
+        <a href="/editor"><li class="top-nav__item {isActivePage('/editor') ? 'active' : ''}"><h3>{$_('navigation.editor')}</h3></li></a>
+        <a href="/projects"><li class="top-nav__item {isActivePage('/projects') ? 'active' : ''}"><h3>{$_('navigation.projects')}</h3></li></a>
+        <a href="/templates"><li class="top-nav__item {isActivePage('/templates') ? 'active' : ''}"><h3>{$_('navigation.templates')}</h3></li></a>
+        <a href="/login"><li class="top-nav__item {isActivePage('/login') ? 'active' : ''}"><h3>{$_('navigation.login')}</h3></li></a> 
         <li class="dropdown" on:click={handleLangDropdownClick} on:keydown={handleLangDropdownClick}>
             <button type="button" class="dropdown--btn button--default" class:active={langDropdownVisible}>
-                <h3>LT</h3>
+                <h3>{$locale}</h3>
                 <img id="dropdown__arrow-icon" src={ArrowDown} class:active={langDropdownVisible} alt="toggle language select">
             </button>
             <div class="dropdown__dropdown-content" class:visible={langDropdownVisible}>
-                {#each Object.values(dropdownItems) as item}
+                {#each Object.values(AVAILABLE_LOCALES) as item}
                     <div class="dropdown__item-container" on:click={handleLanguageSelect} on:keydown={handleLanguageSelect}>
                         <h3>{item}</h3>
                     </div>
@@ -243,6 +248,7 @@ header {
         align-items: center;
         padding: 5px 15px;
         width: 80px;
+        text-transform: uppercase;
 
         &:hover {
             background-color: var(--maastricht-blue);
@@ -284,6 +290,7 @@ header {
         }
 
         h3 {
+            text-transform: uppercase;
             margin: 0;
             padding: 24.5px;    
         }
@@ -291,7 +298,7 @@ header {
     
 }
 
-@media (max-width: 768px) {
+@media (max-width: 810px) {
     .top-nav {
         justify-content: space-between;
         flex-wrap: wrap;
