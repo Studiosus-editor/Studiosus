@@ -50,8 +50,9 @@ public class MainController {
       return "redirect:/login"; // Registration successful, redirect to login
     } catch (IllegalArgumentException e) {
       // Redirect to registration page with error message
-      String errorMsg = URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8);
-      return "redirect:/register?error=" + errorMsg;
+      String exceptionType = e.getClass().getSimpleName();
+      String errorMsg = "exception=" + URLEncoder.encode(exceptionType, StandardCharsets.UTF_8);
+      return "redirect:/register?" + errorMsg;
     }
   }
 

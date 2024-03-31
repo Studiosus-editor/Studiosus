@@ -2,14 +2,31 @@
   import { onMount } from "svelte";
   import GitHubIcon from "../assets/svg/github-logo.svg";
   import GitLabIcon from "../assets/svg/gitlab-logo.svg";
+  import { _ }  from 'svelte-i18n';
 
   let showGithubOAuth;
   let showGitlabOAuth;
   let errorMessage = "";
-
+  let errorMessageKey = "undefinedError"
+  
   onMount(async () => {
     const params = new URLSearchParams(window.location.search);
-    errorMessage = params.get("error");
+    errorMessage = params.get("exception");
+    
+    switch(errorMessage) {
+      case 'LockedException':
+        errorMessageKey = 'accountLocked';
+        break;
+      case 'DisabledException':
+        errorMessageKey = 'accountDisabled';
+        break;
+      case 'BadCredentialsException':
+        errorMessageKey = 'invalidCredentials';
+        break;
+      case 'AccountExpiredException':
+        errorMessageKey = 'accountExpired';
+        break;
+  }
 
     try {
       const response = await fetch("/api/loginOptions", {
@@ -34,7 +51,7 @@
   <p>Studiosus</p>
   <div class="login-component">
     {#if errorMessage}
-      <p class="error">{errorMessage}</p>
+      <p class="error">{$_(`login.errorMessages.${errorMessageKey}`)}</p>
     {/if}
     {#if showGithubOAuth || showGitlabOAuth}
       <div class="oauth-logins">
@@ -55,16 +72,16 @@
     {/if}
     <div class="password-login">
       <form action="/login" method="post">
-        <input type="email" id="username" name="username" placeholder="Email" />
+        <input type="email" id="username" name="username" placeholder={$_('login.email')} />
         <input
           type="password"
           id="password"
           name="password"
-          placeholder="Password"
+          placeholder={$_('login.password')}
         />
-        <button type="submit">Login</button>
+        <button type="submit">{$_('login.login')}</button>
       </form>
-      <a href="/register">Register</a>
+      <a href="/register">{$_('login.register')}</a>
     </div>
   </div>
 </div>

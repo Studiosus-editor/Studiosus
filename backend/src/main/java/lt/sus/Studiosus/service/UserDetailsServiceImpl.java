@@ -42,8 +42,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     databaseUser.ifPresentOrElse(
         existingUser -> {
           if (existingUser.getPassword() != null) {
-            throw new IllegalArgumentException(
-                "Email " + existingUser.getEmail() + " already in use.");
+            throw new IllegalArgumentException("Email already in use");
           }
           existingUser.setPassword(user.getPassword());
           userRepository.save(existingUser);

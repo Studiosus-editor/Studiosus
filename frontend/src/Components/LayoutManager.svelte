@@ -29,7 +29,7 @@
         align-items: center;
     } 
 
-@media (max-width: 768px) {
+@media (max-width: 810px) {
     .header {
         height: 86px;
     }

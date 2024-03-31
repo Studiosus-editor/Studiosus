@@ -1,8 +1,18 @@
 <script>
-  let errorMessage = "";
+  import { _ }  from 'svelte-i18n';
+  import { onMount } from "svelte";
 
-  const params = new URLSearchParams(window.location.search);
-  errorMessage = params.get("error");
+  let errorMessage = "";
+  let errorMessageKey = "undefinedError"
+
+  onMount(async () => {
+    const params = new URLSearchParams(window.location.search);
+    errorMessage = params.get("exception");
+    if (errorMessage === 'IllegalArgumentException') {
+      errorMessageKey = 'emailAlreadyInUse';
+    }
+  });
+
 </script>
 
 <main>
@@ -10,21 +20,21 @@
     <p>Studiosus</p>
     <div class="login-component">
       {#if errorMessage}
-        <p class="error">{errorMessage}</p>
+        <p class="error">{$_(`register.errorMessages.${errorMessageKey}`)}</p>
       {/if}
       <div class="password-login">
         <form action="/register" method="post">
-          <input type="text" name="username" placeholder="Username" required />
-          <input type="email" name="email" placeholder="Email" required />
+          <input type="text" name="username" placeholder={$_('register.username')} required />
+          <input type="email" name="email" placeholder={$_('register.email')} required />
           <input
             type="password"
             name="password"
-            placeholder="Password"
+            placeholder={$_('register.password')}
             required
           />
-          <button type="submit">Register</button>
+          <button type="submit">{$_('register.register')}</button>
         </form>
-        <a href="/login">Login</a>
+        <a href="/login">{$_('register.login')}</a>
       </div>
     </div>
   </div>

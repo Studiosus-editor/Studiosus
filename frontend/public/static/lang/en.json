@@ -1,0 +1,39 @@
+{
+  "navigation": {
+    "editor": "Editor",
+    "projects": "Projects",
+    "templates": "Templates",
+    "login": "Login"
+  },
+  "login": {
+    "loginWithGithub": "Log in with Github",
+    "loginWithGitLab": "Log in with GitLab",
+    "register": "Register",
+    "login": "Login",
+    "email": "Email",
+    "password": "Password",
+    "errorMessages": {
+      "invalidCredentials": "Invalid username or password",
+      "accountLocked": "Your account is locked. Please contact support",
+      "accountDisabled": "Your account is disabled. Please contact support",
+      "accountExpired": "Your account has expired. Please contact support",
+      "undefinedError": "An undefined error occurred. Please contact support"
+    }
+  },
+  "notFound": {
+    "error404": "Error 404",
+    "pageNotFound": "Page not found! :/"
+  },
+  "register": {
+    "username": "Username",
+    "email": "Email",
+    "password": "Password",
+    "register": "Register",
+    "login": "Login",
+    "errorMessages": {
+      "emailAlreadyInUse": "Email already in use",
+      "undefinedError": "An undefined error occurred. Please contact support"
+    }
+  }
+  
+}
