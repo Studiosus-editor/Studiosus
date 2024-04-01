@@ -17,10 +17,10 @@
 
 <main>
   <div class="main-component">
-    <p>Studiosus</p>
+    <h1>Studiosus</h1>
     <div class="login-component">
       {#if errorMessage}
-        <p class="error">{$_(`register.errorMessages.${errorMessageKey}`)}</p>
+        <h3 class="error">{$_(`register.errorMessages.${errorMessageKey}`)}</h3>
       {/if}
       <div class="password-login">
         <form action="/register" method="post">
@@ -42,23 +42,18 @@
 
 <style>
   .main-component {
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.5);
     text-align: center;
     width: 400px;
     transition: all 0.3s ease;
     position: relative;
     padding: 15px;
     border-radius: 5%;
-    border: 3px dashed #000;
-    background-color: rgb(251, 242, 198);
-  }
-
-  .main-component p {
-    font-size: 2rem;
+    border: 2px solid #000;
+    background-color:  var(--grey85);
   }
 
   .main-component .error {
-    font-family: "Courier New", Courier, monospace;
-    font-size: 1.5rem;
     color: red;
   }
 
@@ -93,20 +88,28 @@
   }
 
   form button {
+    border-radius: 25px;
     margin-top: 10px;
     width: 50%;
     height: 30px;
-    /* disalbe default button styles */
     border: #000 1px solid;
-    text-decoration: none;
-    background-color: rgb(196, 203, 250);
+    font-family: "Rubik", sans-serif;
+    background-color: var(--periwinkle);
+    box-shadow:  0px 8px 8px 0px rgba(0, 0, 0, 0.3);
     font-size: 16px;
+  }
+
+  button:hover {
+    cursor: pointer;
+    background-color: var(--spindle); 
   }
 
   .password-login a {
     text-decoration: none;
     color: black;
     font-weight: bold;
+    font-weight: 600;
     align-self: flex-end;
+    font-family: "Montserrat", sans-serif;
   }
 </style>
