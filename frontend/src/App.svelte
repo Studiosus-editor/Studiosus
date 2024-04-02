@@ -1,7 +1,7 @@
 <script>
   import { Route, Router } from "svelte-routing";
   import CodeEditor from "./Components/Editor/CodeEditor.svelte";
-  import Footer from "./Components/Footer.svelte";
+  import Footer from "./Components/Footer/Footer.svelte";
   import LayoutManager from "./Components/LayoutManager.svelte";
   import Login from "./Components/Login.svelte";
   import NotFound from "./Components/NotFound.svelte";

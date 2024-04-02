@@ -34,6 +34,10 @@
       "emailAlreadyInUse": "Email already in use",
       "undefinedError": "An undefined error occurred. Please contact support"
     }
+  },
+  "footer": {
+    "LT": "Lithuanian",
+    "EN": "English"
   }
   
 }

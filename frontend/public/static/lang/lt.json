@@ -34,5 +34,9 @@
       "emailAlreadyInUse": "Vartotojas su tokiu el. paštu jau egzistuoja",
       "undefinedError": "Įvyko klaida. Prašome susisiekti su klientų aptarnavimu"
     }
+  },
+  "footer": {
+    "LT": "Lietuvių",
+    "EN": "Anglų"
   }
 }
