@@ -103,7 +103,12 @@
         <a href="/login"><li class="top-nav__item {isActivePage('/login') ? 'active' : ''}"><h3>{$_('navigation.login')}</h3></li></a> 
         <li class="dropdown" on:click={handleLangDropdownClick} on:keydown={handleLangDropdownClick}>
             <button type="button" class="dropdown--btn button--default" class:active={langDropdownVisible}>
-                <h3>{$locale}</h3>
+                {#if $locale !== 'lt'}
+                    <h3>{$locale}</h3>
+                {/if}
+                {#if $locale !== 'en'}
+                    <h3>{$locale}</h3>
+                {/if}
                 <img id="dropdown__arrow-icon" src={ArrowDown} class:active={langDropdownVisible} alt="toggle language select">
             </button>
             <div class="dropdown__dropdown-content" class:visible={langDropdownVisible}>
