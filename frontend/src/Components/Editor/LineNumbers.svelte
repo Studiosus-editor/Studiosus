@@ -1,5 +1,5 @@
 <script>
-  export let textareaValue; // Accept textareaValue as a prop
+  export let textareaValue;
 
   // Reactive statement to generate line numbers whenever textareaValue changes
   $: lineNumbers = Array.from(
@@ -17,19 +17,18 @@
 <style>
   /* Container that displays the line numbers in the code editor. */
   #line-numbers {
-    background: #2b2b2b;
-    width: 23px;
-    padding: 0 15px;
-    height: 100%;
     line-height: 21px;
+    padding-left: 8px;
+    padding-top: 3px;
   }
 
-  /* Each span is responsbile for 1 line number field */
   #line-numbers span {
+    padding-right: 8px;
     counter-increment: linenumber; /* Increment the counter */
     display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
+    justify-content: right;
+    font-size: 14px;
+    color: var(--grey43);
+    background-color: transparent;
   }
 </style>
