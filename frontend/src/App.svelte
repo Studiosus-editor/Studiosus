@@ -9,8 +9,9 @@
   import { isLoading } from "svelte-i18n";
   import Register from "./Components/Register.svelte";
   import TopNavigation from "./Components/TopNavigation.svelte";
-
+  import Projects from "./Components/Projects/Projects.svelte";
 </script>
+
 {#if $isLoading}
   <!-- <p>Loading language settings...</p> -->
 {:else}
@@ -20,6 +21,7 @@
       <Route path="/login" let:params component={Login} />
       <Route path="/register" let:params component={Register} />
       <Route path="/profile" let:params component={Profile} />
+      <Route path="/projects" let:params component={Projects} />
       <Route path="*" let:params component={NotFound} />
     </Router>
   </LayoutManager>

@@ -35,6 +35,17 @@
       "undefinedError": "An undefined error occurred. Please contact support"
     }
   },
+  "projects": {
+    "projects": "Projects",
+    "yourProjects": "Your Projects",
+    "sharedWithYou":"Shared with you",
+    "createProject": "Create new project",
+    "noProjectsFirstLine": "Currently no one is sharing projects with you...",
+    "noProjectsSecondLine": "Go make some friends!",
+    "addNew": "Add New",
+    "next": "Next",
+    "previous": "Previous"
+  },
   "footer": {
     "LT": "Lithuanian",
     "EN": "English"
