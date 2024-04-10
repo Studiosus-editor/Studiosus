@@ -1,17 +1,20 @@
-:root { 
-	--footer-color: #f08080; 
-  --dark-cerulean: #004D78;
-  --white: #FFFFFF; 
+:root {
+  --dark-cerulean: #004d78;
+  --white: #ffffff;
   --maastricht-blue: #00263c;
-  --hippie-blue: #4C82A0;
-  --whisper: #ECECEC;
-  --grey85: #d9d9d9;
-  --periwinkle: #BFCDFF;
-  --egg-white: #FFF1BF;
-  --white-smoke: #F1F1F1;
-  --silver-dark: #BEBEBE;
+  --hippie-blue: #4c82a0;
   --silver: #c5c5c5;
-  --spindle: #ABB8E5;
+  --whisper: #ececec;
+  --grey85: #d9d9d9;
+  --black: #000000;
+  --silver-dark: #bebebe;
+  --grey43: #6e6e6e;
+  --white-smoke: #f1f1f1;
+  --periwinkle: #bfcdff;
+  --spindle: #abb8e5;
+  --grey56: #8f8f8f;
+  --ubuntu-mono: "Ubuntu Mono", monospace;
+  --egg-white: #FFF1BF;
 }
 
 body {
@@ -43,11 +46,11 @@ h4 {
 }
 
 .button--default {
-  border: none; 
-  background: none; 
-  color: inherit; 
-  font: inherit; 
-  line-height: normal; 
-  overflow: visible; 
-  cursor: pointer; 
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  line-height: normal;
+  overflow: visible;
+  cursor: pointer;
 }

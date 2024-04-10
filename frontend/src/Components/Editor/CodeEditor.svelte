@@ -1,10 +1,13 @@
 <script>
   import { onMount } from "svelte";
   import { writable } from "svelte/store";
+  import Problems from "./Problems.svelte";
+  import Dashboard from "./Dashboard.svelte";
   import FileNavigator from "./FileNavigator.svelte";
   import LineNumbers from "./LineNumbers.svelte";
   import CodeEditor from "./scripts/CodeEditor.js";
   import FileManager from "./scripts/FileManager.js";
+  import GeneralToolbar from "./GeneralToolbar.svelte";
 
   let fileManager = new FileManager();
   let codeEditor;
@@ -12,6 +15,48 @@
   // Create a Svelte store to hold the textarea value
   let textareaValue = writable("");
 
+  let textarea;
+  let defaultWidth;
+
+  const handleInput = () => {
+    textarea.style.height = "auto";
+    textarea.style.height = textarea.scrollHeight + "px";
+
+    // Store the new height in localStorage
+    localStorage.setItem("textareaHeight", textarea.scrollHeight);
+  };
+
+  const adjustTextareaWidth = () => {
+    const lines = textarea.value.split("\n");
+    let longestLine = lines[0];
+
+    // If textarea is empty, reset to original width
+    if (textarea.value === "") {
+      textarea.style.width = `${defaultWidth}px`;
+      return;
+    }
+
+    // Find the line with the most characters
+    for (let line of lines) {
+      if (line.length > longestLine.length) {
+        longestLine = line;
+      }
+    }
+
+    // Calculate the width of the longest line
+    const newWidth = longestLine.length * 9; // 9px per character
+
+    // Set the width of the textarea to match the width of the longest line
+    // only if the new width exceeds the default width
+    if (newWidth > defaultWidth) {
+      textarea.style.width = `${newWidth}px`;
+      //saves the width into local storage
+      localStorage.setItem("textareaWidth", textarea.scrollWidth);
+    } else {
+      textarea.style.width = `${defaultWidth}px`;
+    }
+  };
+  //A single onMount statement for clarification
   onMount(() => {
     codeEditor = new CodeEditor(
       "editor",
@@ -23,140 +68,115 @@
 
     // Trigger an update to textareaValue
     textareaValue.set(codeEditor.textarea.value);
+
+    defaultWidth = textarea.offsetWidth;
+    adjustTextareaWidth(); // Adjust the width on mount
+
+    textarea.addEventListener("input", adjustTextareaWidth); // Adjust the width on input
+    textarea.addEventListener("input", handleInput); // Adjust the height on input
   });
 </script>
 
 <div class="main-component">
-  <h1>Studiosus</h1>
-  <p>Universal Ansible Editor</p>
   <div id="editor">
-    <FileNavigator {codeEditor} {fileManager} {textareaValue} />
-    <div id="editor-content">
-      <LineNumbers {textareaValue} />
-      <div class="textarea-container">
-        <textarea
-          id="editor-field"
-          cols="75"
-          rows="30"
-          placeholder="Start typing here..."
-          spellcheck="false"
-          bind:value={$textareaValue}
-        ></textarea>
-        <div id="overlay" class="hidden">Drop your file here...</div>
+    <GeneralToolbar />
+    <div class="flex-row">
+      <FileNavigator {codeEditor} {fileManager} {textareaValue} />
+      <div class="editor-wrapper">
+        <LineNumbers {textareaValue} />
+        <div class="textarea-container">
+          <textarea
+            id="editor-field"
+            cols="75"
+            rows="30"
+            placeholder="Start typing here..."
+            spellcheck="false"
+            bind:value={$textareaValue}
+            bind:this={textarea}
+            on:input={handleInput}
+            style="overflow: hidden; height: auto;"
+          ></textarea>
+          <div id="overlay" class="hidden">Drop your file here...</div>
+        </div>
       </div>
+    </div>
+    <div class="bottom-toolbars">
+      <Dashboard />
+      <Problems />
     </div>
   </div>
 </div>
 
 <style>
   .main-component {
-    transition: all 0.3s ease;
+    margin-top: 200px;
+    margin-bottom: 200px;
+    display: block;
     position: relative;
-    padding: 15px;
-    border-radius: 5%;
-    border: 3px dashed #000;
-    margin: 200px 0;
-  }
-
-  .main-component:hover {
-    transform: translateY(-2px) scale(1.01);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-
-  .main-component p {
-    margin-top: 5px;
-    max-width: max-content;
-    white-space: nowrap;
-    overflow: hidden;
-    border-right: 0.15em solid #000; /* The typwriter cursor */
-    /* add typing & typewriter cursor effect */
-    animation:
-      typing 2s steps(40, end) forwards,
-      blink-caret 0.75s step-end 2s infinite;
-  }
-
-  /* The typing effect */
-  @keyframes typing {
-    from {
-      width: 0;
-    }
-    to {
-      width: 100%;
-    }
-  }
-
-  /* The typewriter cursor effect */
-  @keyframes blink-caret {
-    from,
-    to {
-      border-color: transparent;
-    }
-    50% {
-      border-color: #000;
-    }
-  }
-
-  /* On smaller devices, set main component width to 90% */
-  @media (max-width: 900px) {
-    .main-component {
-      width: 90%;
-    }
-  }
-
-  .textarea-container {
     width: 100%;
-    position: relative;
+    height: 799px;
+    overflow: hidden;
+    background-color: var(--white);
+    border: 1px solid var(--silver);
   }
-
-  /* Container containing line-numbering, textarea, list of files */
   #editor {
-    margin-top: 20px;
-    font-family: monospace;
-    display: flex;
-    flex-direction: column;
-    max-height: 400px;
-    max-width: 780px;
-    line-height: 21px;
+    display: block;
+    position: relative;
+    flex: 0 0 auto;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: var(--white);
+    border: 1px solid var(--silver);
   }
-
-  /* Textarea field responsible for typing the text */
-  #editor-content {
+  .flex-row {
     display: flex;
     flex-direction: row;
-    overflow-y: auto;
+  }
+  .editor-wrapper {
+    background-color: var(--whisper);
+    display: flex;
+    overflow-y: scroll;
+    height: 544px;
+    width: 75%;
+    margin-top: 31px;
+    border: 1px solid var(--silver);
   }
 
   #editor-field {
+    flex: 0 0 auto;
+    width: 680px;
     line-height: 21px;
     font-size: 1rem;
     padding-left: 5px;
-    border: 0;
-    background: #f1f1f1;
+    font-size: 14px;
+    overflow-x: scroll;
+    white-space: nowrap;
+    background: transparent;
+    border: none;
     outline: none;
     resize: none;
-    white-space: pre-wrap;
-    overflow-wrap: break-word;
+    font-family: var(--ubuntu-mono);
   }
 
-  #editor-field.dragover {
+  #editor-wrapper.dragover {
     background: #eaeaea;
     filter: blur(3px);
   }
-
   #editor-field::placeholder {
     color: #000;
     opacity: 0.5;
   }
 
-  /* Container that appears when a file is dragged over the textarea. */
+  /*Container that appears when a file is dragged over the textarea. */
   #overlay {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.2);
-    color: #fff;
+    background-color: transparent;
+    color: #222222;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -165,5 +185,41 @@
   }
   #overlay.hidden {
     display: none;
+  }
+  .bottom-toolbars {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: 189px;
+  }
+  ::-webkit-scrollbar {
+    width: 14px;
+    height: 13px;
+  }
+
+  /* Track */
+  ::-webkit-scrollbar-track {
+    box-shadow: inset 0 0 3px grey;
+    border-radius: 10px;
+  }
+
+  /* Handle */
+  ::-webkit-scrollbar-thumb {
+    background: var(--grey85);
+    border: 1px solid var(--grey56);
+    border-radius: 10px;
+  }
+
+  /* Handle on hover */
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--grey85);
+  }
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+  @media (min-width: 1100px) {
+    .main-component {
+      width: 1000px;
+    }
   }
 </style>
