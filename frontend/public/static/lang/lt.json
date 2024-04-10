@@ -35,6 +35,17 @@
       "undefinedError": "Įvyko klaida. Prašome susisiekti su klientų aptarnavimu"
     }
   },
+  "projects": {
+    "projects": "Projektai",
+    "yourProjects": "Jūsų projektai",
+    "sharedWithYou":"Dalijamasi su jumis",
+    "createProject": "Sukurti projektą",
+    "noProjectsFirstLine": "Šiuo metu su jumis nėra dalijamasi jokiais projektais",
+    "noProjectsSecondLine": "Lėk ieškot draugų!",
+    "addNew": "Pridėti naują",
+    "next": "Sekantis",
+    "previous": "Ankstesnis"
+  },
   "footer": {
     "LT": "Lietuvių",
     "EN": "Anglų"
