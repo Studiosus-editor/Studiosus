@@ -1,9 +1,25 @@
 <script>
   import AddIcon from "../../assets/svg/add-plus-icon.svg";
+  import Modal from "../Modal/Modal.svelte";
+  import CreateProjectScreen from "../Modal/Components/CreateProjectScreen.svelte";
   import { _ } from "svelte-i18n";
+
+  let showModal = false;
+  let modalTitle;
+
+  function toggleModal() {
+    showModal = !showModal;
+    // clear modalTitle when modal is closed
+    modalTitle = "";
+  }
+
+  // updates modal title based on passed event from CreateProjectScreen component
+  function updateModalTitle(event) {
+    modalTitle = event.detail.createTitle || event.detail.inviteTitle;
+  }
 </script>
 
-<div class="project-wrapper">
+<div class="project-wrapper" on:click={toggleModal} on:keydown={toggleModal}>
   <div class="project-wrapper__name">
     <p>{$_("projects.createProject")}</p>
   </div>
@@ -11,6 +27,21 @@
     <img src={AddIcon} alt={$_("projects.addNew")} />
   </div>
 </div>
+
+{#if showModal}
+  <Modal
+    panelName={modalTitle
+      ? modalTitle
+      : $_("modalCreateProjectScreen.createProject")}
+    width="500px"
+    on:closeModal={toggleModal}
+  >
+    <CreateProjectScreen
+      on:closeModal={toggleModal}
+      on:titleChange={updateModalTitle}
+    />
+  </Modal>
+{/if}
 
 <style lang="scss">
   .project-wrapper {

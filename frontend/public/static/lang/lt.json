@@ -44,10 +44,44 @@
     "noProjectsSecondLine": "Lėk ieškot draugų!",
     "addNew": "Pridėti naują",
     "next": "Sekantis",
-    "previous": "Ankstesnis"
+    "previous": "Ankstesnis",
+    "loadingProjects": "Kraunami projektai..."
   },
   "footer": {
     "LT": "Lietuvių",
     "EN": "Anglų"
+  },
+  "modal": {
+    "close": "Uždaryti"
+  },
+  "modalAddByLinkBox": {
+    "addByLink": "Pridėti per nuorodą",
+    "viewerLink": "Peržiūros nuoroda",
+    "editorLink": "Redagavimo nuoroda",
+    "altCopyToClipBoard": "Nukopijuoti į iškarpinę"
+  },
+  "modalNameProject": {
+    "projectName": "Projekto pavadinimas",
+    "placeholderMyProject": "Mano Projektas"
+  },
+  "modalCreateProjectScreen": {
+    "addByLink": "Pridėti per nuorodą",
+    "addByEmail": "Pridėti per paštą",
+    "altBack": "Atgal",
+    "next": "Toliau",
+    "create": "Sukurti",
+    "inviteTitle": "Pridėti narius",
+    "createProject": "Naujas projektas"
+  },
+  "modalEmailComponents": {
+    "viewer": "Peržiūrėti",
+    "editor": "Redaguoti",
+    "altRemove": "Pašalinti",
+    "placeholderEmail": "Paštas",
+    "emailCannotBeEmpty": "Paštas negali būti tuščias",
+    "invalidEmail": "Klaidingas paštas",
+    "emailAlreadyAdded": "Paštas jau pridėtas",
+    "addByEmail": "Pridėti per paštą",
+    "emptyEmailList": "Pridėk savo kolegas!"
   }
 }

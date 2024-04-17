@@ -2,31 +2,31 @@
   import { onMount } from "svelte";
   import GitHubIcon from "../assets/svg/github-logo.svg";
   import GitLabIcon from "../assets/svg/gitlab-logo.svg";
-  import { _ }  from 'svelte-i18n';
+  import { _ } from "svelte-i18n";
 
   let showGithubOAuth;
   let showGitlabOAuth;
   let errorMessage = "";
-  let errorMessageKey = "undefinedError"
-  
+  let errorMessageKey = "undefinedError";
+
   onMount(async () => {
     const params = new URLSearchParams(window.location.search);
     errorMessage = params.get("exception");
-    
-    switch(errorMessage) {
-      case 'LockedException':
-        errorMessageKey = 'accountLocked';
+
+    switch (errorMessage) {
+      case "LockedException":
+        errorMessageKey = "accountLocked";
         break;
-      case 'DisabledException':
-        errorMessageKey = 'accountDisabled';
+      case "DisabledException":
+        errorMessageKey = "accountDisabled";
         break;
-      case 'BadCredentialsException':
-        errorMessageKey = 'invalidCredentials';
+      case "BadCredentialsException":
+        errorMessageKey = "invalidCredentials";
         break;
-      case 'AccountExpiredException':
-        errorMessageKey = 'accountExpired';
+      case "AccountExpiredException":
+        errorMessageKey = "accountExpired";
         break;
-  }
+    }
 
     try {
       const response = await fetch("/api/loginOptions", {
@@ -72,21 +72,34 @@
     {/if}
     <div class="password-login">
       <form action="/login" method="post">
-        <input type="email" id="username" name="username" placeholder={$_('login.email')} />
+        <input
+          type="email"
+          id="username"
+          name="username"
+          placeholder={$_("login.email")}
+        />
         <input
           type="password"
           id="password"
           name="password"
-          placeholder={$_('login.password')}
+          placeholder={$_("login.password")}
         />
-        <button type="submit">{$_('login.login')}</button>
+        <div class="button-container">
+          <button class="button--blue" type="submit">{$_("login.login")}</button
+          >
+        </div>
       </form>
-      <a href="/register">{$_('login.register')}</a>
+      <a href="/register">{$_("login.register")}</a>
     </div>
   </div>
 </div>
 
 <style>
+  .button-container {
+    margin-top: 24px;
+    width: 50%;
+  }
+
   .main-component {
     box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.5);
     text-align: center;
@@ -96,7 +109,7 @@
     padding: 15px;
     border-radius: 5%;
     border: 2px solid #000;
-    background-color:  var(--grey85);
+    background-color: var(--grey85);
   }
 
   .main-component .error {
@@ -138,7 +151,7 @@
   }
 
   .oauth-options a:hover {
-    background-color: var(--spindle); 
+    background-color: var(--spindle);
   }
 
   .oauth-options a img {
@@ -159,23 +172,6 @@
 
   input::placeholder {
     padding-left: 5px;
-  }
-
-  form button {
-    border-radius: 25px;
-    margin-top: 10px;
-    width: 50%;
-    height: 30px;
-    border: #000 1px solid;
-    font-family: "Rubik", sans-serif;
-    background-color: var(--periwinkle);
-    box-shadow:  0px 8px 8px 0px rgba(0, 0, 0, 0.3);
-    font-size: 16px;
-  }
-
-  button:hover {
-    cursor: pointer;
-    background-color: var(--spindle); 
   }
 
   .password-login a {
