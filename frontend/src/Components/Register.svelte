@@ -1,18 +1,17 @@
 <script>
-  import { _ }  from 'svelte-i18n';
+  import { _ } from "svelte-i18n";
   import { onMount } from "svelte";
 
   let errorMessage = "";
-  let errorMessageKey = "undefinedError"
+  let errorMessageKey = "undefinedError";
 
   onMount(async () => {
     const params = new URLSearchParams(window.location.search);
     errorMessage = params.get("exception");
-    if (errorMessage === 'IllegalArgumentException') {
-      errorMessageKey = 'emailAlreadyInUse';
+    if (errorMessage === "IllegalArgumentException") {
+      errorMessageKey = "emailAlreadyInUse";
     }
   });
-
 </script>
 
 <main>
@@ -24,23 +23,41 @@
       {/if}
       <div class="password-login">
         <form action="/register" method="post">
-          <input type="text" name="username" placeholder={$_('register.username')} required />
-          <input type="email" name="email" placeholder={$_('register.email')} required />
+          <input
+            type="text"
+            name="username"
+            placeholder={$_("register.username")}
+            required
+          />
+          <input
+            type="email"
+            name="email"
+            placeholder={$_("register.email")}
+            required
+          />
           <input
             type="password"
             name="password"
-            placeholder={$_('register.password')}
+            placeholder={$_("register.password")}
             required
           />
-          <button type="submit">{$_('register.register')}</button>
+          <div class="button-container">
+            <button class="button--blue" type="submit"
+              >{$_("register.register")}</button
+            >
+          </div>
         </form>
-        <a href="/login">{$_('register.login')}</a>
+        <a href="/login">{$_("register.login")}</a>
       </div>
     </div>
   </div>
 </main>
 
 <style>
+  .button-container {
+    margin-top: 24px;
+    width: 50%;
+  }
   .main-component {
     box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.5);
     text-align: center;
@@ -50,7 +67,7 @@
     padding: 15px;
     border-radius: 5%;
     border: 2px solid #000;
-    background-color:  var(--grey85);
+    background-color: var(--grey85);
   }
 
   .main-component .error {
@@ -85,23 +102,6 @@
 
   input::placeholder {
     padding-left: 5px;
-  }
-
-  form button {
-    border-radius: 25px;
-    margin-top: 10px;
-    width: 50%;
-    height: 30px;
-    border: #000 1px solid;
-    font-family: "Rubik", sans-serif;
-    background-color: var(--periwinkle);
-    box-shadow:  0px 8px 8px 0px rgba(0, 0, 0, 0.3);
-    font-size: 16px;
-  }
-
-  button:hover {
-    cursor: pointer;
-    background-color: var(--spindle); 
   }
 
   .password-login a {

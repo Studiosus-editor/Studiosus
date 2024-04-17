@@ -44,11 +44,44 @@
     "noProjectsSecondLine": "Go make some friends!",
     "addNew": "Add New",
     "next": "Next",
-    "previous": "Previous"
+    "previous": "Previous",
+    "loadingProjects": "Loading projects..."
   },
   "footer": {
     "LT": "Lithuanian",
     "EN": "English"
+  },
+  "modal": {
+    "close": "Close"
+  },
+  "modalAddByLinkBox": {
+    "addByLink": "Add by link",
+    "viewerLink": "Viewer link",
+    "editorLink": "Editor link",
+    "altCopyToClipBoard": "Copy to clipboard"
+  },
+  "modalNameProject": {
+    "projectName": "Project name",
+    "placeholderMyProject": "My project"
+  },
+  "modalCreateProjectScreen": {
+    "addByLink": "Add by link",
+    "addByEmail": "Add by email",
+    "altBack": "Back",
+    "next": "Next",
+    "create": "Create",
+    "inviteTitle": "Invite members",
+    "createProject": "Create project"
+  },
+  "modalEmailComponents": {
+    "viewer": "Viewer",
+    "editor": "Editor",
+    "altRemove": "Remove",
+    "placeholderEmail": "Email",
+    "emailCannotBeEmpty": "Email cannot be empty",
+    "invalidEmail": "Invalid email",
+    "emailAlreadyAdded": "Email already added",
+    "addByEmail": "Add by email",
+    "emptyEmailList": "Invite your colleagues!"
   }
-  
 }

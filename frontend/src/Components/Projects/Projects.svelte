@@ -3,6 +3,7 @@
   import CreateProject from "./CreateProject.svelte";
   import Pagination from "./Pagination.svelte";
   import { _ } from "svelte-i18n";
+  import { onMount } from "svelte";
 
   let projectsActive = true;
   let sharedProjectsActive = false;
@@ -10,7 +11,9 @@
   let currentlyDisplayedYourProjects = [];
   let currentlyDisplayedSharedProjects = [];
 
-  // mock data
+  // tracks if projects are loading, used for conditional rendering
+  let isLoading = true;
+
   let yourProjects = [
     { id: 1, name: "Your project 1" },
     { id: 2, name: "Your project 2" },
@@ -35,9 +38,36 @@
     { id: 9, name: "Shared with you 9" },
   ];
 
-  // sets the first element as active, since the projects will be sorted by most recent
-  if (!isEmptyArray(yourProjects)) {
-    yourProjects[0].isActive = true;
+  // artifical delay for databse fetchig DELETE AFTER IMPLEMENTING DATABASE
+  function fetchProjects(projects) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(projects);
+      }, 1000); // Simulate a 1 second delay
+    });
+  }
+
+  async function loadAndDisplayProjects() {
+    isLoading = true;
+    const projectsToDisplay = projectsActive ? yourProjects : sharedProjects;
+    const fetchedProjects = await fetchProjects(projectsToDisplay);
+    // slice on page load so only the first projects are shown and the rest are paginated
+    if (projectsActive) {
+      currentlyDisplayedYourProjects = fetchedProjects.slice(
+        0,
+        PROJECTS_PER_PAGE
+      );
+    } else {
+      currentlyDisplayedSharedProjects = fetchedProjects.slice(
+        0,
+        PROJECTS_PER_PAGE
+      );
+    }
+    // sets the first element as active, since the projects will be sorted by most recent
+    if (!isEmptyArray(yourProjects)) {
+      yourProjects[0].isActive = true;
+    }
+    isLoading = false;
   }
 
   // toggles the active class on the project that was clicked & unsets the rest
@@ -60,7 +90,11 @@
       if (!isEmptyArray(sharedProjects)) {
         sharedProjects[0].isActive = false;
       }
-    } else if (item === "sharedProjects" && !sharedProjectsActive) {
+    } else if (
+      item === "sharedProjects" &&
+      !sharedProjectsActive &&
+      !isLoading // prevents toggling when loading
+    ) {
       projectsActive = false;
       sharedProjectsActive = true;
       currentlyDisplayedSharedProjects = sharedProjects.slice(
@@ -89,9 +123,9 @@
       : (currentlyDisplayedSharedProjects = event.detail);
   }
 
-  // slice on page load so only the first projects are shown and the rest are paginated
-  currentlyDisplayedYourProjects = yourProjects.slice(0, PROJECTS_PER_PAGE);
-  currentlyDisplayedSharedProjects = sharedProjects.slice(0, PROJECTS_PER_PAGE);
+  onMount(() => {
+    loadAndDisplayProjects();
+  });
 </script>
 
 <div class="projects-wrapper">
@@ -114,7 +148,9 @@
         <h3>{$_("projects.sharedWithYou")}</h3>
       </div>
     </div>
-    {#if projectsActive}
+    {#if isLoading}
+      <div>{$_("projects.loadingProjects")}</div>
+    {:else if projectsActive}
       <Pagination
         projectPerPage={PROJECTS_PER_PAGE}
         itemArray={yourProjects}
@@ -129,7 +165,7 @@
     {/if}
   </div>
   <div class="projects-wrapper__bottom-section">
-    {#if projectsActive}
+    {#if projectsActive && !isLoading}
       <CreateProject />
       {#each currentlyDisplayedYourProjects as project}
         <ProjectEntry
