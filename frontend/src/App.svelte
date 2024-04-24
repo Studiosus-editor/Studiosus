@@ -1,4 +1,5 @@
 <script>
+  import { isLoading } from "svelte-i18n";
   import { Route, Router } from "svelte-routing";
   import CodeEditor from "./Components/Editor/CodeEditor.svelte";
   import Footer from "./Components/Footer/Footer.svelte";
@@ -6,10 +7,9 @@
   import Login from "./Components/Login.svelte";
   import NotFound from "./Components/NotFound.svelte";
   import Profile from "./Components/Profile.svelte";
-  import { isLoading } from "svelte-i18n";
+  import Projects from "./Components/Projects/Projects.svelte";
   import Register from "./Components/Register.svelte";
   import TopNavigation from "./Components/TopNavigation.svelte";
-  import Projects from "./Components/Projects/Projects.svelte";
 </script>
 
 {#if $isLoading}
@@ -22,6 +22,7 @@
       <Route path="/register" let:params component={Register} />
       <Route path="/profile" let:params component={Profile} />
       <Route path="/projects" let:params component={Projects} />
+      <Route path="/editor" let:params component={CodeEditor} />
       <Route path="*" let:params component={NotFound} />
     </Router>
   </LayoutManager>

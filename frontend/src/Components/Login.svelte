@@ -1,13 +1,15 @@
 <script>
   import { onMount } from "svelte";
+  import { _ } from "svelte-i18n";
   import GitHubIcon from "../assets/svg/github-logo.svg";
   import GitLabIcon from "../assets/svg/gitlab-logo.svg";
-  import { _ } from "svelte-i18n";
 
+  const backendUrl = __BACKEND_URL__;
   let showGithubOAuth;
   let showGitlabOAuth;
   let errorMessage = "";
   let errorMessageKey = "undefinedError";
+  let isLoggedIn = false;
 
   onMount(async () => {
     const params = new URLSearchParams(window.location.search);
@@ -29,10 +31,10 @@
     }
 
     try {
-      const response = await fetch("/api/loginOptions", {
+      const response = await fetch(backendUrl + "/api/loginOptions", {
         method: "GET",
         headers: {
-          "Content-Type": "application/json",
+          Accept: "application/json",
         },
       });
       if (!response.ok) {
@@ -57,21 +59,24 @@
       <div class="oauth-logins">
         <div class="oauth-options">
           {#if showGithubOAuth}
-            <a href="/oauth2/authorization/github">
-              <img src={GitHubIcon} alt="github logo" />Log in with GitHub
+            <a href={backendUrl + "/oauth2/authorization/github"}>
+              <img src={GitHubIcon} alt="github logo" />{$_(
+                `login.loginWithGithub`
+              )}
             </a>
           {/if}
           {#if showGitlabOAuth}
-            <a href="/oauth2/authorization/gitlab">
-              <img class="gitlab" src={GitLabIcon} alt="gitlab logo" />Log in
-              with GitLab
+            <a href={backendUrl + "/oauth2/authorization/gitlab"}>
+              <img class="gitlab" src={GitLabIcon} alt="gitlab logo" />{$_(
+                `login.loginWithGitLab`
+              )}
             </a>
           {/if}
         </div>
       </div>
     {/if}
     <div class="password-login">
-      <form action="/login" method="post">
+      <form action={backendUrl + "/login"} method="post">
         <input
           type="email"
           id="username"
@@ -101,6 +106,7 @@
   }
 
   .main-component {
+    margin: 100px 0 100px 0;
     box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.5);
     text-align: center;
     width: 400px;

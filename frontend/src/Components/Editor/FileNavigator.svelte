@@ -7,6 +7,7 @@
   export let codeEditor;
   export let fileManager;
   export let textareaValue; // Svelte store to hold the textarea value
+
   let files = [];
   let currentFile;
   let fileNavigator = writable(null);
@@ -48,10 +49,12 @@
   }
 </script>
 
+<div id="nav-placeholder"></div>
 <div id="file-navigator">
   <div id="project-toolbar">
     <input id="project-name" type="text" placeholder="Project Name" />
     <button
+      title="Create File"
       class="project-toolbar-btn"
       id="create-new-file"
       on:click={createNewFile}
@@ -60,7 +63,11 @@
     </button>
 
     <!-- on:click={createNewFolder}  -->
-    <button class="project-toolbar-btn" id="create-new-folder">
+    <button
+      title="Create Folder"
+      class="project-toolbar-btn"
+      id="create-new-folder"
+    >
       <img
         src={AddFolderIcon}
         alt="Create new folder"
@@ -91,19 +98,25 @@
 </div>
 
 <style>
+  #nav-placeholder {
+    display: none;
+    height: 100%;
+    background: var(--grey85);
+    width: 50px;
+  }
   #file-navigator {
     display: flex;
     flex-direction: column;
-    width: 25%;
-    height: 100%;
+    width: 100%;
+    height: 73%;
   }
   #project-toolbar {
     position: relative;
     display: flex;
     justify-content: flex-end;
-    height: 31px;
-    box-shadow: 0px 0px 12px 0px #343434;
-    z-index: 3;
+    height: 40px;
+    box-shadow: 2px 4px 8px 0px #343434; /* Adjusted vertical offset */
+    z-index: 2;
     background-color: var(--grey85);
   }
   #project-name {
@@ -112,9 +125,9 @@
     background-color: transparent;
     border: none;
     font-family: Montserrat, sans-serif;
-    width: 120px;
+    width: 60%;
     height: 100%;
-    font-size: 100;
+    font-size: 16px;
   }
   .project-toolbar-btn {
     display: flex;
@@ -132,17 +145,20 @@
   .flex-column {
     display: flex;
     flex-direction: column;
+    height: 100%;
   }
   #file-selector {
     width: 100%;
+    height: 100%;
   }
   #file-system-container {
+    height: 100%;
+    margin-top: 1px;
     overflow-y: auto;
     position: relative;
     display: flex;
     width: 100%;
-    height: 545px;
-    z-index: 2;
+    z-index: 1;
     background-color: var(--grey85);
     border-bottom: 1px solid var(--silver);
   }
@@ -168,11 +184,10 @@
   }
 
   #file-selector li {
-    min-width: 50px;
+    height: 100%;
     font-size: 1rem;
     position: relative;
     text-align: center;
-    flex-grow: 1;
     padding: 10px 30px 10px 15px;
     border-right: 1px solid var(--silver);
     background-color: var(--white); /* white background for non-active tabs */
@@ -217,14 +232,40 @@
     transition: transform 0.3s ease color 0.3s ease;
     cursor: pointer;
   }
+  ::-webkit-scrollbar {
+    width: 14px;
+    height: 13px;
+  }
+
+  /* Track */
+
+  ::-webkit-scrollbar-track {
+    box-shadow: inset 0 0 3px grey;
+    border-radius: 10px;
+  }
+
+  /* Handle */
+  ::-webkit-scrollbar-thumb {
+    background: var(--grey85);
+    border: 1px solid var(--grey56);
+    border-radius: 10px;
+  }
+
+  /* Handle on hover */
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--grey85);
+  }
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
   @media (max-width: 800px) {
-    #create-new-folder {
-      display: none;
+    #project-name {
+      width: 80px;
     }
   }
-  @media (max-width: 500px) {
+  @media (max-width: 600px) {
     #project-name {
-      width: 50px;
+      display: none;
     }
   }
 </style>

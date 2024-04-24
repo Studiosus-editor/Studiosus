@@ -17,7 +17,7 @@
 <style>
   /* Container that displays the line numbers in the code editor. */
   #line-numbers {
-    line-height: 21px;
+    line-height: 23px;
     padding-left: 8px;
     padding-top: 3px;
   }
@@ -27,7 +27,7 @@
     counter-increment: linenumber; /* Increment the counter */
     display: flex;
     justify-content: right;
-    font-size: 14px;
+    font-size: 18px;
     color: var(--grey43);
     background-color: transparent;
   }

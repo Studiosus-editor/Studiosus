@@ -76,4 +76,17 @@ export default class FileManager {
   getCurrentFile() {
     return localStorage.getItem("currentFile");
   }
+  
+  func_savedata(data) { 
+    var string_data = typeof data === "string" ? data : JSON.stringify(data);
+    var file = new File([string_data], this.getCurrentFile() + ".txt", {
+      type: "text;charset=utf-8",
+    });
+
+    var anchor = document.createElement("a");
+    anchor.setAttribute("href", window.URL.createObjectURL(file));
+    anchor.setAttribute("download", this.getCurrentFile() + ".txt",);
+    anchor.click();
+    URL.revokeObjectURL(anchor.href);
+  }
 }

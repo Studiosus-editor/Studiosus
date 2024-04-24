@@ -2,6 +2,7 @@ export default class FileNavigator {
   constructor(fileManager, codeEditor) {
     this.fileManager = fileManager;
     this.codeEditor = codeEditor;
+    this.currentPageName = null;
   }
 
   createNewPage() {
@@ -24,6 +25,7 @@ export default class FileNavigator {
 
     // Load the new page in the code editor
     this.codeEditor.loadFile(newPageName);
+    this.currentPageName = newPageName;
   }
 
   deleteFile(file) {
@@ -40,5 +42,8 @@ export default class FileNavigator {
     } else {
       this.codeEditor.loadFile("main");
     }
+  }
+  get currentFileName() {
+    return this.currentPageName;
   }
 }

@@ -1,8 +1,11 @@
 <script>
-  import AddIcon from "../../assets/svg/add-plus-icon.svg";
-  import Modal from "../Modal/Modal.svelte";
-  import CreateProjectScreen from "../Modal/Components/CreateProjectScreen.svelte";
+  import { createEventDispatcher } from "svelte";
   import { _ } from "svelte-i18n";
+  import AddIcon from "../../assets/svg/add-plus-icon.svg";
+  import CreateProjectScreen from "../Modal/Components/CreateProjectScreen.svelte";
+  import Modal from "../Modal/Modal.svelte";
+
+  const dispatch = createEventDispatcher();
 
   let showModal = false;
   let modalTitle;
@@ -16,6 +19,10 @@
   // updates modal title based on passed event from CreateProjectScreen component
   function updateModalTitle(event) {
     modalTitle = event.detail.createTitle || event.detail.inviteTitle;
+  }
+
+  function updateProjectsPage() {
+    dispatch("updateProjectsPage");
   }
 </script>
 
@@ -39,6 +46,7 @@
     <CreateProjectScreen
       on:closeModal={toggleModal}
       on:titleChange={updateModalTitle}
+      on:projectCreated={updateProjectsPage}
     />
   </Modal>
 {/if}

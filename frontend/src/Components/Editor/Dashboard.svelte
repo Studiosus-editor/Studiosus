@@ -7,15 +7,14 @@
     justify-content: flex-start;
     align-items: flex-start;
     display: flex;
-    height: 100%;
-    width: 25%;
+    height: 27%;
+    width: 100%;
     background-color: var(--grey85);
-    border-right: 1px solid var(--silver);
     border-left: none;
     text-align: left;
   }
   .dashboard-header {
     margin: 10px 0 0 10px;
-    font-size: 15px;
+    font-size: 18px;
   }
 </style>

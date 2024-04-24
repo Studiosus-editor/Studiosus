@@ -3,7 +3,12 @@
     "editor": "Redaguoti",
     "projects": "Projektai",  
     "templates": "Šablonai",
-    "login": "Prisijungti"
+    "login": "Prisijungti",
+    "register": "Registruotis",
+    "logout": "Atsijungti",
+    "profile": "Paskyra",
+    "open": "Atidaryti",
+    "close": "Uždaryti"
   },
   "login": {
     "loginWithGithub": "Prisijungti su Github",
@@ -45,7 +50,8 @@
     "addNew": "Pridėti naują",
     "next": "Sekantis",
     "previous": "Ankstesnis",
-    "loadingProjects": "Kraunami projektai..."
+    "loadingProjects": "Kraunami projektai...",
+    "errorLoadingProjects": "Įvyko klaida kraunant projektus"
   },
   "footer": {
     "LT": "Lietuvių",

@@ -1,10 +1,12 @@
 <script>
-  import ProjectEntry from "./ProjectEntry.svelte";
+  import { onMount } from "svelte";
+  import { _ } from "svelte-i18n";
   import CreateProject from "./CreateProject.svelte";
   import Pagination from "./Pagination.svelte";
-  import { _ } from "svelte-i18n";
-  import { onMount } from "svelte";
+  import ProjectEntry from "./ProjectEntry.svelte";
 
+  const backendUrl = __BACKEND_URL__;
+  let errorLoadingProjects = false;
   let projectsActive = true;
   let sharedProjectsActive = false;
   const PROJECTS_PER_PAGE = 8;
@@ -14,51 +16,56 @@
   // tracks if projects are loading, used for conditional rendering
   let isLoading = true;
 
-  let yourProjects = [
-    { id: 1, name: "Your project 1" },
-    { id: 2, name: "Your project 2" },
-    { id: 3, name: "Your project 3" },
-    { id: 4, name: "Your project 4" },
-    { id: 5, name: "Your project 5" },
-    { id: 6, name: "Your project 6" },
-    { id: 7, name: "Your project 7" },
-    { id: 8, name: "Your project 8" },
-    { id: 9, name: "Your project 9" },
-  ];
+  let yourProjects = [];
 
-  let sharedProjects = [
-    { id: 1, name: "Shared with you 1" },
-    { id: 2, name: "Shared with you 2" },
-    { id: 3, name: "Shared with you 3" },
-    { id: 4, name: "Shared with you 4" },
-    { id: 5, name: "Shared with you 5" },
-    { id: 6, name: "Shared with you 6" },
-    { id: 7, name: "Shared with you 7" },
-    { id: 8, name: "Shared with you 8" },
-    { id: 9, name: "Shared with you 9" },
-  ];
+  let sharedProjects = [];
 
   // artifical delay for databse fetchig DELETE AFTER IMPLEMENTING DATABASE
-  function fetchProjects(projects) {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(projects);
-      }, 1000); // Simulate a 1 second delay
-    });
+  async function fetchProjects() {
+    return fetch(backendUrl + "/api/projects", {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+      },
+      credentials: "include",
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        return data;
+      })
+      .catch(() => {
+        return null;
+      });
   }
 
   async function loadAndDisplayProjects() {
+    yourProjects = [];
+    sharedProjects = [];
     isLoading = true;
-    const projectsToDisplay = projectsActive ? yourProjects : sharedProjects;
-    const fetchedProjects = await fetchProjects(projectsToDisplay);
+    const fetchedProjects = await fetchProjects();
+    if (fetchedProjects === null) {
+      isLoading = false;
+      errorLoadingProjects = true;
+      return;
+    }
+
+    fetchedProjects.forEach((project) => {
+      if (project.role === "Owner") {
+        yourProjects.push(project);
+      } else {
+        sharedProjects.push(project);
+      }
+    });
     // slice on page load so only the first projects are shown and the rest are paginated
     if (projectsActive) {
-      currentlyDisplayedYourProjects = fetchedProjects.slice(
-        0,
-        PROJECTS_PER_PAGE
-      );
+      currentlyDisplayedYourProjects = yourProjects.slice(0, PROJECTS_PER_PAGE);
     } else {
-      currentlyDisplayedSharedProjects = fetchedProjects.slice(
+      currentlyDisplayedSharedProjects = sharedProjects.slice(
         0,
         PROJECTS_PER_PAGE
       );
@@ -150,6 +157,8 @@
     </div>
     {#if isLoading}
       <div>{$_("projects.loadingProjects")}</div>
+    {:else if errorLoadingProjects}
+      <div>{$_("projects.errorLoadingProjects")}</div>
     {:else if projectsActive}
       <Pagination
         projectPerPage={PROJECTS_PER_PAGE}
@@ -165,8 +174,8 @@
     {/if}
   </div>
   <div class="projects-wrapper__bottom-section">
-    {#if projectsActive && !isLoading}
-      <CreateProject />
+    {#if projectsActive && !isLoading && !errorLoadingProjects}
+      <CreateProject on:updateProjectsPage={loadAndDisplayProjects} />
       {#each currentlyDisplayedYourProjects as project}
         <ProjectEntry
           projectName={project.name}

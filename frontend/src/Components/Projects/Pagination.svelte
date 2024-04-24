@@ -33,7 +33,7 @@
   }
 
   // reactive statment that updates showNextButton variable when currentPage changes
-  $: (showNextButton = hasMoreItems()), currentPage;
+  $: (showNextButton = hasMoreItems()), [currentPage, itemArray];
 </script>
 
 <div class="paggination-wrapper">
