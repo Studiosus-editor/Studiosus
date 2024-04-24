@@ -7,16 +7,30 @@
   import LineNumbers from "./LineNumbers.svelte";
   import CodeEditor from "./scripts/CodeEditor.js";
   import FileManager from "./scripts/FileManager.js";
+  import YamlChecker from "./scripts/YamlChecker.js";
   import GeneralToolbar from "./GeneralToolbar.svelte";
-
+  import NavController from "./NavigatorController.svelte";
+  import { errorStore } from "./scripts/store.js";
+  import { projectExpanded } from "./scripts/store.js";
+  import { editorWrapperHeightStore } from "./scripts/store.js";
+  import interact from "interactjs";
   let fileManager = new FileManager();
   let codeEditor;
-
-  // Create a Svelte store to hold the textarea value
+  let yamlChecker = new YamlChecker();
   let textareaValue = writable("");
-
   let textarea;
   let defaultWidth;
+
+  let editorWrapperHeight;
+
+  editorWrapperHeightStore.subscribe((value) => {
+    editorWrapperHeight = value;
+  });
+
+  let projectExpandedValue;
+  projectExpanded.subscribe((value) => {
+    projectExpandedValue = value;
+  });
 
   const handleInput = () => {
     textarea.style.height = "auto";
@@ -56,7 +70,6 @@
       textarea.style.width = `${defaultWidth}px`;
     }
   };
-  //A single onMount statement for clarification
   onMount(() => {
     codeEditor = new CodeEditor(
       "editor",
@@ -65,44 +78,106 @@
       "overlay",
       fileManager
     );
+    textareaValue.set(codeEditor.textarea.value);
+    const editorWrapperElement = document.querySelector("#editor-wrapper");
+    editorWrapperHeightStore.set(editorWrapperElement.offsetHeight);
 
     // Trigger an update to textareaValue
-    textareaValue.set(codeEditor.textarea.value);
 
     defaultWidth = textarea.offsetWidth;
     adjustTextareaWidth(); // Adjust the width on mount
 
     textarea.addEventListener("input", adjustTextareaWidth); // Adjust the width on input
     textarea.addEventListener("input", handleInput); // Adjust the height on input
+    textarea.addEventListener("input", () => {
+      yamlChecker.yamlCode = textarea.value;
+      let error = yamlChecker.validateYAML();
+      if (error) {
+        errorStore.set(error);
+      }
+    });
   });
+
+  function handleFormat() {
+    yamlChecker.yamlCode = textarea.value;
+    textarea.value = yamlChecker.formatYAML();
+  }
+  function handleSaveLocal() {
+    fileManager.func_savedata(textarea.value);
+  }
+
+  //interact js for resizing the navigator-dashboard
+  interact("#navigator-dashboard")
+    .resizable({
+      edges: { top: false, left: false, bottom: false, right: true },
+      modifiers: [
+        interact.modifiers.restrictSize({
+          min: { width: 100, height: Infinity },
+          max: { width: 600, height: Infinity },
+        }),
+      ],
+    })
+    .on("resizemove", function (event) {
+      var target = event.target;
+      var flexColumn = document.querySelector(".flex-column2");
+
+      var newWidth = event.rect.width;
+      var totalWidth = target.parentNode.offsetWidth;
+
+      target.style.width = newWidth + "px";
+      flexColumn.style.width = totalWidth - newWidth + "px";
+    })
+    .on("resizestart", function (event) {
+      var target = event.target;
+      target.style.borderRight = "2px solid blue";
+
+      var editorWrapper = document.querySelector("#editor-wrapper");
+      if (editorWrapper) {
+        editorWrapper.style.pointerEvents = "none";
+      }
+    })
+    .on("resizeend", function (event) {
+      var target = event.target;
+      target.style.borderRight = "";
+
+      var editorWrapper = document.querySelector("#editor-wrapper");
+      if (editorWrapper) {
+        editorWrapper.style.pointerEvents = "auto";
+      }
+    });
 </script>
 
 <div class="main-component">
   <div id="editor">
-    <GeneralToolbar />
+    <GeneralToolbar on:format={handleFormat} on:saveLocal={handleSaveLocal} />
     <div class="flex-row">
-      <FileNavigator {codeEditor} {fileManager} {textareaValue} />
-      <div class="editor-wrapper">
-        <LineNumbers {textareaValue} />
-        <div class="textarea-container">
-          <textarea
-            id="editor-field"
-            cols="75"
-            rows="30"
-            placeholder="Start typing here..."
-            spellcheck="false"
-            bind:value={$textareaValue}
-            bind:this={textarea}
-            on:input={handleInput}
-            style="overflow: hidden; height: auto;"
-          ></textarea>
-          <div id="overlay" class="hidden">Drop your file here...</div>
+      <NavController />
+      {#if $projectExpanded}
+        <div id="navigator-dashboard">
+          <FileNavigator {codeEditor} {fileManager} {textareaValue} />
+          <Dashboard />
         </div>
+      {/if}
+      <div class="flex-column2">
+        <div id="editor-wrapper">
+          <LineNumbers {textareaValue} />
+          <div class="textarea-container">
+            <textarea
+              id="editor-field"
+              cols="75"
+              rows="30"
+              placeholder="Start typing here..."
+              spellcheck="false"
+              bind:value={$textareaValue}
+              bind:this={textarea}
+              on:input={handleInput}
+              style="overflow: hidden; height: auto;"
+            ></textarea>
+            <div id="overlay" class="hidden">Drop your file here...</div>
+          </div>
+        </div>
+        <Problems />
       </div>
-    </div>
-    <div class="bottom-toolbars">
-      <Dashboard />
-      <Problems />
     </div>
   </div>
 </div>
@@ -132,24 +207,44 @@
   .flex-row {
     display: flex;
     flex-direction: row;
+    height: 96%;
+    width: 100%;
   }
-  .editor-wrapper {
+  #navigator-dashboard {
+    display: flex;
+    flex-direction: column;
+    min-width: 175px;
+    max-width: 600px;
+    width: 24%;
+    height: 100%;
+    border-right: 1px solid var(--silver);
+  }
+  .flex-column2 {
+    display: flex;
+    width: 100%;
+    min-width: 100px;
+    max-width: 100%;
+    flex: 1;
+    flex-direction: column;
+    height: 100%;
+  }
+  #editor-wrapper {
     background-color: var(--whisper);
     display: flex;
     overflow-y: scroll;
-    height: 544px;
-    width: 75%;
-    margin-top: 31px;
+    flex: 1; /* this will make it take up the remaining space */
+    width: 100%;
+    margin-top: 38px;
     border: 1px solid var(--silver);
   }
 
   #editor-field {
     flex: 0 0 auto;
-    width: 680px;
-    line-height: 21px;
+    width: 600px;
+    line-height: 23px;
     font-size: 1rem;
     padding-left: 5px;
-    font-size: 14px;
+    font-size: 18px;
     overflow-x: scroll;
     white-space: nowrap;
     background: transparent;
@@ -186,17 +281,10 @@
   #overlay.hidden {
     display: none;
   }
-  .bottom-toolbars {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-    height: 189px;
-  }
   ::-webkit-scrollbar {
     width: 14px;
     height: 13px;
   }
-
   /* Track */
   ::-webkit-scrollbar-track {
     box-shadow: inset 0 0 3px grey;

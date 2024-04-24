@@ -1,6 +1,6 @@
 plugins {
 	id 'java'
-	id 'org.springframework.boot' version '3.2.2'
+	id 'org.springframework.boot' version '3.2.4'
 	id 'io.spring.dependency-management' version '1.1.4'
 	id 'com.diffplug.spotless' version '6.22.0'
     id 'com.github.node-gradle.node' version '3.1.1'
@@ -24,7 +24,6 @@ repositories {
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
@@ -50,51 +49,3 @@ spotless {
 }
 
 compileJava.dependsOn('spotlessApply')
-
-task copyStatic(type: Copy) {
-    from '../frontend/public/static'
-    into 'src/main/resources/static'
-}
-
-task copyTemplates(type: Copy) {
-    from '../frontend/public/templates'
-    into 'src/main/resources/templates'
-}
-
-processResources {
-    if (gradle.startParameter.taskNames.contains('bootJar')) {
-        dependsOn copyStatic, copyTemplates
-        filesMatching('application.properties') {
-            filter {
-                it.replace('file:../frontend/public/static/', 'classpath:/static/')
-                .replace('file:../frontend/public/templates/', 'classpath:/templates/')
-            }
-        }
-    }
-}
-
-node {
-    version = '20.11.1'
-    npmVersion = '10.2.4'
-    download = true
-    nodeProjectDir = file('../frontend')
-}
-
-task npmInstallRollup(type: NpmTask) {
-    execOverrides {
-        it.workingDir = file('../frontend')
-    }
-    args = ['install', 'rollup']
-}
-
-task npmBuild(type: NpmTask) {
-    execOverrides {
-        it.workingDir = file('../frontend')
-    }
-    inputs.file("../frontend/package.json")
-    inputs.file("../frontend/package-lock.json")
-    args = ['run', 'build']
-}
-
-npmBuild.dependsOn npmInstallRollup
-bootJar.dependsOn npmBuild, processResources

@@ -5,19 +5,33 @@
   import CopyToClipboardIcon from "../../assets/svg/General-toolbar/copy-to-clipboard-icon.svg";
   import SaveAsIcon from "../../assets/svg/General-toolbar/save-as-icon.svg";
   import ExpandIcon from "../../assets/svg/General-toolbar/expand-icon.svg";
+  import { createEventDispatcher } from "svelte";
+  const dispatch = createEventDispatcher();
+
+  function handleClick() {
+    dispatch("format");
+  }
+  function handleSaveLocal() {
+    dispatch("saveLocal");
+  }
 </script>
 
 <div id="top-toolbar">
-  <button id="run-button" class="top-button">
+  <button title="Run script" id="run-button" class="top-button">
     <img src={RunProjectIcon} alt="Run Script" width="20px" height="20px" />
   </button>
-  <button id="save-button" class="top-button">
+  <button title="Save project" id="save-button" class="top-button">
     <img src={SaveFileIcon} alt="Save File" width="20px" height="20px" />
   </button>
-  <button id="format-button" class="top-button">
+  <button
+    title="Format code"
+    id="format-button"
+    on:click={handleClick}
+    class="top-button"
+  >
     <img src={FormatCodeIcon} alt="Format Code" width="20px" height="20px" />
   </button>
-  <button id="clipboard-button" class="top-button">
+  <button title="Copy" id="clipboard-button" class="top-button">
     <img
       src={CopyToClipboardIcon}
       alt="Copy to Clipboard"
@@ -25,10 +39,15 @@
       height="20px"
     />
   </button>
-  <button id="save-as-button" class="top-button">
+  <button
+    title="Save As"
+    id="save-as-button"
+    class="top-button"
+    on:click={handleSaveLocal}
+  >
     <img src={SaveAsIcon} alt="Save As" width="20px" height="20px" />
   </button>
-  <button id="expand-button" class="top-button">
+  <button title="Expand" id="expand-button" class="top-button">
     <img src={ExpandIcon} alt="Expand" width="20px" height="20px" />
   </button>
 </div>

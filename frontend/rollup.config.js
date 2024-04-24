@@ -1,13 +1,14 @@
 import commonjs from "@rollup/plugin-commonjs";
 import image from "@rollup/plugin-image";
+import json from "@rollup/plugin-json";
 import resolve from "@rollup/plugin-node-resolve";
+import replace from "@rollup/plugin-replace";
 import terser from "@rollup/plugin-terser";
 import { spawn } from "child_process";
 import css from "rollup-plugin-css-only";
 import livereload from "rollup-plugin-livereload";
 import svelte from "rollup-plugin-svelte";
-import preprocess from 'svelte-preprocess';
-import json from "@rollup/plugin-json";
+import preprocess from "svelte-preprocess";
 
 const production = !process.env.ROLLUP_WATCH;
 
@@ -37,10 +38,17 @@ export default {
   output: {
     sourcemap: true,
     format: "esm",
-    dir: "public/static/build",
+    dir: "public/build",
     entryFileNames: "bundle.js",
   },
   plugins: [
+    replace({
+      // Replace process.env.MY_ENV_VAR in your code with the value of MY_ENV_VAR environment variable
+      __BACKEND_URL__: JSON.stringify(
+        process.env.BACKEND_URL || "http://localhost:8080"
+      ),
+      preventAssignment: true,
+    }),
     json(),
     image(),
     svelte({

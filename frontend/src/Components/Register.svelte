@@ -1,7 +1,7 @@
 <script>
-  import { _ } from "svelte-i18n";
   import { onMount } from "svelte";
-
+  import { _ } from "svelte-i18n";
+  const backendUrl = __BACKEND_URL__;
   let errorMessage = "";
   let errorMessageKey = "undefinedError";
 
@@ -22,7 +22,7 @@
         <h3 class="error">{$_(`register.errorMessages.${errorMessageKey}`)}</h3>
       {/if}
       <div class="password-login">
-        <form action="/register" method="post">
+        <form action={backendUrl + "/register"} method="post">
           <input
             type="text"
             name="username"
@@ -59,6 +59,7 @@
     width: 50%;
   }
   .main-component {
+    margin: 100px 0 100px 0;
     box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.5);
     text-align: center;
     width: 400px;

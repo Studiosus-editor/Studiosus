@@ -3,7 +3,12 @@
     "editor": "Editor",
     "projects": "Projects",
     "templates": "Templates",
-    "login": "Login"
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "profile": "Profile",
+    "open": "Open",
+    "close": "Close"
   },
   "login": {
     "loginWithGithub": "Log in with Github",
@@ -45,7 +50,8 @@
     "addNew": "Add New",
     "next": "Next",
     "previous": "Previous",
-    "loadingProjects": "Loading projects..."
+    "loadingProjects": "Loading projects...",
+    "errorLoadingProjects": "Error loading projects"
   },
   "footer": {
     "LT": "Lithuanian",

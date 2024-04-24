@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import lt.sus.Studiosus.service.OAuth2UserService;
 import lt.sus.Studiosus.service.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -30,6 +31,9 @@ import org.springframework.security.web.header.writers.ContentSecurityPolicyHead
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+  @Value("${app.frontendUrl}")
+  private String frontendUrl;
 
   // Secrets.properties file configuration
   @Autowired private Environment env;
@@ -76,7 +80,7 @@ public class SecurityConfig {
               csrf -> csrf.ignoringRequestMatchers("/h2-console/**", "/login", "/register"))
           .authorizeHttpRequests(
               auth -> {
-                auth.requestMatchers("/profile").authenticated();
+                auth.requestMatchers("/profile", "/api/createProject").authenticated();
                 auth.anyRequest().permitAll();
               })
           .headers(
@@ -88,12 +92,20 @@ public class SecurityConfig {
                   login
                       .loginPage("/login")
                       .permitAll()
-                      .userInfoEndpoint(userInfo -> userInfo.userService(oAuth2UserService())))
+                      .userInfoEndpoint(userInfo -> userInfo.userService(oAuth2UserService()))
+                      .successHandler(
+                          (request, response, authentication) -> {
+                            response.sendRedirect(frontendUrl);
+                          }))
           .formLogin(
               form ->
                   form.loginPage("/login")
                       .permitAll()
-                      .failureHandler(authenticationFailureHandler()))
+                      .failureHandler(authenticationFailureHandler())
+                      .successHandler(
+                          (request, response, authentication) -> {
+                            response.sendRedirect(frontendUrl);
+                          }))
           .logout(
               logout -> {
                 logout.invalidateHttpSession(true);
@@ -105,7 +117,7 @@ public class SecurityConfig {
               csrf -> csrf.ignoringRequestMatchers("/h2-console/**", "/login", "/register"))
           .authorizeHttpRequests(
               auth -> {
-                auth.requestMatchers("/profile").authenticated();
+                auth.requestMatchers("/profile", "/api/createProject").authenticated();
                 auth.anyRequest().permitAll();
               })
           .headers(
@@ -116,7 +128,11 @@ public class SecurityConfig {
               form ->
                   form.loginPage("/login")
                       .permitAll()
-                      .failureHandler(authenticationFailureHandler()))
+                      .failureHandler(authenticationFailureHandler())
+                      .successHandler(
+                          (request, response, authentication) -> {
+                            response.sendRedirect(frontendUrl);
+                          }))
           .logout(
               logout -> {
                 logout.invalidateHttpSession(true);
@@ -128,7 +144,7 @@ public class SecurityConfig {
 
   @Bean
   public AuthenticationFailureHandler authenticationFailureHandler() {
-    return new CustomAuthenticationFailureHandler();
+    return new CustomAuthenticationFailureHandler(frontendUrl);
   }
 
   private boolean isOAuthEnabled() {
@@ -140,6 +156,11 @@ public class SecurityConfig {
 }
 
 class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler {
+  String frontendUrl;
+
+  public CustomAuthenticationFailureHandler(String frontendUrl) {
+    this.frontendUrl = frontendUrl;
+  }
 
   @Override
   public void onAuthenticationFailure(
@@ -148,7 +169,9 @@ class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationFailureH
     String exceptionType = exception.getClass().getSimpleName();
 
     String targetUrl =
-        "/login?exception=" + URLEncoder.encode(exceptionType, StandardCharsets.UTF_8.toString());
+        frontendUrl
+            + "/login?exception="
+            + URLEncoder.encode(exceptionType, StandardCharsets.UTF_8.toString());
 
     response.sendRedirect(targetUrl);
   }

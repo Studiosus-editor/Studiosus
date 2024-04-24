@@ -1,0 +1,20 @@
+---
+- hosts: servers
+  vars:
+    project_path: "../"
+    deploy_path: "~/studiosus"
+  tasks:
+    - name: Copy project files to the server
+      synchronize:
+        src: "{{ project_path }}"
+        dest: "{{ deploy_path }}"
+        delete: yes
+        recursive: yes
+
+    - name: Stop and remove existing containers
+      become: yes
+      shell: docker-compose -f "{{ deploy_path }}/docker-compose.yml" down
+
+    - name: Build and start containers
+      become: yes
+      shell: docker-compose -f "{{ deploy_path }}/docker-compose.yml" up --build -d

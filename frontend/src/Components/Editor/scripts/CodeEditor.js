@@ -1,3 +1,5 @@
+import YamlChecker from './YamlChecker';
+import { errorStore } from './store.js'
 export default class CodeEditor {
   constructor(
     editorId,
@@ -33,7 +35,7 @@ export default class CodeEditor {
     this.textarea = document.getElementById(textareaId);
     this.lineNumbers = document.getElementById(lineNumbersId);
     this.overlay = document.getElementById(overlayId);
-    this.editorWrapper = document.querySelector('.editor-wrapper');
+    this.editorWrapper = document.querySelector('#editor-wrapper');
 
     const missingElements = [];
     if (!this.editor) missingElements.push("editor");
@@ -164,7 +166,7 @@ export default class CodeEditor {
         longestLine = line;
       }
     }
-    const newWidth = longestLine.length * 10;// 10px width per char
+    const newWidth = longestLine.length * 9;// 10px width per char
   
     // Set the width of the textarea to match the width of the longest line
     // only if the new width exceeds the default width
@@ -172,19 +174,30 @@ export default class CodeEditor {
       this.textarea.style.width = `${newWidth}px`;
     }
   }
-
   loadFile(file) {
-
     this.currentFileName = file;
     this.charObjects = this.fileManager.loadFromLocalStorage(this.currentFileName);
     this.textarea.value = this.charObjects.map((obj) => obj.char).join("");
-
+  
+    errorStore.set(null);
+    
+    let yamlChecker = new YamlChecker(this.textarea.value);
+    let error = yamlChecker.validateYAML();
+    if (error) {
+      errorStore.set(error);
+    } 
     // Reset the scroll position
     this.editorWrapper.scrollTop = 0;
     this.editorWrapper.scrollLeft = 0;
     
     //Update the width of text area
     this.updateDimensions();
+  
+    // Use setTimeout to ensure the textarea has fully rendered the new text
+    setTimeout(() => {
+      this.handleInput();
+    }, 0);
+  
     // Save highlighted file in local storage
     this.fileManager.saveCurrentFile(file);
   }

@@ -1,12 +1,13 @@
 <script>
-  import AddByLinkBox from "./AddByLinkBox.svelte";
-  import AddByEmailBox from "./AddByEmail/AddByEmailBox.svelte";
-  import NameProject from "./NameProject.svelte";
-  import ToggleComponent from "./ToggleComponent.svelte";
-  import ArrowBack from "../../../assets/svg/arrow-left-icon.svg";
   import { createEventDispatcher } from "svelte";
   import { _ } from "svelte-i18n";
+  import ArrowBack from "../../../assets/svg/arrow-left-icon.svg";
+  import AddByEmailBox from "./AddByEmail/AddByEmailBox.svelte";
+  import AddByLinkBox from "./AddByLinkBox.svelte";
+  import NameProject from "./NameProject.svelte";
+  import ToggleComponent from "./ToggleComponent.svelte";
 
+  const backendUrl = __BACKEND_URL__;
   const dispatch = createEventDispatcher();
 
   let emailEntries = [];
@@ -43,10 +44,25 @@
     currentIndex += 1;
   }
 
-  // TODO implement DATABASE submission
-  function handleSubmitProject() {
+  async function handleSubmitProject() {
+    await fetch(backendUrl + "/api/createProject/" + projectName, {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+      },
+      credentials: "include",
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return (projects = response.json());
+      })
+      .catch((error) => {
+        console.error(error.message);
+      });
     dispatch("closeModal");
-    console.log("Submitting project:", projectName, emailEntries);
+    dispatch("projectCreated");
   }
 </script>
 
