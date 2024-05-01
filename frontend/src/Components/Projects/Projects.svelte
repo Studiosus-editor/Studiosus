@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import { _ } from "svelte-i18n";
   import CreateProject from "./CreateProject.svelte";
+  import LeftNavigation from "./LeftNavigation.svelte";
   import Pagination from "./Pagination.svelte";
   import ProjectEntry from "./ProjectEntry.svelte";
 
@@ -17,10 +18,16 @@
   let isLoading = true;
 
   let yourProjects = [];
-
   let sharedProjects = [];
 
-  // artifical delay for databse fetchig DELETE AFTER IMPLEMENTING DATABASE
+  // reactive statments to conditinonally pass the current active
+  // project to left side navigation component on project entry click
+  $: yourActiveProject =
+    currentlyDisplayedYourProjects.find((project) => project.isActive) || null;
+  $: sharedActiveProject =
+    currentlyDisplayedSharedProjects.find((project) => project.isActive) ||
+    null;
+
   async function fetchProjects() {
     return fetch(backendUrl + "/api/projects", {
       method: "GET",
@@ -123,11 +130,15 @@
 
   // when the page change function is triggered inside the pagination component, this function is called
   // which assigns a new slice of the all projects array using getCurrentPageItems defined in the pagination component
-  // event.detail is equal to the return value of getCurrentPageItems
+  // event.detail is equal to the return value of getCurrentPageItems, also sets the first element as active on page change
   function handlePaginationChange(event) {
-    projectsActive
-      ? (currentlyDisplayedYourProjects = event.detail)
-      : (currentlyDisplayedSharedProjects = event.detail);
+    if (projectsActive) {
+      currentlyDisplayedYourProjects = event.detail;
+      currentlyDisplayedYourProjects[0].isActive = true;
+    } else {
+      currentlyDisplayedSharedProjects = event.detail;
+      currentlyDisplayedSharedProjects[0].isActive = true;
+    }
   }
 
   onMount(() => {
@@ -135,6 +146,19 @@
   });
 </script>
 
+{#if projectsActive && !isLoading && !errorLoadingProjects && !isEmptyArray(yourProjects)}
+  <LeftNavigation
+    isOwner={true}
+    project={yourActiveProject}
+    on:updateProjectsPage={loadAndDisplayProjects}
+  />
+{:else if sharedProjectsActive && !errorLoadingProjects && !isEmptyArray(sharedProjects)}
+  <LeftNavigation
+    isOwner={false}
+    project={sharedActiveProject}
+    on:updateProjectsPage={loadAndDisplayProjects}
+  />
+{/if}
 <div class="projects-wrapper">
   <div class="projects-wrapper__top-section">
     <h1>{$_("projects.projects")}</h1>
@@ -213,6 +237,7 @@
 <style lang="scss">
   .projects-wrapper {
     margin-top: 100px;
+    margin-bottom: 100px;
     width: 100%;
     height: 900px;
 

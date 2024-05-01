@@ -16,12 +16,26 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-@CrossOrigin(allowCredentials = "true", originPatterns = "*")
+@CrossOrigin(
+    allowCredentials = "true",
+    originPatterns = "*",
+    allowedHeaders = "*",
+    methods = {
+      RequestMethod.DELETE,
+      RequestMethod.GET,
+      RequestMethod.POST,
+      RequestMethod.PUT,
+      RequestMethod.OPTIONS
+    })
 @RestController
 @RequestMapping("/api")
 @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -62,7 +76,7 @@ public class ApiController {
     return ResponseEntity.status(HttpStatus.OK).body(profileInfo);
   }
 
-  @GetMapping("/createProject/{name}")
+  @GetMapping("project/create/{name}")
   public ResponseEntity<Project> createProject(
       @PathVariable String name, Authentication authentication) {
     String email = "";
@@ -81,29 +95,54 @@ public class ApiController {
     return ResponseEntity.status(HttpStatus.CREATED).body(savedProject);
   }
 
-  @GetMapping("/deleteProject/{id}")
+  @DeleteMapping("/project/{id}")
   public ResponseEntity<String> deleteProject(
       @PathVariable Long id, Authentication authentication) {
+    if (authentication == null || !authentication.isAuthenticated()) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
 
     String email = "";
-    if (authentication != null && authentication.isAuthenticated()) {
-      if (authentication.getPrincipal() instanceof OAuth2User oauth2User) {
-        email = oauth2User.getAttribute("email");
-      } else if (authentication.getPrincipal() instanceof AuthenticatedUser authenticatedUser) {
-        email = authenticatedUser.getEmail();
-      }
-    } else {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User is not authenticated");
+    if (authentication.getPrincipal() instanceof OAuth2User oauth2User) {
+      email = oauth2User.getAttribute("email");
+    } else if (authentication.getPrincipal() instanceof AuthenticatedUser authenticatedUser) {
+      email = authenticatedUser.getEmail();
     }
 
     try {
       projectService.deleteProjectForUser(email, id);
     } catch (Exception e) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+      return ResponseEntity.status(HttpStatus.FORBIDDEN)
           .body("User does not have permission to delete the project");
     }
 
-    return ResponseEntity.status(HttpStatus.OK).body("Deleted project successfully");
+    return ResponseEntity.status(HttpStatus.OK)
+        .body("{\"message\": \"Deleted project successfully\"}");
+  }
+
+  @PutMapping("/project/{id}:rename")
+  public ResponseEntity<?> renameProject(
+      @PathVariable Long id, @RequestBody String newName, Authentication authentication) {
+    if (authentication == null || !authentication.isAuthenticated()) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    String email = "";
+    if (authentication.getPrincipal() instanceof OAuth2User oauth2User) {
+      email = oauth2User.getAttribute("email");
+    } else if (authentication.getPrincipal() instanceof AuthenticatedUser authenticatedUser) {
+      email = authenticatedUser.getEmail();
+    }
+    String newProjectName;
+    try {
+      newProjectName = projectService.renameProjectForUser(email, id, newName);
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN)
+          .body("User does not have permission to rename the project");
+    }
+
+    return ResponseEntity.status(HttpStatus.OK)
+        .body("{\"message\": \"Renamed project to " + newProjectName + " successfully\"}");
   }
 
   @GetMapping("/projects")

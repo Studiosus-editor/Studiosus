@@ -90,7 +90,7 @@
 
   h3 {
     font-weight: 500;
-    margin-top: 45px;
+    margin-top: 41px;
   }
   img {
     width: 35px;

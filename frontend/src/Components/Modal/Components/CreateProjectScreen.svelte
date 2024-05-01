@@ -2,18 +2,16 @@
   import { createEventDispatcher } from "svelte";
   import { _ } from "svelte-i18n";
   import ArrowBack from "../../../assets/svg/arrow-left-icon.svg";
-  import AddByEmailBox from "./AddByEmail/AddByEmailBox.svelte";
-  import AddByLinkBox from "./AddByLinkBox.svelte";
-  import NameProject from "./NameProject.svelte";
-  import ToggleComponent from "./ToggleComponent.svelte";
+  import NameProject from "./NameOrRenameProject.svelte";
+  import ToggleAddByLinkAndEmail from "./ToggleAddByLinkAndEmail.svelte";
 
   const backendUrl = __BACKEND_URL__;
+  const MAX_PNAME_LENGTH = 22;
   const dispatch = createEventDispatcher();
 
-  let emailEntries = [];
   let currentIndex = 0;
-  const firstName = $_("modalCreateProjectScreen.addByLink");
-  const secondName = $_("modalCreateProjectScreen.addByEmail");
+  let emailEntries = [];
+
   const inviteTitle = $_("modalCreateProjectScreen.inviteTitle");
   const createTitle = $_("modalCreateProjectScreen.createProject");
 
@@ -21,12 +19,6 @@
   let selection = 1;
 
   let projectName = "";
-
-  // listens for disptached event from ToggleComponent and toggles components
-  // inside the CreateProjectScreen component
-  function handleToggleEvent(event) {
-    selection = event.detail.selection;
-  }
 
   // goes back to previous page, also resets AddByLinkBox to active
   // when swapping pages, and disptaches an event to change title
@@ -45,7 +37,7 @@
   }
 
   async function handleSubmitProject() {
-    await fetch(backendUrl + "/api/createProject/" + projectName, {
+    await fetch(backendUrl + "/api/project/create/" + projectName, {
       method: "GET",
       headers: {
         Accept: "application/json",
@@ -56,7 +48,7 @@
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        return (projects = response.json());
+        return response.json();
       })
       .catch((error) => {
         console.error(error.message);
@@ -80,12 +72,10 @@
     {#if currentIndex === 0}
       <NameProject bind:projectName />
     {:else if currentIndex === 1}
-      <ToggleComponent on:toggle={handleToggleEvent} {firstName} {secondName} />
-      {#if selection === 1}
-        <AddByLinkBox showHeader={false} />
-      {:else}
-        <AddByEmailBox bind:emailEntries showHeader={false} />
-      {/if}
+      <ToggleAddByLinkAndEmail
+        bind:emailEntries
+        on:confirm={handleSubmitProject}
+      />
     {/if}
   </div>
   <div class="content-wrapper__button-container">
@@ -93,13 +83,10 @@
       <button
         class="button--blue"
         on:click={handleNext}
-        class:button-disabled={projectName.trim() === "" && currentIndex === 0}
+        class:button-disabled={(projectName.trim() === "" &&
+          currentIndex === 0) ||
+          projectName.length > MAX_PNAME_LENGTH}
         >{$_("modalCreateProjectScreen.next")}</button
-      >
-    {/if}
-    {#if currentIndex == 1}
-      <button class="button--blue" on:click={handleSubmitProject}
-        >{$_("modalCreateProjectScreen.create")}</button
       >
     {/if}
   </div>
@@ -121,10 +108,6 @@
         cursor: pointer;
         transform: scale(1.3);
       }
-    }
-
-    &__page-content-wrapper {
-      margin-top: 24px;
     }
 
     &__button-container {

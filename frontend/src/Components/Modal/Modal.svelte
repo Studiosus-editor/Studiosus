@@ -1,5 +1,5 @@
 <script>
-  import { onMount, onDestroy } from "svelte";
+  import { onMount, onDestroy, tick } from "svelte";
   import exitIcon from "../../assets/svg/exit-cross-black.svg";
   import { createEventDispatcher } from "svelte";
   import { _ } from "svelte-i18n";
@@ -10,6 +10,7 @@
   const dispatch = createEventDispatcher();
 
   let isOpen = false;
+  let content;
 
   const disableScroll = () => {
     document.body.style.overflow = "hidden";
@@ -31,14 +32,11 @@
     }
   };
 
-  function handleExitIconClick() {
-    closeModal();
-    enableScroll();
-  }
-
-  onMount(() => {
+  onMount(async () => {
     isOpen = true;
     disableScroll();
+    await tick();
+    if (content) content.focus();
   });
 
   onDestroy(() => {
@@ -53,18 +51,20 @@
     on:keydown={handleBackdropClick}
   >
     <div
+      bind:this={content}
       class="backdrop__modal-content"
       on:click|stopPropagation
       on:keydown|stopPropagation
       style="width: {width};"
+      tabindex="-1"
     >
       <h1 class="backdrop__header">{panelName}</h1>
       <img
         class="backdrop__exit-icon"
         src={exitIcon}
         alt={$_("modal.close")}
-        on:click={handleExitIconClick}
-        on:keydown={handleExitIconClick}
+        on:click={closeModal}
+        on:keydown={closeModal}
       />
       <div class="backdrop__line"></div>
       <slot />
