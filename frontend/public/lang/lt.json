@@ -43,9 +43,9 @@
   "projects": {
     "projects": "Projektai",
     "yourProjects": "Jūsų projektai",
-    "sharedWithYou":"Dalijamasi su jumis",
+    "sharedWithYou":"Bendrinama su jumis",
     "createProject": "Sukurti projektą",
-    "noProjectsFirstLine": "Šiuo metu su jumis nėra dalijamasi jokiais projektais",
+    "noProjectsFirstLine": "Šiuo metu su jumis nėra bendrinami jokie projektai",
     "noProjectsSecondLine": "Lėk ieškot draugų!",
     "addNew": "Pridėti naują",
     "next": "Sekantis",
@@ -66,18 +66,24 @@
     "editorLink": "Redagavimo nuoroda",
     "altCopyToClipBoard": "Nukopijuoti į iškarpinę"
   },
-  "modalNameProject": {
+  "modalNameOrRenameProject": {
+    "renameProject": "Pervadinti projektą",
     "projectName": "Projekto pavadinimas",
-    "placeholderMyProject": "Mano Projektas"
+    "placeholderMyProject": "Mano Projektas",
+    "providenNewName": "Įveskite naują pavadinimą",
+    "rename": "Pervadinti"
   },
   "modalCreateProjectScreen": {
-    "addByLink": "Pridėti per nuorodą",
-    "addByEmail": "Pridėti per paštą",
     "altBack": "Atgal",
     "next": "Toliau",
-    "create": "Sukurti",
     "inviteTitle": "Pridėti narius",
     "createProject": "Naujas projektas"
+  },
+  "toggleAddLinkAndEmail": {
+    "addByEmail": "Pridėti per paštą",
+    "addByLink": "Pridėti per nuorodą",
+    "create": "Sukurti",
+    "update": "Atnaujinti"
   },
   "modalEmailComponents": {
     "viewer": "Peržiūrėti",
@@ -89,5 +95,26 @@
     "emailAlreadyAdded": "Paštas jau pridėtas",
     "addByEmail": "Pridėti per paštą",
     "emptyEmailList": "Pridėk savo kolegas!"
+  },
+  "modalDeleteOrLeave": {
+    "deleteProject": "Ištrinti projektą",
+    "delete": "Ištrinti",
+    "cancel": "Atšaukti",
+    "warningDelete": "Įspėjimas!",
+    "warningDeleteText": "Ištrynus projektą, iš jo bus pašalinti visi failai ir susiję bendradarbiai",
+    "leaveProject": "Palikti projektą",
+    "leave": "Palikti",
+    "warningLeaveText": "Palikus projektą jis bus pašalintas iš sąrašo ir nebegalėsite jo pasiekti"
+  },
+  "projectsLeftSideNav": {
+    "open": "Atidaryti",
+    "save": "Išsaugoti",
+    "team": "Komanda",
+    "rename": "Pervadinti",
+    "delete": "Ištrinti",
+    "leave": "Palikti",
+    "inviteTitle": "Pridėti narius",
+    "altOpen": "Atidaryti",
+    "altClose": "Uždaryti"
   }
 }

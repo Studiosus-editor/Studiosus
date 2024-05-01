@@ -77,7 +77,8 @@ public class SecurityConfig {
   SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     if (isOAuthEnabled()) {
       return http.csrf(
-              csrf -> csrf.ignoringRequestMatchers("/h2-console/**", "/login", "/register"))
+              csrf ->
+                  csrf.ignoringRequestMatchers("/h2-console/**", "/login", "/register", "/api/**"))
           .authorizeHttpRequests(
               auth -> {
                 auth.requestMatchers("/profile", "/api/createProject").authenticated();
@@ -114,7 +115,8 @@ public class SecurityConfig {
           .build();
     } else {
       return http.csrf(
-              csrf -> csrf.ignoringRequestMatchers("/h2-console/**", "/login", "/register"))
+              csrf ->
+                  csrf.ignoringRequestMatchers("/h2-console/**", "/login", "/register", "/api/**"))
           .authorizeHttpRequests(
               auth -> {
                 auth.requestMatchers("/profile", "/api/createProject").authenticated();

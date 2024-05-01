@@ -57,6 +57,10 @@ public class ProjectService {
       throw new RuntimeException("User does not have permission to delete the project");
     }
 
+    logger.info("starting deletion process");
+
+    // Delete the project
+    userProjectRoleRepository.deleteById(userProjectRole.getId());
     projectRepository.delete(project);
     logger.info("Deleted project: {}", project);
   }
@@ -73,5 +77,21 @@ public class ProjectService {
                     upr.getRole(),
                     upr.getLastEdited()))
         .collect(Collectors.toList());
+  }
+
+  public String renameProjectForUser(String email, Long projectId, String newName) {
+    User user = userRepository.findUserByEmail(email).orElseThrow();
+    Project project = projectRepository.findById(projectId).orElseThrow();
+
+    // Check if user has permission to rename the project
+    UserProjectRole userProjectRole =
+        userProjectRoleRepository.findByUserAndProject(user, project).orElseThrow();
+    if (!userProjectRole.getRole().equals("Owner")) {
+      throw new RuntimeException("User does not have permission to delete the project");
+    }
+
+    project.setName(newName);
+    projectRepository.save(project);
+    return project.getName();
   }
 }

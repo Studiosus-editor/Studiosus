@@ -66,18 +66,24 @@
     "editorLink": "Editor link",
     "altCopyToClipBoard": "Copy to clipboard"
   },
-  "modalNameProject": {
+  "modalNameOrRenameProject": {
+    "renameProject": "Rename project",
     "projectName": "Project name",
-    "placeholderMyProject": "My project"
+    "placeholderMyProject": "My project",
+    "providenNewName": "Provide new name",
+    "rename": "Rename"
   },
   "modalCreateProjectScreen": {
-    "addByLink": "Add by link",
-    "addByEmail": "Add by email",
     "altBack": "Back",
     "next": "Next",
-    "create": "Create",
     "inviteTitle": "Invite members",
     "createProject": "Create project"
+  },
+  "toggleAddLinkAndEmail": {
+    "addByEmail": "Add by email",
+    "addByLink": "Add by link",
+    "create": "Create",
+    "update": "Update"
   },
   "modalEmailComponents": {
     "viewer": "Viewer",
@@ -89,5 +95,26 @@
     "emailAlreadyAdded": "Email already added",
     "addByEmail": "Add by email",
     "emptyEmailList": "Invite your colleagues!"
+  },
+  "modalDeleteOrLeave": {
+    "deleteProject": "Delete project",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "warningDelete": "Warning!",
+    "warningDeleteText": "Deleting a project will remove all the files and associated collaborators from it",
+    "leaveProject": "Leave project",
+    "leave": "Leave",
+    "warningLeaveText": "Leaving a project will remove it from the list and you will no longer be able to access it"
+  },
+  "projectsLeftSideNav": {
+    "open": "Open",
+    "save": "Save",
+    "team": "Team",
+    "rename": "Rename",
+    "delete": "Delete",
+    "leave": "Leave",
+    "inviteTitle": "Invite members",
+    "altOpen": "Open",
+    "altClose": "Close"
   }
 }
