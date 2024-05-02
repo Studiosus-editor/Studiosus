@@ -5,18 +5,18 @@
   import Dashboard from "./Dashboard.svelte";
   import FileNavigator from "./FileNavigator.svelte";
   import LineNumbers from "./LineNumbers.svelte";
-  import CodeEditor from "./scripts/CodeEditor.js";
+  import CodeEditor from "./scripts/CodeEditor";
   import FileManager from "./scripts/FileManager.js";
-  import YamlChecker from "./scripts/YamlChecker.js";
+  // import YamlChecker from "./scripts/YamlChecker.js";
   import GeneralToolbar from "./GeneralToolbar.svelte";
   import NavController from "./NavigatorController.svelte";
-  import { errorStore } from "./scripts/store.js";
   import { projectExpanded } from "./scripts/store.js";
   import { editorWrapperHeightStore } from "./scripts/store.js";
+  import { _ } from "svelte-i18n";
   import interact from "interactjs";
+
   let fileManager = new FileManager();
   let codeEditor;
-  let yamlChecker = new YamlChecker();
   let textareaValue = writable("");
   let textarea;
   let defaultWidth;
@@ -35,9 +35,6 @@
   const handleInput = () => {
     textarea.style.height = "auto";
     textarea.style.height = textarea.scrollHeight + "px";
-
-    // Store the new height in localStorage
-    localStorage.setItem("textareaHeight", textarea.scrollHeight);
   };
 
   const adjustTextareaWidth = () => {
@@ -82,28 +79,60 @@
     const editorWrapperElement = document.querySelector("#editor-wrapper");
     editorWrapperHeightStore.set(editorWrapperElement.offsetHeight);
 
-    // Trigger an update to textareaValue
-
     defaultWidth = textarea.offsetWidth;
     adjustTextareaWidth(); // Adjust the width on mount
-
-    textarea.addEventListener("input", adjustTextareaWidth); // Adjust the width on input
-    textarea.addEventListener("input", handleInput); // Adjust the height on input
     textarea.addEventListener("input", () => {
-      yamlChecker.yamlCode = textarea.value;
-      let error = yamlChecker.validateYAML();
-      if (error) {
-        errorStore.set(error);
+      adjustTextareaWidth();
+      handleInput();
+      codeEditor.checkYamlSyntax(codeEditor.textarea.value);
+    });
+    // Handles both tab and enter functionalities
+    textarea.addEventListener("keydown", (event) => {
+      if (event.key === "Tab") {
+        event.preventDefault();
+        const { selectionStart, selectionEnd } = textarea;
+        const value = textarea.value;
+        textarea.value =
+          value.substring(0, selectionStart) +
+          "  " +
+          value.substring(selectionEnd);
+        textarea.selectionStart = textarea.selectionEnd = selectionStart + 2;
+      }
+      // } else if (event.key === "Enter") {
+      //   event.preventDefault();
+      //   const { selectionStart, selectionEnd } = textarea;
+      //   const value = textarea.value;
+      //   const lineStart = value.lastIndexOf("\n", selectionStart - 1) + 1;
+      //   let spaceLength = value.substring(lineStart).search(/\S/);
+      //   spaceLength = spaceLength === -1 ? 0 : spaceLength;
+      //   const spaces = " ".repeat(spaceLength);
+      //   textarea.value = value.substring(0, selectionEnd + 2) + "\n" + spaces;
+      //   textareaValue.set(codeEditor.textarea.value);
+      else if (event.ctrlKey && event.key === "/") {
+        // TODO: Add comment functionality with user fake cursor and selection,
+        // also multiple lines should work
       }
     });
-  });
 
-  function handleFormat() {
-    yamlChecker.yamlCode = textarea.value;
-    textarea.value = yamlChecker.formatYAML();
-  }
+    // Adjust the height on mount
+    handleInput();
+    codeEditor.checkYamlSyntax(codeEditor.textarea.value);
+  });
+  // function handleFormat() {
+  //   yamlChecker.yamlCode = textarea.value;
+  //   textarea.value = yamlChecker.formatYAML();
+  // }
   function handleSaveLocal() {
-    fileManager.func_savedata(textarea.value);
+    var file = new File([textarea.value], fileManager.getCurrentFile(), {
+      type: "text;charset=utf-8",
+    });
+
+    // Create a link to download the file
+    const anchor = document.createElement("a");
+    anchor.setAttribute("href", window.URL.createObjectURL(file));
+    anchor.setAttribute("download", fileManager.getCurrentFile());
+    anchor.click();
+    URL.revokeObjectURL(anchor.href);
   }
 
   //interact js for resizing the navigator-dashboard
@@ -149,7 +178,7 @@
 
 <div class="main-component">
   <div id="editor">
-    <GeneralToolbar on:format={handleFormat} on:saveLocal={handleSaveLocal} />
+    <GeneralToolbar on:saveLocal={handleSaveLocal} />
     <div class="flex-row">
       <NavController />
       {#if $projectExpanded}
@@ -184,8 +213,6 @@
 
 <style>
   .main-component {
-    margin-top: 200px;
-    margin-bottom: 200px;
     display: block;
     position: relative;
     width: 100%;
@@ -213,7 +240,7 @@
   #navigator-dashboard {
     display: flex;
     flex-direction: column;
-    min-width: 175px;
+    min-width: 140px;
     max-width: 600px;
     width: 24%;
     height: 100%;
@@ -246,7 +273,7 @@
     padding-left: 5px;
     font-size: 18px;
     overflow-x: scroll;
-    white-space: nowrap;
+    white-space: pre-wrap;
     background: transparent;
     border: none;
     outline: none;
@@ -305,9 +332,9 @@
   ::-webkit-scrollbar-corner {
     background: transparent;
   }
-  @media (min-width: 1100px) {
+  @media (min-width: 1220px) {
     .main-component {
-      width: 1000px;
+      width: 1200px;
     }
   }
 </style>

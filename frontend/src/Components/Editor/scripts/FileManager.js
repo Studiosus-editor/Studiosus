@@ -22,8 +22,6 @@ export default class FileManager {
 
   /**
    * Saves file content to local storage.
-   * @param {Array} content - The content of the file to save.
-   * @param {string} file - The name of the file to save.
    */
   saveToLocalStorage(content, file) {
     const fileData = {
@@ -36,7 +34,6 @@ export default class FileManager {
 
   /**
    * Retrieves all file names from local storage.
-   * @returns {Array} An array of file names.
    */
   getAllFiles() {
     const files = [];
@@ -63,7 +60,6 @@ export default class FileManager {
 
   /**
    * Stores the currently highlighted file in local storage.
-   * @param {string} file - The name of the currently highlighted file.
    */
   saveCurrentFile(file) {
     localStorage.setItem("currentFile", file);
@@ -71,10 +67,10 @@ export default class FileManager {
 
   /**
    * Retrieves the currently highlighted file from local storage.
-   * @returns {string} The name of the currently highlighted file.
    */
   getCurrentFile() {
     return localStorage.getItem("currentFile");
+    
   }
   
   func_savedata(data) { 

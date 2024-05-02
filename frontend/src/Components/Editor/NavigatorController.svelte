@@ -1,6 +1,8 @@
 <script>
   import Projects from "../../assets/svg/Nav-controller/Projects.svg";
   import { projectExpanded } from "./scripts/store.js";
+  import { _ } from "svelte-i18n";
+
   function handleExpandBtn() {
     projectExpanded.update((value) => !value);
   }
@@ -8,7 +10,7 @@
 
 <div id="nav-controller">
   <button
-    title="Explorer"
+    title={$_("editor.navigatorController.explorer")}
     id="projectExpand-btn"
     class="nav-buttons"
     on:click={handleExpandBtn}

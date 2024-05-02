@@ -3,7 +3,8 @@
   import { errorStore } from "./scripts/store.js";
   import MinimizeIcon from "../../assets/svg/Problem-toolbar/minimize-icon.svg";
   import ExpandIcon from "../../assets/svg/Problem-toolbar/expand-icon.svg";
-
+  import { _ } from "svelte-i18n";
+  import { writable } from "svelte/store";
   let isMinimized = false;
   let originalHeight = "27%";
 
@@ -64,11 +65,11 @@
 <div id="terminal-frame">
   <div id="navFrame">
     <div id="headerFrame">
-      <h4 class="terminal-header">Terminal</h4>
+      <h4 class="terminal-header">{$_("editor.terminal.terminal")}</h4>
     </div>
     <div class="minimize-terminal">
       <button
-        title="Minimize Terminal"
+        title={$_("editor.terminal.minimizeTerminal")}
         id="minimize-problem"
         class="minimize-button"
         on:click={handleMinimizing}
@@ -140,19 +141,22 @@
     cursor: pointer;
   }
   #problem-container {
+    overflow-y: auto;
     position: relative;
     display: flex;
-    height: 100px;
+    flex-grow: 1;
     width: 100%;
     background-color: var(--grey85);
     text-align: left;
   }
   .problems {
+    padding-top: 6px;
+    margin: 0;
+    padding-bottom: 0;
     display: flex;
     position: relative;
-    height: 100px;
+    height: 97%;
     width: 100%;
-    overflow-y: auto;
     padding-left: 10px;
     font-family: Arial, Helvetica, sans-serif;
   }
