@@ -116,5 +116,37 @@
     "inviteTitle": "Invite members",
     "altOpen": "Open",
     "altClose": "Close"
+  },
+  "editor":{
+    "generalToolbar": {
+      "runScript": "Run script",
+      "saveProject": "Save project",
+      "format": "Format",
+      "copyToClipboard": "Copy to clipboard",
+      "saveAs": "Save As",
+      "expand": "Expand"
+    },
+    "projectToolbar": {
+      "nameProject": "Name Project",
+      "createFile": "Create File",
+      "createFolder": "Create Folder"
+    },
+    "navigatorController":{
+      "explorer": "Explorer",
+      "assistant": "Assistant"
+    },
+    "editorDashboard": {
+      "dashboard": "Dashboard"
+    },
+    "editorField": {
+      "startTypingHere": "Start typing here..."
+    },
+    "terminal":{
+      "terminal": "Terminal",
+      "emptyYAMLFile": "Empty YAML file!",
+      "correctYAMLSyntax": "Correct YAML syntax!",
+      "expandTerminal": "Expand Terminal",
+      "minimizeTerminal": "Minimize Terminal"
+    }
   }
 }

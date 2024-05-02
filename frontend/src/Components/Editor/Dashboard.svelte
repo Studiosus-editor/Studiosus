@@ -1,5 +1,9 @@
+<script>
+  import { _ } from "svelte-i18n";
+</script>
+
 <div id="dashboard-container">
-  <h4 class="dashboard-header">Dashboard</h4>
+  <h4 class="dashboard-header">{$_("editor.editorDashboard.dashboard")}</h4>
 </div>
 
 <style>

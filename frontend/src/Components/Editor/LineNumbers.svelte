@@ -4,8 +4,14 @@
   // Reactive statement to generate line numbers whenever textareaValue changes
   $: lineNumbers = Array.from(
     { length: $textareaValue.split("\n").length },
-    (_, i) => i + 1
+    (_, i) => i + 1,
   );
+  export function recalculateLineNumbers() {
+    lineNumbers = Array.from(
+      { length: textareaValue.split("\n").length },
+      (_, i) => i + 1,
+    );
+  }
 </script>
 
 <div id="line-numbers">

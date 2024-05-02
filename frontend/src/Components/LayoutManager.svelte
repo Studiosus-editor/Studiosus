@@ -28,6 +28,9 @@
   }
 
   @media (max-width: 920px) {
+    main {
+      margin: 0;
+    }
     .header {
       height: 86px;
     }

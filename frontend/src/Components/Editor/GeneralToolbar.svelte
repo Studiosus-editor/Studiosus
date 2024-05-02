@@ -6,32 +6,45 @@
   import SaveAsIcon from "../../assets/svg/General-toolbar/save-as-icon.svg";
   import ExpandIcon from "../../assets/svg/General-toolbar/expand-icon.svg";
   import { createEventDispatcher } from "svelte";
+  import { _ } from "svelte-i18n";
+
   const dispatch = createEventDispatcher();
 
-  function handleClick() {
-    dispatch("format");
-  }
+  // function handleClick() {
+  //   dispatch("format");
+  // }
   function handleSaveLocal() {
     dispatch("saveLocal");
   }
 </script>
 
 <div id="top-toolbar">
-  <button title="Run script" id="run-button" class="top-button">
+  <button
+    title={$_("editor.generalToolbar.runScript")}
+    id="run-button"
+    class="top-button"
+  >
     <img src={RunProjectIcon} alt="Run Script" width="20px" height="20px" />
   </button>
-  <button title="Save project" id="save-button" class="top-button">
+  <button
+    title={$_("editor.generalToolbar.saveProject")}
+    id="save-button"
+    class="top-button"
+  >
     <img src={SaveFileIcon} alt="Save File" width="20px" height="20px" />
   </button>
   <button
-    title="Format code"
+    title={$_("editor.generalToolbar.format")}
     id="format-button"
-    on:click={handleClick}
     class="top-button"
   >
     <img src={FormatCodeIcon} alt="Format Code" width="20px" height="20px" />
   </button>
-  <button title="Copy" id="clipboard-button" class="top-button">
+  <button
+    title={$_("editor.generalToolbar.copyToClipboard")}
+    id="clipboard-button"
+    class="top-button"
+  >
     <img
       src={CopyToClipboardIcon}
       alt="Copy to Clipboard"
@@ -40,14 +53,18 @@
     />
   </button>
   <button
-    title="Save As"
+    title={$_("editor.generalToolbar.saveAs")}
     id="save-as-button"
     class="top-button"
     on:click={handleSaveLocal}
   >
     <img src={SaveAsIcon} alt="Save As" width="20px" height="20px" />
   </button>
-  <button title="Expand" id="expand-button" class="top-button">
+  <button
+    title={$_("editor.generalToolbar.expand")}
+    id="expand-button"
+    class="top-button"
+  >
     <img src={ExpandIcon} alt="Expand" width="20px" height="20px" />
   </button>
 </div>

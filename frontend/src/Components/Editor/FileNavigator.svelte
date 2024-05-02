@@ -3,58 +3,71 @@
   import FileNavigator from "./scripts/FileNavigator.js";
   import AddFileIcon from "../../assets/svg/add-file-icon.svg";
   import AddFolderIcon from "../../assets/svg/add-folder-icon.svg";
+  import { _ } from "svelte-i18n";
+  import { text } from "svelte/internal";
+  import { tick } from "svelte";
 
   export let codeEditor;
   export let fileManager;
   export let textareaValue; // Svelte store to hold the textarea value
 
   let files = [];
-  let currentFile;
-  let fileNavigator = writable(null);
+  let currentFile = writable(null);
+  let fileNavigator;
+  const MAX_LENGTH_PROJECT_NAME = 22;
+
+  let unsubscribe = () => {};
 
   $: if (codeEditor && fileManager) {
-    fileNavigator.set(new FileNavigator(fileManager, codeEditor));
+    fileNavigator = new FileNavigator(fileManager, codeEditor, currentFile);
 
     // Update the files variable whenever the file list changes
     files = fileManager.getAllFiles();
 
     // Update the current file whenever the code editor's current file changes
-    currentFile = fileManager.getCurrentFile();
+    tick().then(() => {
+      const savedCurrentFile = localStorage.getItem("currentFile");
+      if (savedCurrentFile) {
+        currentFile.set(savedCurrentFile);
+      }
+    });
+
+    unsubscribe();
+    unsubscribe = fileNavigator.currentPageName.subscribe((value) => {
+      currentFile.set(value);
+    });
   }
   function selectFile(file) {
-    // Update the current file
-    currentFile = file;
-
-    // Load the file in the code editor
     codeEditor.loadFile(file);
-
-    // Update the textarea UI
     textareaValue.set(codeEditor.textarea.value);
+    currentFile.set(file);
+    fileManager.saveCurrentFile(file);
   }
 
   function createNewFile() {
-    fileNavigator.update((navigator) => {
-      navigator.createNewPage();
-      return navigator;
-    });
+    fileNavigator.createNewPage();
     files = fileManager.getAllFiles();
+    textareaValue.set(codeEditor.textarea.value);
   }
 
   function deleteFile(file) {
-    fileNavigator.update((navigator) => {
-      navigator.deleteFile(file);
-      return navigator;
-    });
+    fileNavigator.deleteFile(file);
     files = fileManager.getAllFiles();
+    textareaValue.set(codeEditor.textarea.value);
   }
 </script>
 
 <div id="nav-placeholder"></div>
 <div id="file-navigator">
   <div id="project-toolbar">
-    <input id="project-name" type="text" placeholder="Project Name" />
+    <input
+      id="project-name"
+      type="text"
+      maxlength={MAX_LENGTH_PROJECT_NAME}
+      placeholder={$_("editor.projectToolbar.nameProject")}
+    />
     <button
-      title="Create File"
+      title={$_("editor.projectToolbar.createFile")}
       class="project-toolbar-btn"
       id="create-new-file"
       on:click={createNewFile}
@@ -64,7 +77,7 @@
 
     <!-- on:click={createNewFolder}  -->
     <button
-      title="Create Folder"
+      title={$_("editor.projectToolbar.createFolder")}
       class="project-toolbar-btn"
       id="create-new-folder"
     >
@@ -83,7 +96,7 @@
         <ul>
           {#each files as file (file)}
             <li
-              class={file === currentFile ? "active" : ""}
+              class={$currentFile === file ? "active" : ""}
               on:click={() => selectFile(file)}
               on:keydown={(event) => event.key === "Enter" && selectFile(file)}
             >

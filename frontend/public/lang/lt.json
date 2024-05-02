@@ -116,5 +116,37 @@
     "inviteTitle": "Pridėti narius",
     "altOpen": "Atidaryti",
     "altClose": "Uždaryti"
+  },
+  "editor":{
+    "generalToolbar": {
+      "runScript": "Paleisti kodą",
+      "saveProject": "Išsaugoti projektą",
+      "format": "Formatuoti",
+      "copyToClipboard": "Kopijuoti į iškarpinę",
+      "saveAs": "Išsaugoti kaip",
+      "expand": "Išplėsti"
+    },
+    "projectToolbar": {
+      "nameProject": "Pavadinti Projektą",
+      "createFile": "Sukurti dokumentą",
+      "createFolder": "Sukurti aplanką"
+    },
+    "navigatorController":{
+      "explorer": "Naršyklė",
+      "assistant": "Asistentas"
+    },
+    "editorDashboard": {
+      "dashboard": "Darbastalis"
+    },
+    "editorField": {
+      "startTypingHere": "Pradėkite rašyti čia..."
+    },
+    "terminal":{
+      "terminal": "Terminalas",
+      "emptyYAMLfile": "Tuščias YAML failas!",
+      "correctYAMLsyntax": "Taisyklinga YAML sintaksė!",
+      "expandTerminal": "Išplėsti termina1ą",
+      "minimizeTerminal": "Sumažinti terminalą"
+    }
   }
 }
