@@ -24,6 +24,7 @@
     "svelte-preprocess": "^5.1.3"
   },
   "dependencies": {
+    "highlight.js": "^11.9.0",
     "interactjs": "^1.10.27",
     "js-yaml": "^4.1.0",
     "sirv-cli": "^2.0.2",

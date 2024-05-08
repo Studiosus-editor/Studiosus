@@ -372,7 +372,7 @@
       background-color: var(--maastricht-blue);
       min-width: 75px;
       box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.5);
-      z-index: 1;
+      z-index: 10;
 
       &.visible {
         display: block;

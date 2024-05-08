@@ -139,7 +139,8 @@
       "dashboard": "Darbastalis"
     },
     "editorField": {
-      "startTypingHere": "Pradėkite rašyti čia..."
+      "startTypingHere": "Pradėkite rašyti čia...",
+      "dropFileHere": "Nutempti failą čia..."
     },
     "terminal":{
       "terminal": "Terminalas",

@@ -139,7 +139,8 @@
       "dashboard": "Dashboard"
     },
     "editorField": {
-      "startTypingHere": "Start typing here..."
+      "startTypingHere": "Start typing here...",
+      "dropFileHere": "Drop file here..."
     },
     "terminal":{
       "terminal": "Terminal",

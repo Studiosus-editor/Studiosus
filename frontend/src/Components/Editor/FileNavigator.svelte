@@ -5,7 +5,7 @@
   import AddFolderIcon from "../../assets/svg/add-folder-icon.svg";
   import { _ } from "svelte-i18n";
   import { text } from "svelte/internal";
-  import { tick } from "svelte";
+  import { tick, createEventDispatcher } from "svelte";
 
   export let codeEditor;
   export let fileManager;
@@ -15,6 +15,7 @@
   let currentFile = writable(null);
   let fileNavigator;
   const MAX_LENGTH_PROJECT_NAME = 22;
+  const dispatch = createEventDispatcher();
 
   let unsubscribe = () => {};
 
@@ -39,7 +40,8 @@
   }
   function selectFile(file) {
     codeEditor.loadFile(file);
-    textareaValue.set(codeEditor.textarea.value);
+    textareaValue.set(codeEditor.textarea.innerText);
+    dispatch("fileInteraction");
     currentFile.set(file);
     fileManager.saveCurrentFile(file);
   }
@@ -47,13 +49,15 @@
   function createNewFile() {
     fileNavigator.createNewPage();
     files = fileManager.getAllFiles();
-    textareaValue.set(codeEditor.textarea.value);
+    textareaValue.set(codeEditor.textarea.innerText);
+    dispatch("fileInteraction");
   }
 
   function deleteFile(file) {
     fileNavigator.deleteFile(file);
     files = fileManager.getAllFiles();
-    textareaValue.set(codeEditor.textarea.value);
+    textareaValue.set(codeEditor.textarea.innerText);
+    dispatch("fileInteraction");
   }
 </script>
 
