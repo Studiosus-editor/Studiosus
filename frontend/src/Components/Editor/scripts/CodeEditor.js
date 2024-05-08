@@ -18,7 +18,7 @@ export default class CodeEditor {
       this.currentFileName
     );
     this.dragCounter = 0;
-    this.textarea.value = this.charObjects.map((obj) => obj.char).join("");
+    this.textarea.innerText = this.charObjects.map((obj) => obj.char).join("");
     this.addEventListeners();
   }
 
@@ -47,8 +47,8 @@ export default class CodeEditor {
     this.editor.addEventListener("drop", this.handleDropEvent);
   }
 
-  onKeyUp(event) {
-    const newText = this.textarea.value;
+  onKeyUp() {
+    const newText = this.textarea.innerText;
     this.charObjects = this.createCharObjects(newText, this.charObjects);
     this.fileManager.saveToLocalStorage(
       this.charObjects,
@@ -79,7 +79,7 @@ export default class CodeEditor {
 
     // If the textarea is not empty, ask the user for confirmation
     if (
-      this.textarea.value.trim() !== "" &&
+      this.textarea.innerText.trim() !== "" &&
       !confirm("Textarea has content. Replace with file content?")
     ) {
       return;
@@ -130,7 +130,7 @@ export default class CodeEditor {
     const reader = new FileReader();
     reader.onload = (e) => {
       // Update the textarea value with the contents of the file
-      this.textarea.value = e.target.result;
+      this.textarea.innerText = e.target.result;
       // Create new charObjects based on the file contents
       this.charObjects = this.createCharObjects(e.target.result);
       // Save the updated charObjects to local storage
@@ -152,7 +152,7 @@ export default class CodeEditor {
     this.textarea.style.height = this.textarea.scrollHeight + "px";
 
     // Calculate the width based on the longest line
-    const lines = this.textarea.value.split("\n");
+    const lines = this.textarea.innerText.split("\n");
     let longestLine = lines[0];
 
     // Find the line with the most characters
@@ -174,7 +174,7 @@ export default class CodeEditor {
     this.charObjects = this.fileManager.loadFromLocalStorage(
       this.currentFileName
     );
-    this.textarea.value = this.charObjects.map((obj) => obj.char).join("");
+    this.textarea.innerText = this.charObjects.map((obj) => obj.char).join("");
     errorStore.set(null);
 
     this.checkYamlSyntax()
@@ -194,7 +194,7 @@ export default class CodeEditor {
 
   checkYamlSyntax() {
     let yamlChecker = new YamlChecker(
-      this.removeNoBreakSpaceChars(this.textarea.value)
+      this.removeNoBreakSpaceChars(this.textarea.innerText)
     );
     let error = yamlChecker.validateYAML();
     if (error) {

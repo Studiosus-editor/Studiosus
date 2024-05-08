@@ -14,6 +14,9 @@
   import { editorWrapperHeightStore } from "./scripts/store.js";
   import { _ } from "svelte-i18n";
   import interact from "interactjs";
+  import hljs from "highlight.js/lib/core";
+  import yaml from "highlight.js/lib/languages/yaml";
+  import "highlight.js/styles/atom-one-light.css";
 
   let fileManager = new FileManager();
   let codeEditor;
@@ -22,6 +25,8 @@
   let defaultWidth;
 
   let editorWrapperHeight;
+
+  let editorField;
 
   editorWrapperHeightStore.subscribe((value) => {
     editorWrapperHeight = value;
@@ -32,17 +37,17 @@
     projectExpandedValue = value;
   });
 
-  const handleInput = () => {
+  const handleTextareaStyle = () => {
     textarea.style.height = "auto";
     textarea.style.height = textarea.scrollHeight + "px";
   };
 
   const adjustTextareaWidth = () => {
-    const lines = textarea.value.split("\n");
+    const lines = textarea.innerText.split("\n");
     let longestLine = lines[0];
 
     // If textarea is empty, reset to original width
-    if (textarea.value === "") {
+    if (textarea.innerText === "") {
       textarea.style.width = `${defaultWidth}px`;
       return;
     }
@@ -67,7 +72,90 @@
       textarea.style.width = `${defaultWidth}px`;
     }
   };
+
+  function setCaretPosition(index) {
+    const setPoint = (node, index) => {
+      const range = document.createRange();
+      const sel = window.getSelection();
+      range.setStart(node, index);
+      range.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    };
+
+    const walker = document.createTreeWalker(
+      editorField,
+      NodeFilter.SHOW_TEXT,
+      null,
+      false
+    );
+    let current = walker.nextNode();
+    let length = 0;
+
+    while (current) {
+      if (length + current.textContent.length >= index) {
+        setPoint(current, index - length);
+        break;
+      }
+      length += current.textContent.length;
+      current = walker.nextNode();
+    }
+  }
+
+  function getCaretOffset() {
+    const selection = window.getSelection();
+
+    const range = selection.getRangeAt(0);
+    // clone to avoid modifying users selection
+    const preCaretRange = range.cloneRange();
+
+    // in case editorField is not set do nothing
+    try {
+      preCaretRange.selectNodeContents(editorField);
+    } catch (error) {
+      return;
+    }
+
+    preCaretRange.setEnd(range.endContainer, range.endOffset);
+    return preCaretRange.toString().length;
+  }
+
+  function highlightSyntaxOnUpdate() {
+    let caretOffset = getCaretOffset();
+    highlightSyntax();
+    setCaretPosition(caretOffset);
+  }
+
+  function highlightSyntax() {
+    document
+      .querySelector("code.language-yaml")
+      .removeAttribute("data-highlighted");
+    const codeElements = document.querySelectorAll("code.language-yaml");
+    codeElements.forEach((element) => {
+      let highlightedHtml = hljs.highlight(element.textContent, {
+        language: "yaml",
+      }).value;
+      element.innerHTML = highlightedHtml;
+    });
+  }
+
+  // clears empty content to apply placeholder using css
+  function clearEmptyContent() {
+    if (editorField.textContent.trim() === "") {
+      editorField.innerHTML = "";
+    }
+  }
+
+  function preserveBreaksAndHighlight() {
+    editorField.innerHTML = editorField.innerHTML.replace(/<br>/g, "\n");
+    highlightSyntax();
+  }
+
   onMount(() => {
+    hljs.registerLanguage("yaml", yaml);
+    editorField = document.getElementById("editor-field");
+    editorField.contentEditable = true; // only set on mount for security reasons
+
     codeEditor = new CodeEditor(
       "editor",
       "editor-field",
@@ -75,55 +163,72 @@
       "overlay",
       fileManager
     );
-    textareaValue.set(codeEditor.textarea.value);
+
+    textareaValue.set(codeEditor.textarea.innerText);
+    preserveBreaksAndHighlight();
+
+    // clear empty content to apply placeholder using css
+    clearEmptyContent();
+
+    // Set the default height of the editor wrapper
     const editorWrapperElement = document.querySelector("#editor-wrapper");
     editorWrapperHeightStore.set(editorWrapperElement.offsetHeight);
 
+    // Set the default width of the textarea
     defaultWidth = textarea.offsetWidth;
-    adjustTextareaWidth(); // Adjust the width on mount
+    adjustTextareaWidth();
+
+    // adjust style on mount
+    handleTextareaStyle();
+
+    // Check the syntax on mount
+    codeEditor.checkYamlSyntax(codeEditor.textarea.innerText);
+
     textarea.addEventListener("input", () => {
+      clearEmptyContent();
       adjustTextareaWidth();
-      handleInput();
-      codeEditor.checkYamlSyntax(codeEditor.textarea.value);
+      handleTextareaStyle();
+      highlightSyntaxOnUpdate();
+      textareaValue.set(textarea.innerText);
+      codeEditor.checkYamlSyntax(textarea.innerText);
+    });
+    textarea.addEventListener("focus", () => {
+      clearEmptyContent();
     });
     // Handles both tab and enter functionalities
     textarea.addEventListener("keydown", (event) => {
       if (event.key === "Tab") {
-        event.preventDefault();
-        const { selectionStart, selectionEnd } = textarea;
-        const value = textarea.value;
-        textarea.value =
-          value.substring(0, selectionStart) +
-          "  " +
-          value.substring(selectionEnd);
-        textarea.selectionStart = textarea.selectionEnd = selectionStart + 2;
+        // event.preventDefault();
+        // const { selectionStart, selectionEnd } = textarea;
+        // const value = textarea.innerText;
+        // textarea.innerText =
+        //   value.substring(0, selectionStart) +
+        //   "  " +
+        //   value.substring(selectionEnd);
+        // textarea.selectionStart = textarea.selectionEnd = selectionStart + 2;
       }
       // } else if (event.key === "Enter") {
       //   event.preventDefault();
       //   const { selectionStart, selectionEnd } = textarea;
-      //   const value = textarea.value;
+      //   const value = textarea.innerText;
       //   const lineStart = value.lastIndexOf("\n", selectionStart - 1) + 1;
       //   let spaceLength = value.substring(lineStart).search(/\S/);
       //   spaceLength = spaceLength === -1 ? 0 : spaceLength;
       //   const spaces = " ".repeat(spaceLength);
-      //   textarea.value = value.substring(0, selectionEnd + 2) + "\n" + spaces;
-      //   textareaValue.set(codeEditor.textarea.value);
+      //   textarea.innerText = value.substring(0, selectionEnd + 2) + "\n" + spaces;
+      //   textareaValue.set(codeEditor.textarea.innerText);
       else if (event.ctrlKey && event.key === "/") {
         // TODO: Add comment functionality with user fake cursor and selection,
         // also multiple lines should work
       }
     });
-
-    // Adjust the height on mount
-    handleInput();
-    codeEditor.checkYamlSyntax(codeEditor.textarea.value);
   });
   // function handleFormat() {
-  //   yamlChecker.yamlCode = textarea.value;
-  //   textarea.value = yamlChecker.formatYAML();
+  //   yamlChecker.yamlCode = textarea.innerText;
+  //   textarea.innerText = yamlChecker.formatYAML();
   // }
   function handleSaveLocal() {
-    var file = new File([textarea.value], fileManager.getCurrentFile(), {
+    var file = new File([textarea.innerText], fileManager.getCurrentFile(), {
       type: "text;charset=utf-8",
     });
 
@@ -183,26 +288,34 @@
       <NavController />
       {#if $projectExpanded}
         <div id="navigator-dashboard">
-          <FileNavigator {codeEditor} {fileManager} {textareaValue} />
+          <FileNavigator
+            {codeEditor}
+            {fileManager}
+            {textareaValue}
+            on:fileInteraction={preserveBreaksAndHighlight}
+          />
           <Dashboard />
         </div>
       {/if}
       <div class="flex-column2">
         <div id="editor-wrapper">
           <LineNumbers {textareaValue} />
+          <!-- svelte-ignore a11y-click-events-have-key-events -->
           <div class="textarea-container">
-            <textarea
+            <code
+              class="language-yaml"
               id="editor-field"
               cols="75"
               rows="30"
-              placeholder="Start typing here..."
+              placeholder={$_("editor.editorField.startTypingHere")}
               spellcheck="false"
-              bind:value={$textareaValue}
               bind:this={textarea}
-              on:input={handleInput}
+              on:input={handleTextareaStyle}
               style="overflow: hidden; height: auto;"
-            ></textarea>
-            <div id="overlay" class="hidden">Drop your file here...</div>
+            ></code>
+            <div id="overlay" class="hidden">
+              {$_("editor.editorField.dropFileHere")}
+            </div>
           </div>
         </div>
         <Problems />
@@ -212,6 +325,10 @@
 </div>
 
 <style>
+  .textarea-container {
+    width: 100%;
+    padding-top: 3px;
+  }
   .main-component {
     display: block;
     position: relative;
@@ -259,7 +376,7 @@
     background-color: var(--whisper);
     display: flex;
     overflow-y: scroll;
-    flex: 1; /* this will make it take up the remaining space */
+    flex: 1;
     width: 100%;
     margin-top: 38px;
     border: 1px solid var(--silver);
@@ -267,18 +384,30 @@
 
   #editor-field {
     flex: 0 0 auto;
-    width: 600px;
+    width: 100%;
+    height: 100%;
     line-height: 23px;
     font-size: 1rem;
-    padding-left: 5px;
     font-size: 18px;
     overflow-x: scroll;
-    white-space: pre-wrap;
+    white-space: pre;
     background: transparent;
     border: none;
     outline: none;
     resize: none;
     font-family: var(--ubuntu-mono);
+    padding-right: 30px;
+  }
+
+  #editor-field:empty:before {
+    content: attr(placeholder);
+    pointer-events: none;
+    display: block;
+    height: 95%;
+  }
+
+  #editor-field:focus:before {
+    content: none;
   }
 
   #editor-wrapper.dragover {
