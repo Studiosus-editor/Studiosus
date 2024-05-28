@@ -90,11 +90,12 @@
     display: flex;
     height: 27%;
     width: 100%;
-    background-color: var(--grey85);
+    background-color: var(--white);
     border-right: 1px solid var(--silver);
     border-left: none;
     text-align: left;
     flex-direction: column;
+    box-shadow: 0 -8px 10px 0 rgba(0, 0, 0, 0.1);
   }
   #navFrame {
     display: flex;
@@ -102,13 +103,14 @@
     position: relative;
     width: 100%;
     height: 40px;
+    background-color: transparent;
     border-bottom: 1px solid var(--silver);
   }
   #headerFrame {
     display: flex;
     align-items: center;
     height: 40px;
-    background-color: var(--grey85);
+    background-color: transparent;
   }
   .terminal-header {
     display: flex;
@@ -132,12 +134,6 @@
     margin-right: 4px;
     width: 22px;
     height: 22px;
-  }
-  .minimize-button:hover {
-    transform: scale(1.05);
-    transition: transform 0.3s ease;
-    background: var(--silver);
-    border-radius: 25%;
     cursor: pointer;
   }
   #problem-container {
@@ -146,7 +142,7 @@
     display: flex;
     flex-grow: 1;
     width: 100%;
-    background-color: var(--grey85);
+    background-color: var(--white);
     text-align: left;
   }
   .problems {
@@ -155,19 +151,19 @@
     padding-bottom: 0;
     display: flex;
     position: relative;
-    height: 97%;
+    height: 95%;
     width: 100%;
     padding-left: 10px;
     font-family: Arial, Helvetica, sans-serif;
   }
   ::-webkit-scrollbar {
-    width: 14px;
-    height: 13px;
+    width: 10px;
+    height: 10px;
   }
 
   /* Track */
   ::-webkit-scrollbar-track {
-    box-shadow: inset 0 0 3px grey;
+    box-shadow: none;
     border-radius: 10px;
   }
 

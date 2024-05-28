@@ -119,12 +119,13 @@
   },
   "editor":{
     "generalToolbar": {
+      "assistant": "Paleisti asistentą",
       "runScript": "Paleisti kodą",
-      "saveProject": "Išsaugoti projektą",
-      "format": "Formatuoti",
-      "copyToClipboard": "Kopijuoti į iškarpinę",
-      "saveAs": "Išsaugoti kaip",
-      "expand": "Išplėsti"
+      "saveProject": "Išsaugoti",
+      "format": "Formatuoti kodą",
+      "copyToClipboard": "Kopijuoti",
+      "saveAs": "Išsaugoti įrenginyje",
+      "expand": "Išplėsti ekraną"
     },
     "projectToolbar": {
       "nameProject": "Pavadinti Projektą",
@@ -136,7 +137,7 @@
       "assistant": "Asistentas"
     },
     "editorDashboard": {
-      "dashboard": "Darbastalis"
+      "dashboard": "Aktyvūs naudotojai"
     },
     "editorField": {
       "startTypingHere": "Pradėkite rašyti čia...",
@@ -148,6 +149,14 @@
       "correctYAMLsyntax": "Taisyklinga YAML sintaksė!",
       "expandTerminal": "Išplėsti termina1ą",
       "minimizeTerminal": "Sumažinti terminalą"
+    },
+    "assistant": {
+      "greeting1": "Sveiki",
+      "greeting2": "Aš esu jūsų asistentas ir esu čia, kad padėčiau jums greičiau atlikti darbus. Esu varomas dirbtinio intelekto, todėl galimos netikėtumai ir klaidos.",
+      "Chat" : "POKALBIS",
+      "Question" : "Įveskite klausimą...",
+      "Send":"Išsiųsti",
+      "Assistant": "Asistentas"
     }
   }
 }

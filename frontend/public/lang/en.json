@@ -119,12 +119,13 @@
   },
   "editor":{
     "generalToolbar": {
-      "runScript": "Run script",
-      "saveProject": "Save project",
-      "format": "Format",
-      "copyToClipboard": "Copy to clipboard",
-      "saveAs": "Save As",
-      "expand": "Expand"
+      "assistant": "Start Assistant",
+      "runScript": "Run code",
+      "saveProject": "Save",
+      "format": "Format code",
+      "copyToClipboard": "Copy",
+      "saveAs": "Save To PC",
+      "expand": "Expand editor"
     },
     "projectToolbar": {
       "nameProject": "Name Project",
@@ -136,7 +137,7 @@
       "assistant": "Assistant"
     },
     "editorDashboard": {
-      "dashboard": "Dashboard"
+      "dashboard": "Active Users"
     },
     "editorField": {
       "startTypingHere": "Start typing here...",
@@ -148,6 +149,14 @@
       "correctYAMLSyntax": "Correct YAML syntax!",
       "expandTerminal": "Expand Terminal",
       "minimizeTerminal": "Minimize Terminal"
+    },
+    "assistant": {
+      "greeting1": "Welcome",
+      "greeting2": "I'm your Assistant and I'm here to help you get things done faster.  I'm powered by AI, so surprises and mistakes are possible.",
+      "Chat" : "CHAT",
+      "Question" : "Input your question here...",
+      "Send":"Send",
+      "Assistant": "Assistant"
     }
   }
 }
