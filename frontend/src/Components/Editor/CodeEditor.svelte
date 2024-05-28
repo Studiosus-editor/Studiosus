@@ -7,11 +7,11 @@
   import LineNumbers from "./LineNumbers.svelte";
   import CodeEditor from "./scripts/CodeEditor";
   import FileManager from "./scripts/FileManager.js";
-  // import YamlChecker from "./scripts/YamlChecker.js";
   import GeneralToolbar from "./GeneralToolbar.svelte";
   import NavController from "./NavigatorController.svelte";
-  import { projectExpanded } from "./scripts/store.js";
-  import { editorWrapperHeightStore } from "./scripts/store.js";
+  import Assistant from "./Assistant/Assistant.svelte";
+  import { projectExplorer, projectAssistant } from "./scripts/store.js";
+  import { editorWrapperHeightStore, textareaStore } from "./scripts/store.js";
   import { _ } from "svelte-i18n";
   import interact from "interactjs";
   import hljs from "highlight.js/lib/core";
@@ -23,25 +23,17 @@
   let textareaValue = writable("");
   let textarea;
   let defaultWidth;
-
-  let editorWrapperHeight;
-
+  let editorElement;
+  let controllerColumn;
   let editorField;
-
-  editorWrapperHeightStore.subscribe((value) => {
-    editorWrapperHeight = value;
-  });
-
-  let projectExpandedValue;
-  projectExpanded.subscribe((value) => {
-    projectExpandedValue = value;
-  });
+  const backendUrl = __BACKEND_URL__;
 
   const handleTextareaStyle = () => {
     textarea.style.height = "auto";
     textarea.style.height = textarea.scrollHeight + "px";
   };
 
+  //Setting the width of the textarea to the longest line
   const adjustTextareaWidth = () => {
     const lines = textarea.innerText.split("\n");
     let longestLine = lines[0];
@@ -52,21 +44,16 @@
       return;
     }
 
-    // Find the line with the most characters
     for (let line of lines) {
       if (line.length > longestLine.length) {
         longestLine = line;
       }
     }
 
-    // Calculate the width of the longest line
-    const newWidth = longestLine.length * 9; // 9px per character
+    const newWidth = longestLine.length * 9;
 
-    // Set the width of the textarea to match the width of the longest line
-    // only if the new width exceeds the default width
     if (newWidth > defaultWidth) {
       textarea.style.width = `${newWidth}px`;
-      //saves the width into local storage
       localStorage.setItem("textareaWidth", textarea.scrollWidth);
     } else {
       textarea.style.width = `${defaultWidth}px`;
@@ -142,7 +129,7 @@
   // clears empty content to apply placeholder using css
   function clearEmptyContent() {
     if (editorField.textContent.trim() === "") {
-      editorField.innerHTML = "";
+      editorField.innerContent = "";
     }
   }
 
@@ -165,6 +152,7 @@
     );
 
     textareaValue.set(codeEditor.textarea.innerText);
+    textareaStore.set(codeEditor.textarea.innerText);
     preserveBreaksAndHighlight();
 
     // clear empty content to apply placeholder using css
@@ -173,6 +161,8 @@
     // Set the default height of the editor wrapper
     const editorWrapperElement = document.querySelector("#editor-wrapper");
     editorWrapperHeightStore.set(editorWrapperElement.offsetHeight);
+    editorElement = document.querySelector(".main-component");
+    controllerColumn = document.querySelector("#controller-column");
 
     // Set the default width of the textarea
     defaultWidth = textarea.offsetWidth;
@@ -232,17 +222,63 @@
       type: "text;charset=utf-8",
     });
 
-    // Create a link to download the file
     const anchor = document.createElement("a");
     anchor.setAttribute("href", window.URL.createObjectURL(file));
     anchor.setAttribute("download", fileManager.getCurrentFile());
     anchor.click();
     URL.revokeObjectURL(anchor.href);
   }
+  function handleExpand() {
+    if (!document.fullscreenElement) {
+      editorElement.requestFullscreen();
+    } else {
+      document.exitFullscreen();
+    }
+  }
+  //AI control
+  async function handleAssistant() {
+    await fetch(backendUrl + "/ai/fix", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      credentials: "include",
+      body: `{"data": "${$textareaValue}"}`,
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.text();
+      })
+      .then((data) => {
+        console.log(data);
+        textareaValue.set(data);
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
+  }
+  //Draggable containers for the sidebar
+  function setWidths(target, newWidth) {
+    const flexColumn = document.querySelector(".flex-column2");
+    const totalWidth = target.parentNode.offsetWidth;
 
-  //interact js for resizing the navigator-dashboard
-  interact("#navigator-dashboard")
+    target.style.width = `${newWidth}px`;
+    flexColumn.style.width = `${totalWidth - newWidth}px`;
+  }
+
+  function setPointerEvents(value) {
+    const editorWrapper = document.querySelector("#editor-wrapper");
+    if (editorWrapper) {
+      editorWrapper.style.pointerEvents = value;
+    }
+  }
+
+  interact("#controller-column")
     .resizable({
+      margin: 20,
       edges: { top: false, left: false, bottom: false, right: true },
       modifiers: [
         interact.modifiers.restrictSize({
@@ -251,52 +287,52 @@
         }),
       ],
     })
-    .on("resizemove", function (event) {
-      var target = event.target;
-      var flexColumn = document.querySelector(".flex-column2");
-
-      var newWidth = event.rect.width;
-      var totalWidth = target.parentNode.offsetWidth;
-
-      target.style.width = newWidth + "px";
-      flexColumn.style.width = totalWidth - newWidth + "px";
+    .on("resizemove", (event) => {
+      setWidths(event.target, event.rect.width);
     })
-    .on("resizestart", function (event) {
-      var target = event.target;
-      target.style.borderRight = "2px solid blue";
-
-      var editorWrapper = document.querySelector("#editor-wrapper");
-      if (editorWrapper) {
-        editorWrapper.style.pointerEvents = "none";
-      }
+    .on("resizestart", (event) => {
+      event.target.style.borderRight = "2px solid blue";
+      setPointerEvents("none");
     })
-    .on("resizeend", function (event) {
-      var target = event.target;
-      target.style.borderRight = "";
-
-      var editorWrapper = document.querySelector("#editor-wrapper");
-      if (editorWrapper) {
-        editorWrapper.style.pointerEvents = "auto";
-      }
+    .on("resizeend", (event) => {
+      event.target.style.borderRight = "";
+      setPointerEvents("auto");
     });
+
+  //Sidebar toggle control
+  $: {
+    if (controllerColumn) {
+      controllerColumn.style.display =
+        $projectExplorer || $projectAssistant ? "flex" : "none";
+    }
+  }
 </script>
 
 <div class="main-component">
   <div id="editor">
-    <GeneralToolbar on:saveLocal={handleSaveLocal} />
+    <GeneralToolbar
+      on:saveLocal={handleSaveLocal}
+      on:expand={handleExpand}
+      on:assistant={handleAssistant}
+    />
     <div class="flex-row">
       <NavController />
-      {#if $projectExpanded}
-        <div id="navigator-dashboard">
-          <FileNavigator
-            {codeEditor}
-            {fileManager}
-            {textareaValue}
-            on:fileInteraction={preserveBreaksAndHighlight}
-          />
-          <Dashboard />
-        </div>
-      {/if}
+      <div id="controller-column">
+        {#if $projectExplorer}
+          <div id="navigator-dashboard">
+            <FileNavigator
+              {codeEditor}
+              {fileManager}
+              {textareaValue}
+              on:fileInteraction={preserveBreaksAndHighlight}
+            />
+            <Dashboard />
+          </div>
+        {/if}
+        {#if $projectAssistant}
+          <Assistant />
+        {/if}
+      </div>
       <div class="flex-column2">
         <div id="editor-wrapper">
           <LineNumbers {textareaValue} />
@@ -331,12 +367,12 @@
   }
   .main-component {
     display: block;
+    top: 0;
     position: relative;
     width: 100%;
-    height: 799px;
+    height: 92vh;
     overflow: hidden;
     background-color: var(--white);
-    border: 1px solid var(--silver);
   }
   #editor {
     display: block;
@@ -345,8 +381,17 @@
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background-color: var(--white);
-    border: 1px solid var(--silver);
+    background-color: transparent;
+  }
+  #controller-column {
+    display: flex;
+    flex-direction: column;
+    min-width: 175px;
+    max-width: 600px;
+
+    height: 100%;
+    width: 15%;
+    border-right: 1px solid var(--silver);
   }
   .flex-row {
     display: flex;
@@ -357,11 +402,8 @@
   #navigator-dashboard {
     display: flex;
     flex-direction: column;
-    min-width: 140px;
-    max-width: 600px;
-    width: 24%;
+    width: 100%;
     height: 100%;
-    border-right: 1px solid var(--silver);
   }
   .flex-column2 {
     display: flex;
@@ -373,13 +415,13 @@
     height: 100%;
   }
   #editor-wrapper {
-    background-color: var(--whisper);
+    background-color: var(--ghost-white);
     display: flex;
     overflow-y: scroll;
     flex: 1;
     width: 100%;
     margin-top: 38px;
-    border: 1px solid var(--silver);
+    border-top: 1px solid var(--silver);
   }
 
   #editor-field {
@@ -438,18 +480,18 @@
     display: none;
   }
   ::-webkit-scrollbar {
-    width: 14px;
-    height: 13px;
+    width: 10px;
+    height: 10px;
   }
   /* Track */
   ::-webkit-scrollbar-track {
-    box-shadow: inset 0 0 3px grey;
+    box-shadow: none;
     border-radius: 10px;
   }
 
   /* Handle */
   ::-webkit-scrollbar-thumb {
-    background: var(--grey85);
+    background: var(--grey56);
     border: 1px solid var(--grey56);
     border-radius: 10px;
   }
@@ -460,10 +502,5 @@
   }
   ::-webkit-scrollbar-corner {
     background: transparent;
-  }
-  @media (min-width: 1220px) {
-    .main-component {
-      width: 1200px;
-    }
   }
 </style>

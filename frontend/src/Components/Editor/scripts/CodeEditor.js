@@ -184,6 +184,7 @@ export default class CodeEditor {
 
     //Update the width of text area
     this.updateDimensions();
+  
     // Save highlighted file in local storage
     this.fileManager.saveCurrentFile(file);
   }

@@ -13,7 +13,7 @@
     display: flex;
     height: 27%;
     width: 100%;
-    background-color: var(--grey85);
+    background-color: var(--white);
     border-left: none;
     text-align: left;
   }

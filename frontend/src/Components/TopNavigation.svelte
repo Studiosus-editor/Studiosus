@@ -19,7 +19,7 @@
   // checks if user is logged to differently render the navigation by
   // checking if a specific cookie exists, on logout the backend takes
   // care of clearing the cookie
-  function isUserLoggedIn() {
+  export function isUserLoggedIn() {
     isLoggedIn = document.cookie.includes("JSESSIONID=");
   }
 
@@ -217,7 +217,7 @@
 
 <style lang="scss">
   header {
-    height: 86px;
+    height: 50px;
     a {
       text-decoration: none;
       color: var(--white);
@@ -229,6 +229,14 @@
     color: var(--white);
     display: flex;
     width: 100%;
+    height: 70px;
+
+    &__route-wrapper a {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
     &__logo-container {
       display: flex;
@@ -244,6 +252,7 @@
       }
 
       h3 {
+        margin: 0;
         font-weight: 400;
         font-family: "Kanit", sans-serif;
       }
@@ -280,13 +289,21 @@
 
       &:hover {
         background-color: var(--maastricht-blue);
-        cursor: pointer;
+        box-shadow:
+          rgba(0, 0, 0, 0.05) 0 5px 30px,
+          rgba(0, 0, 0, 0.05) 0 1px 4px;
+        opacity: 1;
+        transform: translateY(0);
+        transition-duration: 0.35s;
       }
       &.active {
         background-color: var(--maastricht-blue);
       }
       a {
-        padding: 5px 15px;
+        h3 {
+          margin: 0;
+        }
+        padding: 21px 15px;
       }
     }
 
@@ -299,10 +316,15 @@
     border-radius: 10px;
     display: none;
     margin: 15px 15px 12px 15px;
-    padding: 10px;
 
     &:hover {
       background-color: var(--maastricht-blue);
+      box-shadow:
+        rgba(0, 0, 0, 0.05) 0 5px 30px,
+        rgba(0, 0, 0, 0.05) 0 1px 4px;
+      opacity: 1;
+      transform: translateY(0);
+      transition-duration: 0.35s;
     }
 
     &__burger-icon {
@@ -335,6 +357,12 @@
 
       &:hover {
         background-color: var(--hippie-blue);
+        box-shadow:
+          rgba(0, 0, 0, 0.05) 0 5px 30px,
+          rgba(0, 0, 0, 0.05) 0 1px 4px;
+        opacity: 1;
+        transform: translateY(0);
+        transition-duration: 0.35s;
       }
     }
   }
@@ -344,12 +372,22 @@
     &--btn {
       display: flex;
       align-items: center;
-      padding: 5px 15px;
+      padding: 18px 15px 17px 15px;
       width: 80px;
       text-transform: uppercase;
 
+      h3 {
+        margin: 0;
+      }
+
       &:hover {
         background-color: var(--maastricht-blue);
+        box-shadow:
+          rgba(0, 0, 0, 0.05) 0 5px 30px,
+          rgba(0, 0, 0, 0.05) 0 1px 4px;
+        opacity: 1;
+        transform: translateY(0);
+        transition-duration: 0.35s;
       }
 
       &.active {
@@ -384,6 +422,12 @@
 
       :hover {
         background-color: var(--hippie-blue);
+        box-shadow:
+          rgba(0, 0, 0, 0.05) 0 5px 30px,
+          rgba(0, 0, 0, 0.05) 0 1px 4px;
+        opacity: 1;
+        transform: translateY(0);
+        transition-duration: 0.35s;
         cursor: pointer;
       }
 
@@ -398,7 +442,6 @@
   @media (max-width: 920px) {
     .top-nav {
       justify-content: space-between;
-      flex-wrap: wrap;
       position: fixed;
       z-index: 5;
 

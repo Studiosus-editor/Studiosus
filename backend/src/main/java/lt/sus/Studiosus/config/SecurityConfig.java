@@ -78,7 +78,8 @@ public class SecurityConfig {
     if (isOAuthEnabled()) {
       return http.csrf(
               csrf ->
-                  csrf.ignoringRequestMatchers("/h2-console/**", "/login", "/register", "/api/**"))
+                  csrf.ignoringRequestMatchers(
+                      "/h2-console/**", "/login", "/register", "/api/**", "/ai/**"))
           .authorizeHttpRequests(
               auth -> {
                 auth.requestMatchers("/profile", "/api/createProject").authenticated();
@@ -116,7 +117,8 @@ public class SecurityConfig {
     } else {
       return http.csrf(
               csrf ->
-                  csrf.ignoringRequestMatchers("/h2-console/**", "/login", "/register", "/api/**"))
+                  csrf.ignoringRequestMatchers(
+                      "/h2-console/**", "/login", "/register", "/api/**", "/ai/**"))
           .authorizeHttpRequests(
               auth -> {
                 auth.requestMatchers("/profile", "/api/createProject").authenticated();

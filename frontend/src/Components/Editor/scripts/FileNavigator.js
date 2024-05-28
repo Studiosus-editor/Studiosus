@@ -64,7 +64,4 @@ deleteFile(file) {
   get currentFileName() {
     return this.currentPageName;
   }
-  get currentFileName() {
-    return this.currentPageName;
-  }
 }

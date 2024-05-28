@@ -197,6 +197,9 @@ function destroy_each(iterations, detaching) {
 function element(name) {
     return document.createElement(name);
 }
+function svg_element(name) {
+    return document.createElementNS('http://www.w3.org/2000/svg', name);
+}
 function text(data) {
     return document.createTextNode(data);
 }
@@ -244,6 +247,45 @@ function custom_event(type, detail, { bubbles = false, cancelable = false } = {}
     const e = document.createEvent('CustomEvent');
     e.initCustomEvent(type, bubbles, cancelable, detail);
     return e;
+}
+class HtmlTag {
+    constructor(is_svg = false) {
+        this.is_svg = false;
+        this.is_svg = is_svg;
+        this.e = this.n = null;
+    }
+    c(html) {
+        this.h(html);
+    }
+    m(html, target, anchor = null) {
+        if (!this.e) {
+            if (this.is_svg)
+                this.e = svg_element(target.nodeName);
+            /** #7364  target for <template> may be provided as #document-fragment(11) */
+            else
+                this.e = element((target.nodeType === 11 ? 'TEMPLATE' : target.nodeName));
+            this.t = target.tagName !== 'TEMPLATE' ? target : target.content;
+            this.c(html);
+        }
+        this.i(anchor);
+    }
+    h(html) {
+        this.e.innerHTML = html;
+        this.n = Array.from(this.e.nodeName === 'TEMPLATE' ? this.e.content.childNodes : this.e.childNodes);
+    }
+    i(anchor) {
+        for (let i = 0; i < this.n.length; i += 1) {
+            insert(this.t, this.n[i], anchor);
+        }
+    }
+    p(html) {
+        this.d();
+        this.h(html);
+        this.i(this.a);
+    }
+    d() {
+        this.n.forEach(detach);
+    }
 }
 
 // we need to store the information for multiple documents because a Svelte application could also contain iframes
@@ -331,6 +373,14 @@ function get_current_component() {
  */
 function onMount(fn) {
     get_current_component().$$.on_mount.push(fn);
+}
+/**
+ * Schedules a callback to run immediately after the component has been updated.
+ *
+ * The first time the callback runs will be after the initial `onMount`
+ */
+function afterUpdate(fn) {
+    get_current_component().$$.after_update.push(fn);
 }
 /**
  * Schedules a callback to run immediately before the component is unmounted.
@@ -3590,7 +3640,7 @@ try {
 catch (_) {
     REGEX_SUPPORTS_U_AND_Y = false;
 }
-var startsWith = hasNativeStartsWith
+var startsWith$1 = hasNativeStartsWith
     ? // Native
         function startsWith(s, search, position) {
             return s.startsWith(search, position);
@@ -4070,7 +4120,7 @@ var Parser = /** @class */ (function () {
                 }
                 var location_1 = createLocation(openingBracePosition, this.clonePosition());
                 // Extract style or skeleton
-                if (styleAndLocation && startsWith(styleAndLocation === null || styleAndLocation === void 0 ? void 0 : styleAndLocation.style, '::', 0)) {
+                if (styleAndLocation && startsWith$1(styleAndLocation === null || styleAndLocation === void 0 ? void 0 : styleAndLocation.style, '::', 0)) {
                     // Skeleton starts with `::`.
                     var skeleton = trimStart(styleAndLocation.style.slice(2));
                     if (argType === 'number') {
@@ -4452,7 +4502,7 @@ var Parser = /** @class */ (function () {
      * and return false.
      */
     Parser.prototype.bumpIf = function (prefix) {
-        if (startsWith(this.message, prefix, this.offset())) {
+        if (startsWith$1(this.message, prefix, this.offset())) {
             for (var i = 0; i < prefix.length; i++) {
                 this.bump();
             }
@@ -4842,7 +4892,7 @@ function pruneLocation(els) {
         }
     });
 }
-function parse(message, opts) {
+function parse$1(message, opts) {
     if (opts === void 0) { opts = {}; }
     opts = __assign({ shouldParseSkeletons: true, requiresOtherClause: true }, opts);
     var result = new Parser(message, opts).parse();
@@ -5327,7 +5377,7 @@ var IntlMessageFormat = /** @class */ (function () {
         }
         return new Intl.Locale(typeof locales === 'string' ? locales : locales[0]);
     };
-    IntlMessageFormat.__parse = parse;
+    IntlMessageFormat.__parse = parse$1;
     // Default format options used as the prototype of the `formats` provided to the
     // constructor. These are used when constructing the internal Intl.NumberFormat
     // and Intl.DateTimeFormat instances.
@@ -5622,9 +5672,9 @@ const defaultOptions = {
   handleMissingMessage: void 0,
   ignoreTag: true
 };
-const options = defaultOptions;
+const options$1 = defaultOptions;
 function getOptions() {
-  return options;
+  return options$1;
 }
 function init(opts) {
   const _a = opts, { formats } = _a, rest = __objRest$1(_a, ["formats"]);
@@ -5650,16 +5700,16 @@ function init(opts) {
       );
     }
   }
-  Object.assign(options, rest, { initialLocale });
+  Object.assign(options$1, rest, { initialLocale });
   if (formats) {
     if ("number" in formats) {
-      Object.assign(options.formats.number, formats.number);
+      Object.assign(options$1.formats.number, formats.number);
     }
     if ("date" in formats) {
-      Object.assign(options.formats.date, formats.date);
+      Object.assign(options$1.formats.date, formats.date);
     }
     if ("time" in formats) {
-      Object.assign(options.formats.time, formats.time);
+      Object.assign(options$1.formats.time, formats.time);
     }
   }
   return $locale.set(initialLocale);
@@ -6103,12 +6153,12 @@ const get_default_slot_changes$1 = dirty => ({ params: dirty & /*routeParams*/ 4
 const get_default_slot_context$1 = ctx => ({ params: /*routeParams*/ ctx[2] });
 
 // (42:0) {#if $activeRoute && $activeRoute.route === route}
-function create_if_block$i(ctx) {
+function create_if_block$l(ctx) {
 	let current_block_type_index;
 	let if_block;
 	let if_block_anchor;
 	let current;
-	const if_block_creators = [create_if_block_1$7, create_else_block$6];
+	const if_block_creators = [create_if_block_1$9, create_else_block$8];
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
@@ -6173,7 +6223,7 @@ function create_if_block$i(ctx) {
 
 	dispatch_dev("SvelteRegisterBlock", {
 		block,
-		id: create_if_block$i.name,
+		id: create_if_block$l.name,
 		type: "if",
 		source: "(42:0) {#if $activeRoute && $activeRoute.route === route}",
 		ctx
@@ -6183,7 +6233,7 @@ function create_if_block$i(ctx) {
 }
 
 // (51:4) {:else}
-function create_else_block$6(ctx) {
+function create_else_block$8(ctx) {
 	let current;
 	const default_slot_template = /*#slots*/ ctx[8].default;
 	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[7], get_default_slot_context$1);
@@ -6231,7 +6281,7 @@ function create_else_block$6(ctx) {
 
 	dispatch_dev("SvelteRegisterBlock", {
 		block,
-		id: create_else_block$6.name,
+		id: create_else_block$8.name,
 		type: "else",
 		source: "(51:4) {:else}",
 		ctx
@@ -6241,7 +6291,7 @@ function create_else_block$6(ctx) {
 }
 
 // (43:4) {#if component}
-function create_if_block_1$7(ctx) {
+function create_if_block_1$9(ctx) {
 	let await_block_anchor;
 	let promise;
 	let current;
@@ -6303,7 +6353,7 @@ function create_if_block_1$7(ctx) {
 
 	dispatch_dev("SvelteRegisterBlock", {
 		block,
-		id: create_if_block_1$7.name,
+		id: create_if_block_1$9.name,
 		type: "if",
 		source: "(43:4) {#if component}",
 		ctx
@@ -6449,10 +6499,10 @@ function create_pending_block(ctx) {
 	return block;
 }
 
-function create_fragment$v(ctx) {
+function create_fragment$x(ctx) {
 	let if_block_anchor;
 	let current;
-	let if_block = /*$activeRoute*/ ctx[1] && /*$activeRoute*/ ctx[1].route === /*route*/ ctx[5] && create_if_block$i(ctx);
+	let if_block = /*$activeRoute*/ ctx[1] && /*$activeRoute*/ ctx[1].route === /*route*/ ctx[5] && create_if_block$l(ctx);
 
 	const block = {
 		c: function create() {
@@ -6476,7 +6526,7 @@ function create_fragment$v(ctx) {
 						transition_in(if_block, 1);
 					}
 				} else {
-					if_block = create_if_block$i(ctx);
+					if_block = create_if_block$l(ctx);
 					if_block.c();
 					transition_in(if_block, 1);
 					if_block.m(if_block_anchor.parentNode, if_block_anchor);
@@ -6508,7 +6558,7 @@ function create_fragment$v(ctx) {
 
 	dispatch_dev("SvelteRegisterBlock", {
 		block,
-		id: create_fragment$v.name,
+		id: create_fragment$x.name,
 		type: "component",
 		source: "",
 		ctx
@@ -6517,7 +6567,7 @@ function create_fragment$v(ctx) {
 	return block;
 }
 
-function instance$v($$self, $$props, $$invalidate) {
+function instance$x($$self, $$props, $$invalidate) {
 	let $activeRoute;
 	let { $$slots: slots = {}, $$scope } = $$props;
 	validate_slots('Route', slots, ['default']);
@@ -6609,13 +6659,13 @@ function instance$v($$self, $$props, $$invalidate) {
 class Route extends SvelteComponentDev {
 	constructor(options) {
 		super(options);
-		init$1(this, options, instance$v, create_fragment$v, safe_not_equal, { path: 6, component: 0 });
+		init$1(this, options, instance$x, create_fragment$x, safe_not_equal, { path: 6, component: 0 });
 
 		dispatch_dev("SvelteRegisterComponent", {
 			component: this,
 			tagName: "Route",
 			options,
-			id: create_fragment$v.name
+			id: create_fragment$x.name
 		});
 	}
 
@@ -6736,7 +6786,7 @@ const globalHistory = createHistory(
 /* node_modules\svelte-routing\src\Router.svelte generated by Svelte v3.59.2 */
 
 const { Object: Object_1$1 } = globals;
-const file$t = "node_modules\\svelte-routing\\src\\Router.svelte";
+const file$v = "node_modules\\svelte-routing\\src\\Router.svelte";
 
 const get_default_slot_changes_1 = dirty => ({
 	route: dirty & /*$activeRoute*/ 4,
@@ -6759,7 +6809,7 @@ const get_default_slot_context = ctx => ({
 });
 
 // (143:0) {:else}
-function create_else_block$5(ctx) {
+function create_else_block$7(ctx) {
 	let current;
 	const default_slot_template = /*#slots*/ ctx[15].default;
 	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[14], get_default_slot_context_1);
@@ -6807,7 +6857,7 @@ function create_else_block$5(ctx) {
 
 	dispatch_dev("SvelteRegisterBlock", {
 		block,
-		id: create_else_block$5.name,
+		id: create_else_block$7.name,
 		type: "else",
 		source: "(143:0) {:else}",
 		ctx
@@ -6817,7 +6867,7 @@ function create_else_block$5(ctx) {
 }
 
 // (134:0) {#if viewtransition}
-function create_if_block$h(ctx) {
+function create_if_block$k(ctx) {
 	let previous_key = /*$location*/ ctx[1].pathname;
 	let key_block_anchor;
 	let current;
@@ -6863,7 +6913,7 @@ function create_if_block$h(ctx) {
 
 	dispatch_dev("SvelteRegisterBlock", {
 		block,
-		id: create_if_block$h.name,
+		id: create_if_block$k.name,
 		type: "if",
 		source: "(134:0) {#if viewtransition}",
 		ctx
@@ -6885,7 +6935,7 @@ function create_key_block(ctx) {
 		c: function create() {
 			div = element("div");
 			if (default_slot) default_slot.c();
-			add_location(div, file$t, 135, 8, 4659);
+			add_location(div, file$v, 135, 8, 4659);
 		},
 		m: function mount(target, anchor) {
 			insert_dev(target, div, anchor);
@@ -6949,12 +6999,12 @@ function create_key_block(ctx) {
 	return block;
 }
 
-function create_fragment$u(ctx) {
+function create_fragment$w(ctx) {
 	let current_block_type_index;
 	let if_block;
 	let if_block_anchor;
 	let current;
-	const if_block_creators = [create_if_block$h, create_else_block$5];
+	const if_block_creators = [create_if_block$k, create_else_block$7];
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
@@ -7022,7 +7072,7 @@ function create_fragment$u(ctx) {
 
 	dispatch_dev("SvelteRegisterBlock", {
 		block,
-		id: create_fragment$u.name,
+		id: create_fragment$w.name,
 		type: "component",
 		source: "",
 		ctx
@@ -7031,7 +7081,7 @@ function create_fragment$u(ctx) {
 	return block;
 }
 
-function instance$u($$self, $$props, $$invalidate) {
+function instance$w($$self, $$props, $$invalidate) {
 	let $location;
 	let $routes;
 	let $base;
@@ -7257,7 +7307,7 @@ class Router extends SvelteComponentDev {
 	constructor(options) {
 		super(options);
 
-		init$1(this, options, instance$u, create_fragment$u, safe_not_equal, {
+		init$1(this, options, instance$w, create_fragment$w, safe_not_equal, {
 			basepath: 8,
 			url: 9,
 			viewtransition: 0,
@@ -7268,7 +7318,7 @@ class Router extends SvelteComponentDev {
 			component: this,
 			tagName: "Router",
 			options,
-			id: create_fragment$u.name
+			id: create_fragment$w.name
 		});
 	}
 
@@ -7319,17 +7369,20 @@ var interact_minExports = interact_min.exports;
 var interact = /*@__PURE__*/getDefaultExportFromCjs(interact_minExports);
 
 const errorStore = writable("");
+const textareaStore = writable("");
 const editorWrapperHeightStore = writable(0);
-const projectExpanded = writable(true);
+const projectExplorer = writable(true);
+const projectAssistant = writable(false);
+const nameStore = writable("");
 
-var img$t = "data:image/svg+xml,%3c%3fxml version='1.0' %3f%3e%3csvg class='feather feather-minimize-2' fill='none' height='24' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'%3e%3cpolyline points='4 14 10 14 10 20'/%3e%3cpolyline points='20 10 14 10 14 4'/%3e%3cline x1='14' x2='21' y1='10' y2='3'/%3e%3cline x1='3' x2='10' y1='21' y2='14'/%3e%3c/svg%3e";
+var img$z = "data:image/svg+xml,%3c%3fxml version='1.0' %3f%3e%3csvg class='feather feather-minimize-2' fill='none' height='24' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'%3e%3cpolyline points='4 14 10 14 10 20'/%3e%3cpolyline points='20 10 14 10 14 4'/%3e%3cline x1='14' x2='21' y1='10' y2='3'/%3e%3cline x1='3' x2='10' y1='21' y2='14'/%3e%3c/svg%3e";
 
-var img$s = "data:image/svg+xml,%3c%3fxml version='1.0' %3f%3e%3csvg class='feather feather-maximize-2' fill='none' height='24' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'%3e%3cpolyline points='15 3 21 3 21 9'/%3e%3cpolyline points='9 21 3 21 3 15'/%3e%3cline x1='21' x2='14' y1='3' y2='10'/%3e%3cline x1='3' x2='10' y1='21' y2='14'/%3e%3c/svg%3e";
+var img$y = "data:image/svg+xml,%3c%3fxml version='1.0' %3f%3e%3csvg class='feather feather-maximize-2' fill='none' height='24' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'%3e%3cpolyline points='15 3 21 3 21 9'/%3e%3cpolyline points='9 21 3 21 3 15'/%3e%3cline x1='21' x2='14' y1='3' y2='10'/%3e%3cline x1='3' x2='10' y1='21' y2='14'/%3e%3c/svg%3e";
 
 /* src\Components\Editor\Problems.svelte generated by Svelte v3.59.2 */
-const file$s = "src\\Components\\Editor\\Problems.svelte";
+const file$u = "src\\Components\\Editor\\Problems.svelte";
 
-function create_fragment$t(ctx) {
+function create_fragment$v(ctx) {
 	let div4;
 	let div2;
 	let div0;
@@ -7367,34 +7420,34 @@ function create_fragment$t(ctx) {
 			t2 = space();
 			div3 = element("div");
 			p = element("p");
-			attr_dev(h4, "class", "terminal-header svelte-1k1pf9o");
-			add_location(h4, file$s, 67, 6, 2157);
+			attr_dev(h4, "class", "terminal-header svelte-pazetl");
+			add_location(h4, file$u, 67, 6, 2224);
 			attr_dev(div0, "id", "headerFrame");
-			attr_dev(div0, "class", "svelte-1k1pf9o");
-			add_location(div0, file$s, 66, 4, 2128);
+			attr_dev(div0, "class", "svelte-pazetl");
+			add_location(div0, file$u, 66, 4, 2194);
 			if (!src_url_equal(img.src, img_src_value = /*icon*/ ctx[0])) attr_dev(img, "src", img_src_value);
 			attr_dev(img, "alt", "Minimize Terminal");
 			attr_dev(img, "width", "20px");
 			attr_dev(img, "height", "20px");
-			attr_dev(img, "class", "svelte-1k1pf9o");
-			add_location(img, file$s, 76, 8, 2453);
+			attr_dev(img, "class", "svelte-pazetl");
+			add_location(img, file$u, 76, 8, 2529);
 			attr_dev(button, "title", button_title_value = /*$_*/ ctx[1]("editor.terminal.minimizeTerminal"));
 			attr_dev(button, "id", "minimize-problem");
-			attr_dev(button, "class", "minimize-button svelte-1k1pf9o");
-			add_location(button, file$s, 70, 6, 2276);
-			attr_dev(div1, "class", "minimize-terminal svelte-1k1pf9o");
-			add_location(div1, file$s, 69, 4, 2238);
+			attr_dev(button, "class", "minimize-button svelte-pazetl");
+			add_location(button, file$u, 70, 6, 2346);
+			attr_dev(div1, "class", "minimize-terminal svelte-pazetl");
+			add_location(div1, file$u, 69, 4, 2307);
 			attr_dev(div2, "id", "navFrame");
-			attr_dev(div2, "class", "svelte-1k1pf9o");
-			add_location(div2, file$s, 65, 2, 2104);
-			attr_dev(p, "class", "problems svelte-1k1pf9o");
-			add_location(p, file$s, 81, 4, 2594);
+			attr_dev(div2, "class", "svelte-pazetl");
+			add_location(div2, file$u, 65, 2, 2169);
+			attr_dev(p, "class", "problems svelte-pazetl");
+			add_location(p, file$u, 81, 4, 2675);
 			attr_dev(div3, "id", "problem-container");
-			attr_dev(div3, "class", "svelte-1k1pf9o");
-			add_location(div3, file$s, 80, 2, 2561);
+			attr_dev(div3, "class", "svelte-pazetl");
+			add_location(div3, file$u, 80, 2, 2641);
 			attr_dev(div4, "id", "terminal-frame");
-			attr_dev(div4, "class", "svelte-1k1pf9o");
-			add_location(div4, file$s, 64, 0, 2076);
+			attr_dev(div4, "class", "svelte-pazetl");
+			add_location(div4, file$u, 64, 0, 2140);
 		},
 		l: function claim(nodes) {
 			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -7444,7 +7497,7 @@ function create_fragment$t(ctx) {
 
 	dispatch_dev("SvelteRegisterBlock", {
 		block,
-		id: create_fragment$t.name,
+		id: create_fragment$v.name,
 		type: "component",
 		source: "",
 		ctx
@@ -7453,7 +7506,7 @@ function create_fragment$t(ctx) {
 	return block;
 }
 
-function instance$t($$self, $$props, $$invalidate) {
+function instance$v($$self, $$props, $$invalidate) {
 	let icon;
 	let $_;
 	let $errorStore;
@@ -7530,8 +7583,8 @@ function instance$t($$self, $$props, $$invalidate) {
 	$$self.$capture_state = () => ({
 		interact,
 		errorStore,
-		MinimizeIcon: img$t,
-		ExpandIcon: img$s,
+		MinimizeIcon: img$z,
+		ExpandIcon: img$y,
 		_: $format,
 		writable,
 		isMinimized,
@@ -7554,7 +7607,7 @@ function instance$t($$self, $$props, $$invalidate) {
 
 	$$self.$$.update = () => {
 		if ($$self.$$.dirty & /*isMinimized*/ 16) {
-			$$invalidate(0, icon = isMinimized ? img$s : img$t);
+			$$invalidate(0, icon = isMinimized ? img$y : img$z);
 		}
 	};
 
@@ -7564,21 +7617,21 @@ function instance$t($$self, $$props, $$invalidate) {
 class Problems extends SvelteComponentDev {
 	constructor(options) {
 		super(options);
-		init$1(this, options, instance$t, create_fragment$t, safe_not_equal, {});
+		init$1(this, options, instance$v, create_fragment$v, safe_not_equal, {});
 
 		dispatch_dev("SvelteRegisterComponent", {
 			component: this,
 			tagName: "Problems",
 			options,
-			id: create_fragment$t.name
+			id: create_fragment$v.name
 		});
 	}
 }
 
 /* src\Components\Editor\Dashboard.svelte generated by Svelte v3.59.2 */
-const file$r = "src\\Components\\Editor\\Dashboard.svelte";
+const file$t = "src\\Components\\Editor\\Dashboard.svelte";
 
-function create_fragment$s(ctx) {
+function create_fragment$u(ctx) {
 	let div;
 	let h4;
 	let t_value = /*$_*/ ctx[0]("editor.editorDashboard.dashboard") + "";
@@ -7589,11 +7642,11 @@ function create_fragment$s(ctx) {
 			div = element("div");
 			h4 = element("h4");
 			t = text(t_value);
-			attr_dev(h4, "class", "dashboard-header svelte-6bmxgw");
-			add_location(h4, file$r, 5, 2, 88);
+			attr_dev(h4, "class", "dashboard-header svelte-9zmrml");
+			add_location(h4, file$t, 5, 2, 93);
 			attr_dev(div, "id", "dashboard-container");
-			attr_dev(div, "class", "svelte-6bmxgw");
-			add_location(div, file$r, 4, 0, 55);
+			attr_dev(div, "class", "svelte-9zmrml");
+			add_location(div, file$t, 4, 0, 59);
 		},
 		l: function claim(nodes) {
 			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -7615,7 +7668,7 @@ function create_fragment$s(ctx) {
 
 	dispatch_dev("SvelteRegisterBlock", {
 		block,
-		id: create_fragment$s.name,
+		id: create_fragment$u.name,
 		type: "component",
 		source: "",
 		ctx
@@ -7624,7 +7677,7 @@ function create_fragment$s(ctx) {
 	return block;
 }
 
-function instance$s($$self, $$props, $$invalidate) {
+function instance$u($$self, $$props, $$invalidate) {
 	let $_;
 	validate_store($format, '_');
 	component_subscribe($$self, $format, $$value => $$invalidate(0, $_ = $$value));
@@ -7643,13 +7696,13 @@ function instance$s($$self, $$props, $$invalidate) {
 class Dashboard extends SvelteComponentDev {
 	constructor(options) {
 		super(options);
-		init$1(this, options, instance$s, create_fragment$s, safe_not_equal, {});
+		init$1(this, options, instance$u, create_fragment$u, safe_not_equal, {});
 
 		dispatch_dev("SvelteRegisterComponent", {
 			component: this,
 			tagName: "Dashboard",
 			options,
-			id: create_fragment$s.name
+			id: create_fragment$u.name
 		});
 	}
 }
@@ -7718,28 +7771,25 @@ deleteFile(file) {
   get currentFileName() {
     return this.currentPageName;
   }
-  get currentFileName() {
-    return this.currentPageName;
-  }
 }
 
-var img$r = "data:image/svg+xml,%3c%3fxml version='1.0' %3f%3e%3csvg data-name='Layer 1' id='Layer_1' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3e%3ctitle/%3e%3cpath d='M27.2%2c8.22H23.78V5.42A3.42%2c3.42%2c0%2c0%2c0%2c20.36%2c2H5.42A3.42%2c3.42%2c0%2c0%2c0%2c2%2c5.42V20.36a3.42%2c3.42%2c0%2c0%2c0%2c3.42%2c3.42h2.8V27.2A2.81%2c2.81%2c0%2c0%2c0%2c11%2c30H27.2A2.81%2c2.81%2c0%2c0%2c0%2c30%2c27.2V11A2.81%2c2.81%2c0%2c0%2c0%2c27.2%2c8.22ZM5.42%2c21.91a1.55%2c1.55%2c0%2c0%2c1-1.55-1.55V5.42A1.54%2c1.54%2c0%2c0%2c1%2c5.42%2c3.87H20.36a1.55%2c1.55%2c0%2c0%2c1%2c1.55%2c1.55v2.8H11A2.81%2c2.81%2c0%2c0%2c0%2c8.22%2c11V21.91ZM28.13%2c27.2a.93.93%2c0%2c0%2c1-.93.93H11a.93.93%2c0%2c0%2c1-.93-.93V11a.93.93%2c0%2c0%2c1%2c.93-.93H27.2a.93.93%2c0%2c0%2c1%2c.93.93Z'/%3e%3cpath d='M24.09%2c18.18H20v-4a.93.93%2c0%2c1%2c0-1.86%2c0v4h-4a.93.93%2c0%2c0%2c0%2c0%2c1.86h4v4.05a.93.93%2c0%2c1%2c0%2c1.86%2c0V20h4.05a.93.93%2c0%2c1%2c0%2c0-1.86Z'/%3e%3c/svg%3e";
+var img$x = "data:image/svg+xml,%3c%3fxml version='1.0' %3f%3e%3csvg data-name='Layer 1' id='Layer_1' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3e%3ctitle/%3e%3cpath d='M27.2%2c8.22H23.78V5.42A3.42%2c3.42%2c0%2c0%2c0%2c20.36%2c2H5.42A3.42%2c3.42%2c0%2c0%2c0%2c2%2c5.42V20.36a3.42%2c3.42%2c0%2c0%2c0%2c3.42%2c3.42h2.8V27.2A2.81%2c2.81%2c0%2c0%2c0%2c11%2c30H27.2A2.81%2c2.81%2c0%2c0%2c0%2c30%2c27.2V11A2.81%2c2.81%2c0%2c0%2c0%2c27.2%2c8.22ZM5.42%2c21.91a1.55%2c1.55%2c0%2c0%2c1-1.55-1.55V5.42A1.54%2c1.54%2c0%2c0%2c1%2c5.42%2c3.87H20.36a1.55%2c1.55%2c0%2c0%2c1%2c1.55%2c1.55v2.8H11A2.81%2c2.81%2c0%2c0%2c0%2c8.22%2c11V21.91ZM28.13%2c27.2a.93.93%2c0%2c0%2c1-.93.93H11a.93.93%2c0%2c0%2c1-.93-.93V11a.93.93%2c0%2c0%2c1%2c.93-.93H27.2a.93.93%2c0%2c0%2c1%2c.93.93Z'/%3e%3cpath d='M24.09%2c18.18H20v-4a.93.93%2c0%2c1%2c0-1.86%2c0v4h-4a.93.93%2c0%2c0%2c0%2c0%2c1.86h4v4.05a.93.93%2c0%2c1%2c0%2c1.86%2c0V20h4.05a.93.93%2c0%2c1%2c0%2c0-1.86Z'/%3e%3c/svg%3e";
 
-var img$q = "data:image/svg+xml,%3c%3fxml version='1.0' %3f%3e%3csvg height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M11%2c12 L11%2c9 L13%2c9 L13%2c12 L16%2c12 L16%2c14 L13%2c14 L13%2c17 L11%2c17 L11%2c14 L8%2c14 L8%2c12 L11%2c12 Z M21%2c5 C22.1045695%2c5 23%2c5.8954305 23%2c7 L23%2c19 C23%2c20.1045695 22.1045695%2c21 21%2c21 L3%2c21 C1.8954305%2c21 1%2c20.1045695 1%2c19 L1%2c5 C1%2c3.8954305 1.8954305%2c3 3%2c3 L9%2c3 C10.1200023%2c3 10.832939%2c3.47545118 11.5489764%2c4.37885309 C11.5967547%2c4.43913352 11.8100999%2c4.71588275 11.8624831%2c4.78081945 C12.019726%2c4.97574495 12.0517795%2c4.99972956 12.0017863%2c5 L21%2c5 Z M21%2c19 L21%2c7 L11.994646%2c6.99998567 C11.2764915%2c6.99614058 10.8086916%2c6.65990923 10.3058322%2c6.03654146 C10.2364281%2c5.95050497 10.0158737%2c5.66440398 9.98159778%2c5.62115916 C9.60702158%2c5.14856811 9.38424442%2c5 9%2c5 L3%2c5 L3%2c19 L21%2c19 Z' fill-rule='evenodd'/%3e%3c/svg%3e";
+var img$w = "data:image/svg+xml,%3c%3fxml version='1.0' %3f%3e%3csvg height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M11%2c12 L11%2c9 L13%2c9 L13%2c12 L16%2c12 L16%2c14 L13%2c14 L13%2c17 L11%2c17 L11%2c14 L8%2c14 L8%2c12 L11%2c12 Z M21%2c5 C22.1045695%2c5 23%2c5.8954305 23%2c7 L23%2c19 C23%2c20.1045695 22.1045695%2c21 21%2c21 L3%2c21 C1.8954305%2c21 1%2c20.1045695 1%2c19 L1%2c5 C1%2c3.8954305 1.8954305%2c3 3%2c3 L9%2c3 C10.1200023%2c3 10.832939%2c3.47545118 11.5489764%2c4.37885309 C11.5967547%2c4.43913352 11.8100999%2c4.71588275 11.8624831%2c4.78081945 C12.019726%2c4.97574495 12.0517795%2c4.99972956 12.0017863%2c5 L21%2c5 Z M21%2c19 L21%2c7 L11.994646%2c6.99998567 C11.2764915%2c6.99614058 10.8086916%2c6.65990923 10.3058322%2c6.03654146 C10.2364281%2c5.95050497 10.0158737%2c5.66440398 9.98159778%2c5.62115916 C9.60702158%2c5.14856811 9.38424442%2c5 9%2c5 L3%2c5 L3%2c19 L21%2c19 Z' fill-rule='evenodd'/%3e%3c/svg%3e";
 
 /* src\Components\Editor\FileNavigator.svelte generated by Svelte v3.59.2 */
-const file$q = "src\\Components\\Editor\\FileNavigator.svelte";
+const file$s = "src\\Components\\Editor\\FileNavigator.svelte";
 
-function get_each_context$4(ctx, list, i) {
+function get_each_context$5(ctx, list, i) {
 	const child_ctx = ctx.slice();
-	child_ctx[15] = list[i];
+	child_ctx[16] = list[i];
 	return child_ctx;
 }
 
-// (97:10) {#each files as file (file)}
-function create_each_block$4(key_1, ctx) {
+// (101:10) {#each files as file (file)}
+function create_each_block$5(key_1, ctx) {
 	let li;
-	let t0_value = /*file*/ ctx[15] + "";
+	let t0_value = /*file*/ ctx[16] + "";
 	let t0;
 	let t1;
 	let button;
@@ -7749,15 +7799,15 @@ function create_each_block$4(key_1, ctx) {
 	let dispose;
 
 	function click_handler() {
-		return /*click_handler*/ ctx[12](/*file*/ ctx[15]);
+		return /*click_handler*/ ctx[12](/*file*/ ctx[16]);
 	}
 
 	function click_handler_1() {
-		return /*click_handler_1*/ ctx[13](/*file*/ ctx[15]);
+		return /*click_handler_1*/ ctx[13](/*file*/ ctx[16]);
 	}
 
 	function keydown_handler(...args) {
-		return /*keydown_handler*/ ctx[14](/*file*/ ctx[15], ...args);
+		return /*keydown_handler*/ ctx[14](/*file*/ ctx[16], ...args);
 	}
 
 	const block = {
@@ -7770,14 +7820,14 @@ function create_each_block$4(key_1, ctx) {
 			button = element("button");
 			button.textContent = "X";
 			t3 = space();
-			attr_dev(button, "class", "svelte-5h3ue5");
-			add_location(button, file$q, 103, 14, 3010);
+			attr_dev(button, "class", "svelte-1n9968y");
+			add_location(button, file$s, 107, 14, 3295);
 
-			attr_dev(li, "class", li_class_value = "" + (null_to_empty(/*$currentFile*/ ctx[2] === /*file*/ ctx[15]
+			attr_dev(li, "class", li_class_value = "" + (null_to_empty(/*$currentFile*/ ctx[2] === /*file*/ ctx[16]
 			? "active"
-			: "") + " svelte-5h3ue5"));
+			: "") + " svelte-1n9968y"));
 
-			add_location(li, file$q, 97, 12, 2769);
+			add_location(li, file$s, 101, 12, 3048);
 			this.first = li;
 		},
 		m: function mount(target, anchor) {
@@ -7799,11 +7849,11 @@ function create_each_block$4(key_1, ctx) {
 		},
 		p: function update(new_ctx, dirty) {
 			ctx = new_ctx;
-			if (dirty & /*files*/ 1 && t0_value !== (t0_value = /*file*/ ctx[15] + "")) set_data_dev(t0, t0_value);
+			if (dirty & /*files*/ 1 && t0_value !== (t0_value = /*file*/ ctx[16] + "")) set_data_dev(t0, t0_value);
 
-			if (dirty & /*$currentFile, files*/ 5 && li_class_value !== (li_class_value = "" + (null_to_empty(/*$currentFile*/ ctx[2] === /*file*/ ctx[15]
+			if (dirty & /*$currentFile, files*/ 5 && li_class_value !== (li_class_value = "" + (null_to_empty(/*$currentFile*/ ctx[2] === /*file*/ ctx[16]
 			? "active"
-			: "") + " svelte-5h3ue5"))) {
+			: "") + " svelte-1n9968y"))) {
 				attr_dev(li, "class", li_class_value);
 			}
 		},
@@ -7816,16 +7866,16 @@ function create_each_block$4(key_1, ctx) {
 
 	dispatch_dev("SvelteRegisterBlock", {
 		block,
-		id: create_each_block$4.name,
+		id: create_each_block$5.name,
 		type: "each",
-		source: "(97:10) {#each files as file (file)}",
+		source: "(101:10) {#each files as file (file)}",
 		ctx
 	});
 
 	return block;
 }
 
-function create_fragment$r(ctx) {
+function create_fragment$t(ctx) {
 	let div0;
 	let t0;
 	let div5;
@@ -7853,13 +7903,13 @@ function create_fragment$r(ctx) {
 	let dispose;
 	let each_value = /*files*/ ctx[0];
 	validate_each_argument(each_value);
-	const get_key = ctx => /*file*/ ctx[15];
-	validate_each_keys(ctx, each_value, get_each_context$4, get_key);
+	const get_key = ctx => /*file*/ ctx[16];
+	validate_each_keys(ctx, each_value, get_each_context$5, get_key);
 
 	for (let i = 0; i < each_value.length; i += 1) {
-		let child_ctx = get_each_context$4(ctx, each_value, i);
+		let child_ctx = get_each_context$5(ctx, each_value, i);
 		let key = get_key(child_ctx);
-		each_1_lookup.set(key, each_blocks[i] = create_each_block$4(key, child_ctx));
+		each_1_lookup.set(key, each_blocks[i] = create_each_block$5(key, child_ctx));
 	}
 
 	const block = {
@@ -7886,51 +7936,51 @@ function create_fragment$r(ctx) {
 			}
 
 			attr_dev(div0, "id", "nav-placeholder");
-			attr_dev(div0, "class", "svelte-5h3ue5");
-			add_location(div0, file$q, 59, 0, 1744);
+			attr_dev(div0, "class", "svelte-1n9968y");
+			add_location(div0, file$s, 63, 0, 1985);
 			attr_dev(input, "id", "project-name");
 			attr_dev(input, "type", "text");
 			attr_dev(input, "maxlength", MAX_LENGTH_PROJECT_NAME);
 			attr_dev(input, "placeholder", input_placeholder_value = /*$_*/ ctx[1]("editor.projectToolbar.nameProject"));
-			attr_dev(input, "class", "svelte-5h3ue5");
-			add_location(input, file$q, 62, 4, 1836);
-			if (!src_url_equal(img0.src, img0_src_value = img$r)) attr_dev(img0, "src", img0_src_value);
+			attr_dev(input, "class", "svelte-1n9968y");
+			add_location(input, file$s, 66, 4, 2080);
+			if (!src_url_equal(img0.src, img0_src_value = img$x)) attr_dev(img0, "src", img0_src_value);
 			attr_dev(img0, "alt", "Create new file");
 			attr_dev(img0, "width", "22px");
 			attr_dev(img0, "height", "22px");
-			attr_dev(img0, "class", "svelte-5h3ue5");
-			add_location(img0, file$q, 74, 6, 2163);
+			attr_dev(img0, "class", "svelte-1n9968y");
+			add_location(img0, file$s, 78, 6, 2419);
 			attr_dev(button0, "title", button0_title_value = /*$_*/ ctx[1]("editor.projectToolbar.createFile"));
-			attr_dev(button0, "class", "project-toolbar-btn svelte-5h3ue5");
+			attr_dev(button0, "class", "project-toolbar-btn svelte-1n9968y");
 			attr_dev(button0, "id", "create-new-file");
-			add_location(button0, file$q, 68, 4, 1998);
-			if (!src_url_equal(img1.src, img1_src_value = img$q)) attr_dev(img1, "src", img1_src_value);
+			add_location(button0, file$s, 72, 4, 2248);
+			if (!src_url_equal(img1.src, img1_src_value = img$w)) attr_dev(img1, "src", img1_src_value);
 			attr_dev(img1, "alt", "Create new folder");
 			attr_dev(img1, "width", "22px");
 			attr_dev(img1, "height", "22px");
 			attr_dev(img1, "background", "transparent");
-			attr_dev(img1, "class", "svelte-5h3ue5");
-			add_location(img1, file$q, 83, 6, 2436);
+			attr_dev(img1, "class", "svelte-1n9968y");
+			add_location(img1, file$s, 87, 6, 2701);
 			attr_dev(button1, "title", button1_title_value = /*$_*/ ctx[1]("editor.projectToolbar.createFolder"));
-			attr_dev(button1, "class", "project-toolbar-btn svelte-5h3ue5");
+			attr_dev(button1, "class", "project-toolbar-btn svelte-1n9968y");
 			attr_dev(button1, "id", "create-new-folder");
-			add_location(button1, file$q, 78, 4, 2298);
+			add_location(button1, file$s, 82, 4, 2558);
 			attr_dev(div1, "id", "project-toolbar");
-			attr_dev(div1, "class", "svelte-5h3ue5");
-			add_location(div1, file$q, 61, 2, 1805);
-			attr_dev(ul, "class", "svelte-5h3ue5");
-			add_location(ul, file$q, 95, 8, 2713);
+			attr_dev(div1, "class", "svelte-1n9968y");
+			add_location(div1, file$s, 65, 2, 2048);
+			attr_dev(ul, "class", "svelte-1n9968y");
+			add_location(ul, file$s, 99, 8, 2990);
 			attr_dev(div2, "id", "file-selector");
-			attr_dev(div2, "class", "svelte-5h3ue5");
-			add_location(div2, file$q, 94, 6, 2680);
+			attr_dev(div2, "class", "svelte-1n9968y");
+			add_location(div2, file$s, 98, 6, 2956);
 			attr_dev(div3, "id", "file-system-container");
-			attr_dev(div3, "class", "svelte-5h3ue5");
-			add_location(div3, file$q, 93, 4, 2641);
-			attr_dev(div4, "class", "flex-column svelte-5h3ue5");
-			add_location(div4, file$q, 92, 2, 2611);
+			attr_dev(div3, "class", "svelte-1n9968y");
+			add_location(div3, file$s, 97, 4, 2916);
+			attr_dev(div4, "class", "flex-column svelte-1n9968y");
+			add_location(div4, file$s, 96, 2, 2885);
 			attr_dev(div5, "id", "file-navigator");
-			attr_dev(div5, "class", "svelte-5h3ue5");
-			add_location(div5, file$q, 60, 0, 1777);
+			attr_dev(div5, "class", "svelte-1n9968y");
+			add_location(div5, file$s, 64, 0, 2019);
 		},
 		l: function claim(nodes) {
 			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -7980,8 +8030,8 @@ function create_fragment$r(ctx) {
 			if (dirty & /*$currentFile, files, selectFile, deleteFile*/ 85) {
 				each_value = /*files*/ ctx[0];
 				validate_each_argument(each_value);
-				validate_each_keys(ctx, each_value, get_each_context$4, get_key);
-				each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx, each_value, each_1_lookup, ul, destroy_block, create_each_block$4, null, get_each_context$4);
+				validate_each_keys(ctx, each_value, get_each_context$5, get_key);
+				each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx, each_value, each_1_lookup, ul, destroy_block, create_each_block$5, null, get_each_context$5);
 			}
 		},
 		i: noop,
@@ -8002,7 +8052,7 @@ function create_fragment$r(ctx) {
 
 	dispatch_dev("SvelteRegisterBlock", {
 		block,
-		id: create_fragment$r.name,
+		id: create_fragment$t.name,
 		type: "component",
 		source: "",
 		ctx
@@ -8013,7 +8063,7 @@ function create_fragment$r(ctx) {
 
 const MAX_LENGTH_PROJECT_NAME = 22;
 
-function instance$r($$self, $$props, $$invalidate) {
+function instance$t($$self, $$props, $$invalidate) {
 	let $_;
 	let $currentFile;
 	validate_store($format, '_');
@@ -8028,6 +8078,7 @@ function instance$r($$self, $$props, $$invalidate) {
 	validate_store(currentFile, 'currentFile');
 	component_subscribe($$self, currentFile, value => $$invalidate(2, $currentFile = value));
 	let fileNavigator;
+	const dispatch = createEventDispatcher();
 
 	let unsubscribe = () => {
 		
@@ -8035,7 +8086,8 @@ function instance$r($$self, $$props, $$invalidate) {
 
 	function selectFile(file) {
 		codeEditor.loadFile(file);
-		textareaValue.set(codeEditor.textarea.value);
+		textareaValue.set(codeEditor.textarea.innerText);
+		dispatch("fileInteraction");
 		currentFile.set(file);
 		fileManager.saveCurrentFile(file);
 	}
@@ -8043,13 +8095,15 @@ function instance$r($$self, $$props, $$invalidate) {
 	function createNewFile() {
 		fileNavigator.createNewPage();
 		$$invalidate(0, files = fileManager.getAllFiles());
-		textareaValue.set(codeEditor.textarea.value);
+		textareaValue.set(codeEditor.textarea.innerText);
+		dispatch("fileInteraction");
 	}
 
 	function deleteFile(file) {
 		fileNavigator.deleteFile(file);
 		$$invalidate(0, files = fileManager.getAllFiles());
-		textareaValue.set(codeEditor.textarea.value);
+		textareaValue.set(codeEditor.textarea.innerText);
+		dispatch("fileInteraction");
 	}
 
 	$$self.$$.on_mount.push(function () {
@@ -8085,11 +8139,12 @@ function instance$r($$self, $$props, $$invalidate) {
 	$$self.$capture_state = () => ({
 		writable,
 		FileNavigator,
-		AddFileIcon: img$r,
-		AddFolderIcon: img$q,
+		AddFileIcon: img$x,
+		AddFolderIcon: img$w,
 		_: $format,
 		text,
 		tick,
+		createEventDispatcher,
 		codeEditor,
 		fileManager,
 		textareaValue,
@@ -8097,6 +8152,7 @@ function instance$r($$self, $$props, $$invalidate) {
 		currentFile,
 		fileNavigator,
 		MAX_LENGTH_PROJECT_NAME,
+		dispatch,
 		unsubscribe,
 		selectFile,
 		createNewFile,
@@ -8168,7 +8224,7 @@ class FileNavigator_1 extends SvelteComponentDev {
 	constructor(options) {
 		super(options);
 
-		init$1(this, options, instance$r, create_fragment$r, safe_not_equal, {
+		init$1(this, options, instance$t, create_fragment$t, safe_not_equal, {
 			codeEditor: 7,
 			fileManager: 8,
 			textareaValue: 9
@@ -8178,7 +8234,7 @@ class FileNavigator_1 extends SvelteComponentDev {
 			component: this,
 			tagName: "FileNavigator_1",
 			options,
-			id: create_fragment$r.name
+			id: create_fragment$t.name
 		});
 	}
 
@@ -8209,18 +8265,18 @@ class FileNavigator_1 extends SvelteComponentDev {
 
 /* src\Components\Editor\LineNumbers.svelte generated by Svelte v3.59.2 */
 
-const file$p = "src\\Components\\Editor\\LineNumbers.svelte";
+const file$r = "src\\Components\\Editor\\LineNumbers.svelte";
 
-function get_each_context$3(ctx, list, i) {
+function get_each_context$4(ctx, list, i) {
 	const child_ctx = ctx.slice();
-	child_ctx[4] = list[i];
+	child_ctx[3] = list[i];
 	return child_ctx;
 }
 
-// (18:2) {#each lineNumbers as lineNumber (lineNumber)}
-function create_each_block$3(key_1, ctx) {
+// (12:2) {#each lineNumbers as lineNumber (lineNumber)}
+function create_each_block$4(key_1, ctx) {
 	let span;
-	let t_value = /*lineNumber*/ ctx[4] + "";
+	let t_value = /*lineNumber*/ ctx[3] + "";
 	let t;
 
 	const block = {
@@ -8230,7 +8286,7 @@ function create_each_block$3(key_1, ctx) {
 			span = element("span");
 			t = text(t_value);
 			attr_dev(span, "class", "svelte-1f6044e");
-			add_location(span, file$p, 18, 4, 475);
+			add_location(span, file$r, 12, 4, 342);
 			this.first = span;
 		},
 		m: function mount(target, anchor) {
@@ -8239,7 +8295,7 @@ function create_each_block$3(key_1, ctx) {
 		},
 		p: function update(new_ctx, dirty) {
 			ctx = new_ctx;
-			if (dirty & /*lineNumbers*/ 2 && t_value !== (t_value = /*lineNumber*/ ctx[4] + "")) set_data_dev(t, t_value);
+			if (dirty & /*lineNumbers*/ 2 && t_value !== (t_value = /*lineNumber*/ ctx[3] + "")) set_data_dev(t, t_value);
 		},
 		d: function destroy(detaching) {
 			if (detaching) detach_dev(span);
@@ -8248,28 +8304,28 @@ function create_each_block$3(key_1, ctx) {
 
 	dispatch_dev("SvelteRegisterBlock", {
 		block,
-		id: create_each_block$3.name,
+		id: create_each_block$4.name,
 		type: "each",
-		source: "(18:2) {#each lineNumbers as lineNumber (lineNumber)}",
+		source: "(12:2) {#each lineNumbers as lineNumber (lineNumber)}",
 		ctx
 	});
 
 	return block;
 }
 
-function create_fragment$q(ctx) {
+function create_fragment$s(ctx) {
 	let div;
 	let each_blocks = [];
 	let each_1_lookup = new Map();
 	let each_value = /*lineNumbers*/ ctx[1];
 	validate_each_argument(each_value);
-	const get_key = ctx => /*lineNumber*/ ctx[4];
-	validate_each_keys(ctx, each_value, get_each_context$3, get_key);
+	const get_key = ctx => /*lineNumber*/ ctx[3];
+	validate_each_keys(ctx, each_value, get_each_context$4, get_key);
 
 	for (let i = 0; i < each_value.length; i += 1) {
-		let child_ctx = get_each_context$3(ctx, each_value, i);
+		let child_ctx = get_each_context$4(ctx, each_value, i);
 		let key = get_key(child_ctx);
-		each_1_lookup.set(key, each_blocks[i] = create_each_block$3(key, child_ctx));
+		each_1_lookup.set(key, each_blocks[i] = create_each_block$4(key, child_ctx));
 	}
 
 	const block = {
@@ -8282,7 +8338,7 @@ function create_fragment$q(ctx) {
 
 			attr_dev(div, "id", "line-numbers");
 			attr_dev(div, "class", "svelte-1f6044e");
-			add_location(div, file$p, 16, 0, 398);
+			add_location(div, file$r, 10, 0, 263);
 		},
 		l: function claim(nodes) {
 			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -8300,8 +8356,8 @@ function create_fragment$q(ctx) {
 			if (dirty & /*lineNumbers*/ 2) {
 				each_value = /*lineNumbers*/ ctx[1];
 				validate_each_argument(each_value);
-				validate_each_keys(ctx, each_value, get_each_context$3, get_key);
-				each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx, each_value, each_1_lookup, div, destroy_block, create_each_block$3, null, get_each_context$3);
+				validate_each_keys(ctx, each_value, get_each_context$4, get_key);
+				each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx, each_value, each_1_lookup, div, destroy_block, create_each_block$4, null, get_each_context$4);
 			}
 		},
 		i: noop,
@@ -8317,7 +8373,7 @@ function create_fragment$q(ctx) {
 
 	dispatch_dev("SvelteRegisterBlock", {
 		block,
-		id: create_fragment$q.name,
+		id: create_fragment$s.name,
 		type: "component",
 		source: "",
 		ctx
@@ -8326,12 +8382,12 @@ function create_fragment$q(ctx) {
 	return block;
 }
 
-function instance$q($$self, $$props, $$invalidate) {
+function instance$s($$self, $$props, $$invalidate) {
 	let lineNumbers;
 
 	let $textareaValue,
 		$$unsubscribe_textareaValue = noop,
-		$$subscribe_textareaValue = () => ($$unsubscribe_textareaValue(), $$unsubscribe_textareaValue = subscribe(textareaValue, $$value => $$invalidate(3, $textareaValue = $$value)), textareaValue);
+		$$subscribe_textareaValue = () => ($$unsubscribe_textareaValue(), $$unsubscribe_textareaValue = subscribe(textareaValue, $$value => $$invalidate(2, $textareaValue = $$value)), textareaValue);
 
 	$$self.$$.on_destroy.push(() => $$unsubscribe_textareaValue());
 	let { $$slots: slots = {}, $$scope } = $$props;
@@ -8339,10 +8395,6 @@ function instance$q($$self, $$props, $$invalidate) {
 	let { textareaValue } = $$props;
 	validate_store(textareaValue, 'textareaValue');
 	$$subscribe_textareaValue();
-
-	function recalculateLineNumbers() {
-		$$invalidate(1, lineNumbers = Array.from({ length: textareaValue.split("\n").length }, (_, i) => i + 1));
-	}
 
 	$$self.$$.on_mount.push(function () {
 		if (textareaValue === undefined && !('textareaValue' in $$props || $$self.$$.bound[$$self.$$.props['textareaValue']])) {
@@ -8362,7 +8414,6 @@ function instance$q($$self, $$props, $$invalidate) {
 
 	$$self.$capture_state = () => ({
 		textareaValue,
-		recalculateLineNumbers,
 		lineNumbers,
 		$textareaValue
 	});
@@ -8377,34 +8428,30 @@ function instance$q($$self, $$props, $$invalidate) {
 	}
 
 	$$self.$$.update = () => {
-		if ($$self.$$.dirty & /*$textareaValue*/ 8) {
+		if ($$self.$$.dirty & /*$textareaValue*/ 4) {
 			// Reactive statement to generate line numbers whenever textareaValue changes
 			$$invalidate(1, lineNumbers = Array.from(
 				{
-					length: $textareaValue.split("\n").length
+					length: Math.max(1, $textareaValue.split("\n").length - 1)
 				},
 				(_, i) => i + 1
 			));
 		}
 	};
 
-	return [textareaValue, lineNumbers, recalculateLineNumbers, $textareaValue];
+	return [textareaValue, lineNumbers, $textareaValue];
 }
 
 class LineNumbers extends SvelteComponentDev {
 	constructor(options) {
 		super(options);
-
-		init$1(this, options, instance$q, create_fragment$q, safe_not_equal, {
-			textareaValue: 0,
-			recalculateLineNumbers: 2
-		});
+		init$1(this, options, instance$s, create_fragment$s, safe_not_equal, { textareaValue: 0 });
 
 		dispatch_dev("SvelteRegisterComponent", {
 			component: this,
 			tagName: "LineNumbers",
 			options,
-			id: create_fragment$q.name
+			id: create_fragment$s.name
 		});
 	}
 
@@ -8413,14 +8460,6 @@ class LineNumbers extends SvelteComponentDev {
 	}
 
 	set textareaValue(value) {
-		throw new Error("<LineNumbers>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-	}
-
-	get recalculateLineNumbers() {
-		return this.$$.ctx[2];
-	}
-
-	set recalculateLineNumbers(value) {
 		throw new Error("<LineNumbers>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
 	}
 }
@@ -9166,7 +9205,7 @@ var json = failsafe.extend({
   ]
 });
 
-var core = json;
+var core$1 = json;
 
 var YAML_DATE_REGEXP = new RegExp(
   '^([0-9][0-9][0-9][0-9])'          + // [1] year
@@ -9503,7 +9542,7 @@ var set = new type('tag:yaml.org,2002:set', {
   construct: constructYamlSet
 });
 
-var _default = core.extend({
+var _default = core$1.extend({
   implicit: [
     timestamp,
     merge
@@ -12227,7 +12266,7 @@ var Type                = type;
 var Schema              = schema;
 var FAILSAFE_SCHEMA     = failsafe;
 var JSON_SCHEMA         = json;
-var CORE_SCHEMA         = core;
+var CORE_SCHEMA         = core$1;
 var DEFAULT_SCHEMA      = _default;
 var load                = loader.load;
 var loadAll             = loader.loadAll;
@@ -12369,7 +12408,7 @@ class CodeEditor {
       this.currentFileName
     );
     this.dragCounter = 0;
-    this.textarea.value = this.charObjects.map((obj) => obj.char).join("");
+    this.textarea.innerText = this.charObjects.map((obj) => obj.char).join("");
     this.addEventListeners();
   }
 
@@ -12398,8 +12437,8 @@ class CodeEditor {
     this.editor.addEventListener("drop", this.handleDropEvent);
   }
 
-  onKeyUp(event) {
-    const newText = this.textarea.value;
+  onKeyUp() {
+    const newText = this.textarea.innerText;
     this.charObjects = this.createCharObjects(newText, this.charObjects);
     this.fileManager.saveToLocalStorage(
       this.charObjects,
@@ -12430,7 +12469,7 @@ class CodeEditor {
 
     // If the textarea is not empty, ask the user for confirmation
     if (
-      this.textarea.value.trim() !== "" &&
+      this.textarea.innerText.trim() !== "" &&
       !confirm("Textarea has content. Replace with file content?")
     ) {
       return;
@@ -12481,7 +12520,7 @@ class CodeEditor {
     const reader = new FileReader();
     reader.onload = (e) => {
       // Update the textarea value with the contents of the file
-      this.textarea.value = e.target.result;
+      this.textarea.innerText = e.target.result;
       // Create new charObjects based on the file contents
       this.charObjects = this.createCharObjects(e.target.result);
       // Save the updated charObjects to local storage
@@ -12503,7 +12542,7 @@ class CodeEditor {
     this.textarea.style.height = this.textarea.scrollHeight + "px";
 
     // Calculate the width based on the longest line
-    const lines = this.textarea.value.split("\n");
+    const lines = this.textarea.innerText.split("\n");
     let longestLine = lines[0];
 
     // Find the line with the most characters
@@ -12525,7 +12564,7 @@ class CodeEditor {
     this.charObjects = this.fileManager.loadFromLocalStorage(
       this.currentFileName
     );
-    this.textarea.value = this.charObjects.map((obj) => obj.char).join("");
+    this.textarea.innerText = this.charObjects.map((obj) => obj.char).join("");
     errorStore.set(null);
 
     this.checkYamlSyntax();
@@ -12535,6 +12574,7 @@ class CodeEditor {
 
     //Update the width of text area
     this.updateDimensions();
+  
     // Save highlighted file in local storage
     this.fileManager.saveCurrentFile(file);
   }
@@ -12545,7 +12585,7 @@ class CodeEditor {
 
   checkYamlSyntax() {
     let yamlChecker = new YamlChecker(
-      this.removeNoBreakSpaceChars(this.textarea.value)
+      this.removeNoBreakSpaceChars(this.textarea.innerText)
     );
     let error = yamlChecker.validateYAML();
     if (error) {
@@ -12641,54 +12681,735 @@ class FileManager {
     anchor.click();
     URL.revokeObjectURL(anchor.href);
   }
+  
+  func_savedata(data) { 
+    var string_data = typeof data === "string" ? data : JSON.stringify(data);
+    var file = new File([string_data], this.getCurrentFile() + ".txt", {
+      type: "text;charset=utf-8",
+    });
+
+    var anchor = document.createElement("a");
+    anchor.setAttribute("href", window.URL.createObjectURL(file));
+    anchor.setAttribute("download", this.getCurrentFile() + ".txt",);
+    anchor.click();
+    URL.revokeObjectURL(anchor.href);
+  }
 }
 
-var img$p = "data:image/svg+xml,%3c%3fxml version='1.0' %3f%3e%3csvg class='feather feather-play' fill='none' height='24' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'%3e%3cpolygon points='5 3 19 12 5 21 5 3'/%3e%3c/svg%3e";
+var img$v = "data:image/svg+xml,%3csvg viewBox='0 0 128 128' xml:space='preserve' xmlns='http://www.w3.org/2000/svg' enable-background='new 0 0 128 128'%3e%3cpath d='M26.5 64V20.699L64 42.35l37.5 21.649L64 85.65l-37.5 21.651z' fill='none' stroke='white' stroke-width='12' stroke-miterlimit='10' class='stroke-2f3435'%3e%3c/path%3e%3c/svg%3e";
 
-var img$o = "data:image/svg+xml,%3c%3fxml version='1.0' %3f%3e%3csvg height='24.0px' id='SVGRoot' version='1.1' viewBox='0 0 24.0 24.0' width='24.0px' xmlns='http://www.w3.org/2000/svg' xmlns:cc='http://creativecommons.org/ns%23' xmlns:dc='http://purl.org/dc/elements/1.1/' xmlns:inkscape='http://www.inkscape.org/namespaces/inkscape' xmlns:rdf='http://www.w3.org/1999/02/22-rdf-syntax-ns%23' xmlns:sodipodi='http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd' xmlns:svg='http://www.w3.org/2000/svg'%3e%3cdefs id='defs2'/%3e%3cg id='layer1'%3e%3cpath d='M 3 2 A 1.0001 1.0001 0 0 0 2 3 L 2 21 A 1.0001 1.0001 0 0 0 3 22 L 8 22 L 16 22 L 21 22 A 1.0001 1.0001 0 0 0 22 21 L 22 6.1542969 A 1.0001 1.0001 0 0 0 21.738281 5.4785156 L 18.851562 2.3242188 A 1.0001 1.0001 0 0 0 18.113281 2 L 16 2 L 8 2 L 3 2 z M 4 4 L 7 4 L 7 9 A 1.0001 1.0001 0 0 0 8 10 L 16 10 A 1.0001 1.0001 0 0 0 17 9 L 17 4 L 17.673828 4 L 20 6.5429688 L 20 20 L 17 20 L 17 13 A 1.0001 1.0001 0 0 0 16 12 L 8 12 A 1.0001 1.0001 0 0 0 7 13 L 7 20 L 4 20 L 4 4 z M 9 4 L 15 4 L 15 8 L 9 8 L 9 4 z M 9 14 L 15 14 L 15 20 L 9 20 L 9 14 z ' id='path11261' style='color:black%3bfont-style:normal%3bfont-variant:normal%3bfont-weight:normal%3bfont-stretch:normal%3bfont-size:medium%3bline-height:normal%3bfont-family:sans-serif%3bfont-variant-ligatures:normal%3bfont-variant-position:normal%3bfont-variant-caps:normal%3bfont-variant-numeric:normal%3bfont-variant-alternates:normal%3bfont-variant-east-asian:normal%3bfont-feature-settings:normal%3bfont-variation-settings:normal%3btext-indent:0%3btext-align:start%3btext-decoration:none%3btext-decoration-line:none%3btext-decoration-style:solid%3btext-decoration-color:black%3bletter-spacing:normal%3bword-spacing:normal%3btext-transform:none%3bwriting-mode:lr-tb%3bdirection:ltr%3btext-orientation:mixed%3bdominant-baseline:auto%3bbaseline-shift:baseline%3btext-anchor:start%3bwhite-space:normal%3bshape-padding:0%3bshape-margin:0%3binline-size:0%3bclip-rule:nonzero%3bdisplay:inline%3boverflow:visible%3bvisibility:visible%3bisolation:auto%3bmix-blend-mode:normal%3bcolor-interpolation:sRGB%3bcolor-interpolation-filters:linearRGB%3bsolid-color:black%3bsolid-opacity:1%3bvector-effect:none%3bfill:black%3bfill-opacity:1%3bfill-rule:nonzero%3bstroke:none%3bstroke-width:2%3bstroke-linecap:butt%3bstroke-linejoin:round%3bstroke-miterlimit:4%3bstroke-dasharray:none%3bstroke-dashoffset:0%3bstroke-opacity:1%3bcolor-rendering:auto%3bimage-rendering:auto%3bshape-rendering:auto%3btext-rendering:auto%3benable-background:accumulate%3bstop-color:black%3bstop-opacity:1%3bopacity:1'/%3e%3c/g%3e%3c/svg%3e";
+var img$u = "data:image/svg+xml,%3csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M3 2a1 1 0 0 0-1 1v18a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1V6.154a1 1 0 0 0-.262-.675l-2.886-3.155A1 1 0 0 0 18.113 2H3zm1 2h3v5a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4h.674L20 6.543V20h-3v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7H4V4zm5 0h6v4H9V4zm0 10h6v6H9v-6z' style='line-height:normal%3bfont-variant-ligatures:normal%3bfont-variant-position:normal%3bfont-variant-caps:normal%3bfont-variant-numeric:normal%3bfont-variant-alternates:normal%3bfont-variant-east-asian:normal%3bfont-feature-settings:normal%3bfont-variation-settings:normal%3btext-indent:0%3btext-align:start%3btext-decoration-line:none%3btext-decoration-style:solid%3btext-decoration-color:black%3btext-transform:none%3btext-orientation:mixed%3bwhite-space:normal%3bshape-padding:0%3bshape-margin:0%3binline-size:0%3bisolation:auto%3bmix-blend-mode:normal%3bsolid-color:black%3bsolid-opacity:1' color='black' font-style='normal' font-variant='normal' font-weight='400' font-stretch='normal' font-size='medium' font-family='sans-serif' text-decoration='none' letter-spacing='normal' word-spacing='normal' writing-mode='lr-tb' direction='ltr' dominant-baseline='auto' baseline-shift='baseline' text-anchor='start' clip-rule='nonzero' display='inline' overflow='visible' visibility='visible' color-interpolation='sRGB' color-interpolation-filters='linearRGB' vector-effect='none' fill='white' fill-opacity='1' fill-rule='nonzero' stroke='none' stroke-width='2' stroke-linecap='butt' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' color-rendering='auto' image-rendering='auto' shape-rendering='auto' text-rendering='auto' enable-background='accumulate' stop-color='white' stop-opacity='1' opacity='1' class='fill-000000 stop-color-000000'%3e%3c/path%3e%3c/svg%3e";
 
-var img$n = "data:image/svg+xml,%3c%3fxml version='1.0' %3f%3e%3csvg fill='none' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M4 5C3.44772 5 3 5.44772 3 6C3 6.55228 3.44772 7 4 7H20C20.5523 7 21 6.55228 21 6C21 5.44772 20.5523 5 20 5H4Z' fill='currentColor'/%3e%3cpath d='M4 9C3.44772 9 3 9.44772 3 10C3 10.5523 3.44772 11 4 11H12C12.5523 11 13 10.5523 13 10C13 9.44772 12.5523 9 12 9H4Z' fill='currentColor'/%3e%3cpath d='M3 14C3 13.4477 3.44772 13 4 13H20C20.5523 13 21 13.4477 21 14C21 14.5523 20.5523 15 20 15H4C3.44772 15 3 14.5523 3 14Z' fill='currentColor'/%3e%3cpath d='M4 17C3.44772 17 3 17.4477 3 18C3 18.5523 3.44772 19 4 19H12C12.5523 19 13 18.5523 13 18C13 17.4477 12.5523 17 12 17H4Z' fill='currentColor'/%3e%3c/svg%3e";
+var img$t = "data:image/svg+xml,%3csvg fill='none' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M4 5a1 1 0 0 0 0 2h16a1 1 0 1 0 0-2H4ZM4 9a1 1 0 0 0 0 2h8a1 1 0 1 0 0-2H4ZM3 14a1 1 0 0 1 1-1h16a1 1 0 1 1 0 2H4a1 1 0 0 1-1-1ZM4 17a1 1 0 1 0 0 2h8a1 1 0 1 0 0-2H4Z' fill='white' class='fill-000000'%3e%3c/path%3e%3c/svg%3e";
 
-var img$m = "data:image/svg+xml,%3c%3fxml version='1.0' %3f%3e%3csvg height='22px' version='1.1' viewBox='0 0 18 22' width='18px' xmlns='http://www.w3.org/2000/svg' xmlns:sketch='http://www.bohemiancoding.com/sketch/ns' xmlns:xlink='http://www.w3.org/1999/xlink'%3e%3ctitle/%3e%3cdesc/%3e%3cdefs/%3e%3cg fill='none' fill-rule='evenodd' id='Page-1' stroke='none' stroke-width='1'%3e%3cg fill='black' id='Core' transform='translate(-171.000000%2c -127.000000)'%3e%3cg id='content-paste' transform='translate(171.000000%2c 127.000000)'%3e%3cpath d='M16%2c2 L11.8%2c2 C11.4%2c0.8 10.3%2c0 9%2c0 C7.7%2c0 6.6%2c0.8 6.2%2c2 L2%2c2 C0.9%2c2 0%2c2.9 0%2c4 L0%2c20 C0%2c21.1 0.9%2c22 2%2c22 L16%2c22 C17.1%2c22 18%2c21.1 18%2c20 L18%2c4 C18%2c2.9 17.1%2c2 16%2c2 L16%2c2 Z M9%2c2 C9.6%2c2 10%2c2.4 10%2c3 C10%2c3.6 9.6%2c4 9%2c4 C8.4%2c4 8%2c3.6 8%2c3 C8%2c2.4 8.4%2c2 9%2c2 L9%2c2 Z M16%2c20 L2%2c20 L2%2c4 L4%2c4 L4%2c7 L14%2c7 L14%2c4 L16%2c4 L16%2c20 L16%2c20 Z' id='Shape'/%3e%3c/g%3e%3c/g%3e%3c/g%3e%3c/svg%3e";
+var img$s = "data:image/svg+xml,%3csvg viewBox='0 0 185.208 185.208' xmlns='http://www.w3.org/2000/svg'%3e%3cg transform='translate(952.567 -1192.557)'%3e%3cpath d='M-172.905-1050.923c3.398-2.537 2.999-7.828 0-10.827l-36.204-36.205c-3-2.999-7.829-2.999-10.828 0l-58.717 58.615-58.638 58.536c-3.025 18.772-6.13 37.622-9.156 56.394l56.181-9.368c30.373-30.373 44.725-44.671 59.212-59.103 14.486-14.432 28.733-28.625 58.15-58.042z' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='6.19999981' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/path%3e%3crect height='67.307' ry='5.082' transform='rotate(135)' width='11.067' x='-601.165' y='865.359' opacity='1' fill='white' fill-opacity='1' fill-rule='nonzero' stroke='none' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='6.19999981' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='fill-000000'%3e%3c/rect%3e%3cpath d='m-312.874-925.234-32.299-32.298-1.275 33.122z' fill='white' stroke='none' stroke-width='.26458332px' stroke-linecap='butt' stroke-linejoin='miter' stroke-opacity='1' class='fill-000000'%3e%3c/path%3e%3crect height='67.307' ry='5.082' transform='rotate(135)' width='11.067' x='-467.454' y='865.783' opacity='1' fill='white' fill-opacity='1' fill-rule='nonzero' stroke='none' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='6.19999981' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='fill-000000'%3e%3c/rect%3e%3c/g%3e%3cg transform='translate(221.447 -535.307)'%3e%3cellipse cx='-352.555' cy='-1716.312' rx='5.334' ry='5.342' opacity='1' fill='white' fill-opacity='1' fill-rule='nonzero' stroke='none' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='fill-000000'%3e%3c/ellipse%3e%3cpath d='M-352.555-1698.49v37.859' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3cpath d='M-436.722-1743.288a3.806 3.806 0 0 0-3.807 3.822v103.568a3.807 3.807 0 0 0 3.807 3.823h23.24v36.286l71.375-36.286h73.718a3.807 3.807 0 0 0 3.808-3.823v-103.568a3.807 3.807 0 0 0-3.808-3.822z' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='6.19999981' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/path%3e%3c/g%3e%3cpath d='M-1849.964-304.31h41.123l69.633-108.803h65.031M-1674.177-413.113l-39.659-19.993M-1674.177-413.113l-39.659 19.993M-1674.177-304.31l-39.659-19.993M-1674.177-304.31l-39.659 19.993' transform='translate(800.598 -640.885)' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3cpath d='M-1850.01-413.105h41.122l69.633 108.803h65.031' transform='translate(800.598 -640.885)' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3cpath d='M-867.121-414.187h104.674a6.063 6.063 0 0 1 6.088 6.065v144.094a6.063 6.063 0 0 1-6.088 6.064h-104.674a6.063 6.063 0 0 1-6.088-6.064v-144.094a6.063 6.063 0 0 1 6.088-6.065z' transform='translate(-152.686 -1062.231)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='6.19999981' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/path%3e%3cpath d='M-872.764-428.604h116.317M-847.834-394.01v115.87M-814.784-394.01v115.87M-781.734-394.01v115.87M-831.685-433.911h34.16' transform='translate(-152.686 -1062.231)' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3cpath d='M-508.094-666.261v50.635c0 1.263-.843 2.28-1.89 2.28h-172.174c-1.047 0-1.89-1.017-1.89-2.28v-50.635' transform='translate(-1598.046 -706.143)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26041508' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='6.19999981' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/path%3e%3cpath d='M-155.801-47.138v-150.835M-155.801-197.973l-43.482 44.424M-155.801-197.973l43.481 44.424' transform='matrix(1 0 0 -1 -2038.315 -1543.921)' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3cpath d='M-190.138-620.904v-175.781M-154.995-620.804h-70.287M-154.995-796.785h-70.286' transform='translate(-1608.223 -699.374)' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3cpath d='M-1004.936-1676.12h175.823M-1004.936-1735.305h175.823M-1004.936-1616.934h175.823' transform='translate(394.573 -528.726)' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3cg stroke-width='.69996077'%3e%3cpath d='M-127.05-111.185v84.94h-97.204v-120.686 0h59.76' transform='matrix(1.40223 0 0 1.45557 910.18 -1653.36)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='6.48192835' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='6.19999981' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/path%3e%3cpath d='M-128.344-109.95h-36.15c-.717 0-1.294-.55-1.294-1.235v-34.51c0-.685.577-1.236 1.294-1.236l37.444 35.746c0 .684-.577 1.235-1.294 1.235z' transform='matrix(1.40223 0 0 1.45557 910.18 -1653.36)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='6.48192835' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/path%3e%3c/g%3e%3cg stroke-width='.71462166'%3e%3cg stroke-width='.87175673'%3e%3cpath d='M1064.034-145.824v108.35h-118.37v-153.947 0h72.773' transform='matrix(1.15126 0 0 1.14297 -1679.299 -1277.358)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='8.0728302' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='6.19999981' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/path%3e%3cpath d='M1062.458-144.248h-44.021a1.572 1.572 0 0 1-1.576-1.576v-44.021c0-.873.703-1.576 1.576-1.576l45.597 45.597c0 .873-.703 1.576-1.576 1.576z' transform='matrix(1.15126 0 0 1.14297 -1679.299 -1277.358)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='8.0728302' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/path%3e%3c/g%3e%3cpath d='M-203.727-65.836h56.15M-203.727-86.588h56.15M-203.727-45.084h56.15' transform='matrix(1.40338 0 0 1.39531 -274.77 -1289.345)' fill='none' stroke='white' stroke-width='6.61769342' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3c/g%3e%3cpath d='M-1479.304-1348.614h131.96l43.988 43.987v131.961h-175.948v-175.948z' transform='translate(848.772 -518.755)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26041508' stroke-linecap='butt' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/path%3e%3cpath d='M-1427.669-1348.614h72.677v47.425h-72.677z' transform='translate(848.772 -518.755)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26041508' stroke-linecap='butt' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/path%3e%3cpath d='M-1377.394-1332.878v15.496' transform='translate(848.772 -518.755)' fill='none' stroke='white' stroke-width='9.26041508' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3cg stroke-width='.86788404'%3e%3cpath d='M-3414.003 67.181h98.601v61.57h-98.601z' transform='matrix(1.15223 0 0 1.15223 3334.345 -1839.771)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='8.03696728' stroke-linecap='butt' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/path%3e%3cg stroke-width='.86788404'%3e%3cpath d='M-3332.235 86.816h-64.935M-3332.235 109.116h-64.935' transform='matrix(1.15223 0 0 1.15223 3334.345 -1839.771)' fill='none' stroke='white' stroke-width='8.03696823' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3c/g%3e%3c/g%3e%3cpath d='M-270.94-413.34v22.494m-104.458 0v-62.72h64.22' transform='translate(1470.528 -1839.253)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26041603' stroke-linecap='butt' stroke-linejoin='round' stroke-miterlimit='6.19999981' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/path%3e%3cpath d='M-272.332-411.949h-38.847c-.77 0-1.39-.62-1.39-1.39v-38.837c0-.77.62-1.39 1.39-1.39l40.238 40.227c0 .77-.62 1.39-1.39 1.39z' transform='translate(1470.528 -1839.253)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/path%3e%3cpath d='M-263.93-373.522h12.753' transform='translate(1470.528 -1839.253)' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3cpath d='M-374.822-325.246h-36.322v-64.504h175.948v64.504h-33.492' transform='translate(1470.528 -1839.253)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26041603' stroke-linecap='butt' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/path%3e%3cpath d='M-181.739-68.86h60.34M-181.739-50.007h60.34' transform='translate(1298.927 -2087.982)' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3cpath d='M-204.636-89.977h106.135v61.087h-106.135z' transform='translate(1298.927 -2087.982)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26041698' stroke-linecap='butt' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/path%3e%3cpath d='m-1479.199 143.768 175.855-175.855M-1479.199-32.087l175.855 175.855' transform='translate(-407.09 -705.006)' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3cg transform='translate(482.298 -865.099)'%3e%3cellipse cx='-344.666' cy='-2283.139' rx='57.372' ry='56.435' transform='rotate(-45.005)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/ellipse%3e%3cpath d='m-1738.941-1251.822-79.106-79.12' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3c/g%3e%3cpath d='M-925.982-1197.013h-35.149v-18.315 0h35.149z' transform='translate(1036.16 1219.959)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='6.19999981' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/path%3e%3cpath d='M-80.133-22.106h-142.87v-157.632 0h142.87z' transform='translate(244.173 202.685)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='6.19999981' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/path%3e%3cpath d='M-106.552-167.136h-90.033v-6.89 0h90.033z' transform='translate(244.173 202.685)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='6.19999981' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/path%3e%3cg stroke-width='.85923588'%3e%3cpath d='M-3788.422-212.559h68.377M-3788.422-237.183h68.377M-3788.422-187.934h68.377M-3788.991-163.31h68.377' transform='matrix(1.16492 0 0 1.16273 4466.327 339.405)' fill='none' stroke='white' stroke-width='7.956882' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3c/g%3e%3cg transform='translate(-1540.737 -705.196)'%3e%3cellipse cx='704.225' cy='-258.695' rx='23.977' ry='23.822' transform='matrix(.5075 -.86165 .8703 .49253 0 0)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26110744' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/ellipse%3e%3cpath d='m185.263-702.973-32.843-18.586' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3cellipse cx='-519.544' cy='454.936' rx='23.977' ry='23.822' transform='matrix(.5075 .86165 .8703 -.49253 0 0)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26110744' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/ellipse%3e%3cpath d='m185.263-702.973-32.843 18.587M185.27-702.97l98.805-29.777M185.27-702.97l98.805 29.778' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3c/g%3e%3cg transform='matrix(1.5227 0 0 1.52124 316.385 -1420.395)' stroke-width='.65704465'%3e%3cpath d='M-5468.298 2139.315v-72.696M-5468.298 2503.45v-246.957' transform='matrix(.26458 0 0 .26458 -244.173 -97.607)' fill='none' stroke='white' stroke-width='22.99656296' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3ccircle cx='-1690.993' cy='483.921' r='15.502' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='6.08450699' stroke-linecap='round' stroke-linejoin='bevel' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/circle%3e%3c/g%3e%3cg transform='matrix(1.5227 0 0 1.52124 318.893 -1420.395)' stroke-width='.65704465'%3e%3cpath d='M-5314.755 2305.239v-238.62M-5314.755 2503.45v-81.033' transform='matrix(.26458 0 0 .26458 -244.173 -97.607)' fill='none' stroke='white' stroke-width='22.99656296' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3ccircle cx='-1650.368' cy='527.822' r='15.502' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='6.08450699' stroke-linecap='round' stroke-linejoin='bevel' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/circle%3e%3c/g%3e%3cg transform='matrix(1.5227 0 0 1.52124 274.192 -1418.768)' stroke-width='.65704465'%3e%3cpath d='M-5044.034 2186.723v-124.144M-5044.034 2499.41V2303.9' transform='matrix(.26458 0 0 .26458 -244.173 -97.607)' fill='none' stroke='white' stroke-width='22.99656296' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3ccircle cx='-1578.74' cy='496.465' r='15.502' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='6.08450699' stroke-linecap='round' stroke-linejoin='bevel' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/circle%3e%3c/g%3e%3cpath d='M-2262.117-1850.649h116.03v175.953h-116.03z' transform='translate(15.946 -16.722)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='6.19999981' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/path%3e%3cpath d='M-2212.108-1762.673h132.042M-2080.066-1762.673l-38.89 38.051M-2080.066-1762.673l-38.89-38.051' transform='translate(15.946 -16.722)' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3cpath d='M-1895.171-1873.834h116.03v175.953h-116.03z' transform='translate(28.646 6.463)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='6.19999981' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/path%3e%3cpath d='M-1713.12-1785.858h-132.043M-1845.162-1785.858l38.889 38.051M-1845.162-1785.858l38.889-38.051' transform='translate(28.646 6.463)' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3cpath d='M-822.946-666.604v50.635c0 1.263-.843 2.28-1.89 2.28H-997.01c-1.047 0-1.89-1.017-1.89-2.28v-50.635' transform='translate(-1649.078 -705.8)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26041508' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='6.19999981' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/path%3e%3cpath d='M-155.801-47.138v-150.835M-155.801-197.973l-43.482 44.424M-155.801-197.973l43.481 44.424' transform='translate(-2404.2 -1298.81)' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3cpath d='M292.199-1203.883H467.98' transform='translate(244.173 202.685)' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3cpath d='M-239.46-110.08h175.783M-151.568-197.971V-22.19' transform='translate(396.573 -910.682)' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3cg transform='translate(-156.902 -990.181)'%3e%3cellipse cx='-840.6' cy='-2602.197' rx='57.372' ry='56.435' transform='rotate(-45.005)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/ellipse%3e%3cpath d='m-2315.174-1126.74-79.106-79.12M-2472.248-1245.753h76.1M-2434.198-1283.803v76.1' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3c/g%3e%3cg transform='translate(307.534 -899.31)'%3e%3cellipse cx='-566.176' cy='-2456.273' rx='57.372' ry='56.435' transform='rotate(-45.005)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/ellipse%3e%3cpath d='m-2017.97-1217.612-79.106-79.12M-2175.044-1336.625h76.099' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3c/g%3e%3cg transform='translate(236.723 -619.44)'%3e%3ctext style='line-height:3.3499999' x='-2507.133' xml:space='preserve' y='-1592.797' font-style='normal' font-weight='400' font-size='64.96838379px' font-family='sans-serif' letter-spacing='0' word-spacing='0' fill='white' fill-opacity='1' stroke='none' stroke-width='.26458332' class='fill-000000'%3e%3c/text%3e%3cellipse cx='-598.089' cy='-2883.944' rx='57.372' ry='56.435' transform='rotate(-45.005)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/ellipse%3e%3cpath d='m-2342.916-1497.48-79.105-79.121' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3c/g%3e%3cpath d='M228.714-496.777h153.947v153.947H228.714z' transform='translate(-2876.688 -218.362)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='6.19999981' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/path%3e%3cpath d='M250.714-496.777v-22 0h153.948v153.947H382.66' transform='translate(-2876.688 -218.362)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='6.19999981' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/path%3e%3cpath d='M392.743-12.28h-71.21c-61.035 0-61.035-93.207 5.201-93.207H452.286M452.285-105.487l-38.889 38.051M452.285-105.487l-38.889-38.051' transform='translate(-68.211 -1330.237)' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3cpath d='M-460.409-314.904h71.21c61.035 0 61.035-93.208-5.202-93.208h-125.551M-519.952-408.112l38.89 38.051M-519.952-408.112l38.89-38.05' transform='translate(300.927 -1027.612)' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3cpath d='M184.027-110.906 88.823-22.978M184.027-110.906l-95.204-87.929' transform='translate(-1564.477 -874.12)' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3cpath d='m-179.326-367.222 95.203 87.928M-179.326-367.222l95.203-87.929' transform='translate(-2428.276 -633.976)' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3cg stroke-width='.97482073'%3e%3cpath d='m-158.467 96.672 38.89 38.05M-158.467 96.672l38.89-38.052' transform='matrix(1.02602 0 0 1.02564 -58.754 -1147.647)' fill='none' stroke='white' stroke-width='9.02724552' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3c/g%3e%3cpath d='M-629.803-110.386c0 27.68 16.681 52.636 42.264 63.229 25.583 10.593 55.03 4.738 74.611-14.836 19.58-19.573 25.438-49.01 14.841-74.583-10.597-25.574-35.13-42.246-62.82-42.246l-68.843.003' transform='translate(408.411 -869.673)' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='butt' stroke-linejoin='miter' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3cpath d='M-1514.972-863.954h-175.95l90.042-75.866zm-106.819 100.073h-46.532v-100.073h129.179v100.073h-46.533m-36.114-.118v-48.059 0h36.115v48.06' transform='translate(244.173 202.685)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/path%3e%3cg stroke-width='.97482073'%3e%3cpath d='m-158.467 96.672 38.89 38.05M-158.467 96.672l38.89-38.052' transform='matrix(-1.02602 0 0 1.02564 -683.137 -1181.514)' fill='none' stroke='white' stroke-width='9.02724552' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3c/g%3e%3cpath d='M-740.528-110.386c0 27.68-16.68 52.636-42.263 63.229-25.584 10.593-55.03 4.738-74.611-14.836-19.58-19.573-25.438-49.01-14.841-74.583 10.596-25.574 35.13-42.246 62.82-42.246l68.842.003' transform='translate(220.028 -903.54)' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='butt' stroke-linejoin='miter' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3cg transform='translate(3.226 -934.832)'%3e%3ccircle cx='-690.901' cy='-1105.169' r='87.974' transform='rotate(45)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/circle%3e%3ccircle cx='-690.901' cy='-1105.169' r='59.536' transform='rotate(45)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/circle%3e%3cpath d='m335.03-1227.915 20.05 20.05M230.783-1332.162l20.05 20.05M250.833-1227.915l-20.05 20.05M355.08-1332.162l-20.05 20.05' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3c/g%3e%3cg transform='translate(-47.294 -955.833)'%3e%3cellipse cx='452.398' cy='693.554' rx='31.199' ry='31.635' transform='rotate(-90.006) skewX(-.011)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/ellipse%3e%3cpath d='m837.762-452.34-112.587-.006M781.102-426.26l.006-26.059M799.03-430.775l.006-21.572M816.957-426.283l.006-26.058' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3c/g%3e%3cpath d='m-112.512-183.042 38.32 95.425 102.595 6.956-78.912 65.932 25.087 99.723-87.09-54.676-87.09 54.676 25.088-99.723-78.913-65.932 102.595-6.956z' transform='matrix(.62427 0 0 .62366 1139.519 -970.624)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='14.84131432' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/path%3e%3cg transform='translate(242.764 -1331.016)'%3e%3cellipse cx='518.3' cy='619.601' rx='23.977' ry='23.822' transform='matrix(.5075 -.86165 .8703 .49253 0 0)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26110744' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/ellipse%3e%3cellipse cx='406.422' cy='684.842' rx='23.977' ry='23.822' transform='matrix(.5075 -.86165 .8703 .49253 0 0)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26110744' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/ellipse%3e%3cellipse cx='525.334' cy='762.389' rx='23.977' ry='23.822' transform='matrix(.5075 -.86165 .8703 .49253 0 0)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26110744' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/ellipse%3e%3cpath d='m827.84-128.567 76.632 38.525M823.824-23.72l84.74-42.6' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3c/g%3e%3cpath d='m18.24-367.222 95.203-87.929M18.24-367.222l95.203 87.928' transform='rotate(90 -747.15 -1814.189)' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3cpath d='m18.24-367.222 95.203-87.929M18.24-367.222l95.203 87.928' transform='matrix(0 -1 -1 0 -2196.393 -937.146)' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3cpath d='m-179.326-367.222 95.203-62.485M-179.326-367.222l95.203 62.484' transform='translate(-785.349 -281.943)' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3cpath d='M1800.444-591.196v175.857' transform='translate(-2774.43 -145.898)' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='miter' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3cpath d='m-179.326-367.222 95.203-62.485M-179.326-367.222l95.203 62.484' transform='matrix(-1 0 0 1 -692.169 -281.943)' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3cpath d='M-348.818-389.608v175.857' transform='translate(-154.715 -347.486)' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='miter' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3cg transform='translate(1666.946 -473.23)'%3e%3cellipse cx='-1833.87' cy='-222.459' rx='41.306' ry='41.449' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/ellipse%3e%3cpath d='M-1921.576-88.029h175.413m-175.413 0a87.974 86.257 0 0 1-.268-6.724 87.974 86.257 0 0 1 87.974-86.257 87.974 86.257 0 0 1 87.975 86.257v0a87.974 86.257 0 0 1-.268 6.726' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3c/g%3e%3cpath d='M67.944-879.662c-5.379-20.224-23.863-34.32-45.003-34.32-1.688 0-3.376.091-5.054.273m-39.874 34.013c-.524-.02-1.047-.03-1.571-.03-22.901 0-41.466 18.365-41.466 41.018 0 9.846 2.162 21.36 10.074 26.799 42.646 29.32 113.166 29.327 155.809 0 7.91-5.44 10.065-16.953 10.065-26.799 0-22.653-18.565-41.017-41.466-41.017-.524 0-1.048.01-1.571.029m-89.932.034c5.38-20.224 23.863-34.32 45.004-34.32 1.688 0 3.375.091 5.053.273M-429.927-2070.053h175.948v175.948h-175.948z' transform='translate(244.173 202.685)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/path%3e%3cg opacity='1'%3e%3cpath d='M-516.693-200.039h25.929v25.929h-25.929zM-462.983-200.039h25.929v25.929h-25.929zM-409.273-200.039h25.929v25.929h-25.929zM-516.693-142.889h25.929v25.929h-25.929zM-462.983-142.889h25.929v25.929h-25.929zM-409.273-142.889h25.929v25.929h-25.929z' transform='translate(352.238 -1620.896)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/path%3e%3c/g%3e%3cpath d='M-429.927-2051.751h175.948v139.344h-175.948z' transform='translate(244.173 202.685)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/path%3e%3cpath d='M-1630.547-1101.345h116.03v175.953h-116.03z' transform='translate(178.802 -766.026)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='6.19999981' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/path%3e%3cpath d='M-1696.568-1013.369h132.042M-1564.526-1013.369l-38.889 38.051M-1564.526-1013.369l-38.889-38.05' transform='translate(178.802 -766.026)' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3cpath d='M-2486.665-2693.843h116.03v175.953h-116.03z' transform='translate(1440.261 826.472)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='6.19999981' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/path%3e%3cpath d='M-2420.644-2605.867h-132.042M-2552.686-2605.867l38.89 38.05M-2552.686-2605.867l38.89-38.051' transform='translate(1440.261 826.472)' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3cg transform='translate(112.94 -229.91)'%3e%3cpath d='M510.393-419.255h99.06M510.393-478.44h99.06M510.393-360.07h99.06' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3ccircle cx='491.237' cy='-478.44' r='4.63' opacity='1' fill='white' fill-opacity='1' fill-rule='nonzero' stroke='none' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='bevel' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='fill-000000'%3e%3c/circle%3e%3ccircle cx='491.237' cy='-419.255' r='4.63' opacity='1' fill='white' fill-opacity='1' fill-rule='nonzero' stroke='none' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='bevel' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='fill-000000'%3e%3c/circle%3e%3ccircle cx='491.237' cy='-360.069' r='4.63' opacity='1' fill='white' fill-opacity='1' fill-rule='nonzero' stroke='none' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='bevel' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='fill-000000'%3e%3c/circle%3e%3cpath d='M433.623-419.255h38.457M433.623-478.44h38.457M433.623-360.07h38.457' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3c/g%3e%3cpath d='m-2794.504-2031.083-21.048-23.28h-35.36m-32.911 23.28 21.048-23.28h35.36m111.216 144.568h-175.948v-121.288h175.948v121.288z' transform='translate(244.173 202.685)' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3cpath d='M744.321-2034.872h175.948v105.584H744.321z' transform='translate(244.173 202.685)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26041508' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/path%3e%3cpath d='m920.269-2034.872-175.962-.336 87.69 78.01z' transform='translate(244.173 202.685)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/path%3e%3cpath d='m803.846-1981.917-59.54 52.966 175.963-.337-59.796-52.617-28.461 25.044z' transform='translate(244.173 202.685)' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/path%3e%3cpath d='M-1185.807-2341.564v-133.063h-42.622v155.069h61.812v-175.943h-83.078v153.938' transform='translate(244.173 202.685)' fill='none' stroke='white' stroke-width='9.26041603' stroke-linecap='butt' stroke-linejoin='miter' stroke-miterlimit='4' stroke-dasharray='none' stroke-opacity='1' class='stroke-000000'%3e%3c/path%3e%3cg transform='translate(214.065 183.713)'%3e%3cpath d='M763.417-840.016a150.885 154.112 0 0 1 50.689-8.956 150.885 154.112 0 0 1 50.686 8.955M744.758-872.992a187.686 191.7 0 0 1 69.355-13.569 187.686 191.7 0 0 1 69.338 13.562M726.192-905.84a224.488 229.289 0 0 1 87.901-18.31 224.488 229.289 0 0 1 87.923 18.319' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/path%3e%3cellipse cx='814.104' cy='-798.318' rx='18.761' ry='18.767' opacity='1' fill='none' fill-opacity='1' fill-rule='nonzero' stroke='white' stroke-width='9.26041603' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='4' stroke-dasharray='none' stroke-dashoffset='0' stroke-opacity='1' paint-order='normal' class='stroke-000000'%3e%3c/ellipse%3e%3c/g%3e%3c/svg%3e";
 
-var img$l = "data:image/svg+xml,%3c%3fxml version='1.0' %3f%3e%3csvg style='enable-background:new 0 0 24 24%3b' version='1.1' viewBox='0 0 24 24' xml:space='preserve' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'%3e%3cg id='info'/%3e%3cg id='icons'%3e%3cg id='save'%3e%3cpath d='M11.2%2c16.6c0.4%2c0.5%2c1.2%2c0.5%2c1.6%2c0l6-6.3C19.3%2c9.8%2c18.8%2c9%2c18%2c9h-4c0%2c0%2c0.2-4.6%2c0-7c-0.1-1.1-0.9-2-2-2c-1.1%2c0-1.9%2c0.9-2%2c2 c-0.2%2c2.3%2c0%2c7%2c0%2c7H6c-0.8%2c0-1.3%2c0.8-0.8%2c1.4L11.2%2c16.6z'/%3e%3cpath d='M19%2c19H5c-1.1%2c0-2%2c0.9-2%2c2v0c0%2c0.6%2c0.4%2c1%2c1%2c1h16c0.6%2c0%2c1-0.4%2c1-1v0C21%2c19.9%2c20.1%2c19%2c19%2c19z'/%3e%3c/g%3e%3c/g%3e%3c/svg%3e";
+var img$r = "data:image/svg+xml,%3csvg viewBox='0 0 576 512' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M572.5 238.1C518.3 115.5 410.9 32 288 32S57.69 115.6 3.469 238.1C1.563 243.4 0 251 0 256c0 4.977 1.562 12.6 3.469 17.03C57.72 396.5 165.1 480 288 480s230.3-83.58 284.5-206.1c1.9-5.3 3.5-13.8 3.5-17.9 0-5-1.6-12.6-3.5-17.9zM432 256c0 79.45-64.47 144-143.9 144-79.5 0-144.1-64.5-144.1-144s64.5-144 144-144 144 64.5 144 144zm-144-96c-2.3 0-5.6.4-8.5.8 5.3 9.2 8.5 19.8 8.5 31.2 0 35.35-28.65 64-64 64-11.4 0-22.9-3.3-31.3-8.5-.3 3-.7 6.1-.7 8.5 0 52.1 43 96 96 96s96-42.99 96-95.99S340.1 160 288 160z' fill='white' class='fill-000000'%3e%3c/path%3e%3c/svg%3e";
 
-var img$k = "data:image/svg+xml,%3c%3fxml version='1.0' %3f%3e%3c!DOCTYPE svg PUBLIC '-//W3C//DTD SVG 1.1//EN' 'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'%3e%3csvg enable-background='new 0 0 512 512' height='512px' id='Layer_1' version='1.1' viewBox='0 0 512 512' width='512px' xml:space='preserve' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'%3e%3cg%3e%3cg%3e%3cpath d='M178.375%2c287.812L73.094%2c393.094L32%2c352c-17.688%2c0-32%2c14.312-32%2c32v96c0%2c17.688%2c14.312%2c32%2c32%2c32h96 c17.688%2c0%2c32-14.312%2c32-32l-41.095-41.062l105.281-105.312L178.375%2c287.812z M480%2c0h-96c-17.688%2c0-32%2c14.328-32%2c32l41.094%2c41.094 L287.812%2c178.375l45.812%2c45.812l105.281-105.266L480%2c160c17.688%2c0%2c32-14.312%2c32-32V32C512%2c14.328%2c497.688%2c0%2c480%2c0z M480%2c352 l-41.095%2c41.094l-105.28-105.281l-45.812%2c45.812l105.281%2c105.312L352%2c480c0%2c17.688%2c14.312%2c32%2c32%2c32h96c17.688%2c0%2c32-14.312%2c32-32 v-96C512%2c366.312%2c497.688%2c352%2c480%2c352z M160%2c32c0-17.672-14.312-32-32-32H32C14.312%2c0%2c0%2c14.328%2c0%2c32v96c0%2c17.688%2c14.312%2c32%2c32%2c32 l41.094-41.078l105.281%2c105.266l45.812-45.812L118.906%2c73.094L160%2c32z'/%3e%3c/g%3e%3c/g%3e%3c/svg%3e";
+var img$q = "data:image/svg+xml,%3csvg viewBox='0 0 24 24' xml:space='preserve' xmlns='http://www.w3.org/2000/svg' enable-background='new 0 0 24 24'%3e%3cpath d='M11.2 16.6c.4.5 1.2.5 1.6 0l6-6.3c.5-.5 0-1.3-.8-1.3h-4s.2-4.6 0-7c-.1-1.1-.9-2-2-2s-1.9.9-2 2c-.2 2.3 0 7 0 7H6c-.8 0-1.3.8-.8 1.4l6 6.2zM19 19H5c-1.1 0-2 .9-2 2 0 .6.4 1 1 1h16c.6 0 1-.4 1-1 0-1.1-.9-2-2-2z' fill='white' class='fill-000000'%3e%3c/path%3e%3c/svg%3e";
+
+var img$p = "data:image/svg+xml,%3csvg viewBox='0 0 512 512' xml:space='preserve' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M178.375 287.812 73.094 393.094 32 352c-17.688 0-32 14.312-32 32v96c0 17.688 14.312 32 32 32h96c17.688 0 32-14.312 32-32l-41.095-41.062 105.281-105.312-45.811-45.814zM480 0h-96c-17.688 0-32 14.328-32 32l41.094 41.094-105.282 105.281 45.812 45.812 105.281-105.266L480 160c17.688 0 32-14.312 32-32V32c0-17.672-14.312-32-32-32zm0 352-41.095 41.094-105.28-105.281-45.812 45.812 105.281 105.312L352 480c0 17.688 14.312 32 32 32h96c17.688 0 32-14.312 32-32v-96c0-17.688-14.312-32-32-32zM160 32c0-17.672-14.312-32-32-32H32C14.312 0 0 14.328 0 32v96c0 17.688 14.312 32 32 32l41.094-41.078 105.281 105.266 45.812-45.812L118.906 73.094 160 32z' fill='white' class='fill-000000'%3e%3c/path%3e%3c/svg%3e";
+
+var img$o = "data:image/svg+xml,%3csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='m21.32 10.05-1.74-.58a8 8 0 0 0-.43-1.05L20 6.79a1 1 0 0 0-.19-1.15l-1.45-1.42A1 1 0 0 0 17.21 4l-1.63.82a8 8 0 0 0-1.05-.43L14 2.68A1 1 0 0 0 13 2h-2a1 1 0 0 0-.95.68l-.58 1.74a8 8 0 0 0-1.05.43L6.79 4a1 1 0 0 0-1.15.19L4.22 5.64A1 1 0 0 0 4 6.79l.82 1.63a8 8 0 0 0-.43 1.05l-1.74.58A1 1 0 0 0 2 11v2a1 1 0 0 0 .68.95l1.74.58a8 8 0 0 0 .43 1.05L4 17.21a1 1 0 0 0 .19 1.15l1.42 1.42a1 1 0 0 0 1.18.22l1.63-.82a8 8 0 0 0 1.05.43l.58 1.74A1 1 0 0 0 11 22h2a1 1 0 0 0 .95-.68l.58-1.74a8 8 0 0 0 1.05-.43l1.63.82a1 1 0 0 0 1.15-.19l1.42-1.42a1 1 0 0 0 .22-1.15l-.82-1.63a8 8 0 0 0 .43-1.05l1.71-.53a1 1 0 0 0 .68-1v-2a1 1 0 0 0-.68-.95ZM12 16a4 4 0 1 1 4-4 4 4 0 0 1-4 4Z' fill='white' class='fill-464646'%3e%3c/path%3e%3c/svg%3e";
 
 /* src\Components\Editor\GeneralToolbar.svelte generated by Svelte v3.59.2 */
-const file$o = "src\\Components\\Editor\\GeneralToolbar.svelte";
 
-function create_fragment$p(ctx) {
+const { console: console_1$7 } = globals;
+const file$q = "src\\Components\\Editor\\GeneralToolbar.svelte";
+
+function create_fragment$r(ctx) {
+	let div17;
+	let div7;
+	let button0;
+	let div0;
+	let t0_value = /*$_*/ ctx[1]("editor.generalToolbar.assistant") + "";
+	let t0;
+	let t1;
+	let img0;
+	let img0_src_value;
+	let button0_title_value;
+	let t2;
+	let button1;
+	let div1;
+	let t3_value = /*$_*/ ctx[1]("editor.generalToolbar.runScript") + "";
+	let t3;
+	let t4;
+	let img1;
+	let img1_src_value;
+	let button1_title_value;
+	let t5;
+	let button2;
+	let div2;
+	let t6_value = /*$_*/ ctx[1]("editor.generalToolbar.saveProject") + "";
+	let t6;
+	let t7;
+	let img2;
+	let img2_src_value;
+	let button2_title_value;
+	let t8;
+	let button3;
+	let div3;
+	let t9_value = /*$_*/ ctx[1]("editor.generalToolbar.format") + "";
+	let t9;
+	let t10;
+	let img3;
+	let img3_src_value;
+	let button3_title_value;
+	let t11;
+	let button4;
+	let div4;
+	let t12_value = /*$_*/ ctx[1]("editor.generalToolbar.copyToClipboard") + "";
+	let t12;
+	let t13;
+	let img4;
+	let img4_src_value;
+	let button4_title_value;
+	let t14;
+	let button5;
+	let div5;
+	let t15_value = /*$_*/ ctx[1]("editor.generalToolbar.saveAs") + "";
+	let t15;
+	let t16;
+	let img5;
+	let img5_src_value;
+	let button5_title_value;
+	let t17;
+	let button6;
+	let div6;
+	let t18_value = /*$_*/ ctx[1]("editor.generalToolbar.expand") + "";
+	let t18;
+	let t19;
+	let img6;
+	let img6_src_value;
+	let button6_title_value;
+	let t20;
+	let div16;
+	let button7;
+	let img7;
+	let img7_src_value;
+	let button7_class_value;
+	let t21;
+	let div15;
+	let button8;
+	let div8;
+	let t22_value = /*$_*/ ctx[1]("editor.generalToolbar.assistant") + "";
+	let t22;
+	let t23;
+	let img8;
+	let img8_src_value;
+	let t24;
+	let button9;
+	let div9;
+	let t25_value = /*$_*/ ctx[1]("editor.generalToolbar.runScript") + "";
+	let t25;
+	let t26;
+	let img9;
+	let img9_src_value;
+	let t27;
+	let button10;
+	let div10;
+	let t28_value = /*$_*/ ctx[1]("editor.generalToolbar.saveProject") + "";
+	let t28;
+	let t29;
+	let img10;
+	let img10_src_value;
+	let t30;
+	let button11;
+	let div11;
+	let t31_value = /*$_*/ ctx[1]("editor.generalToolbar.format") + "";
+	let t31;
+	let t32;
+	let img11;
+	let img11_src_value;
+	let t33;
+	let button12;
+	let div12;
+	let t34_value = /*$_*/ ctx[1]("editor.generalToolbar.copyToClipboard") + "";
+	let t34;
+	let t35;
+	let img12;
+	let img12_src_value;
+	let t36;
+	let button13;
+	let div13;
+	let t37_value = /*$_*/ ctx[1]("editor.generalToolbar.saveAs") + "";
+	let t37;
+	let t38;
+	let img13;
+	let img13_src_value;
+	let t39;
+	let button14;
+	let div14;
+	let t40_value = /*$_*/ ctx[1]("editor.generalToolbar.expand") + "";
+	let t40;
+	let t41;
+	let img14;
+	let img14_src_value;
+	let mounted;
+	let dispose;
+
+	const block = {
+		c: function create() {
+			div17 = element("div");
+			div7 = element("div");
+			button0 = element("button");
+			div0 = element("div");
+			t0 = text(t0_value);
+			t1 = space();
+			img0 = element("img");
+			t2 = space();
+			button1 = element("button");
+			div1 = element("div");
+			t3 = text(t3_value);
+			t4 = space();
+			img1 = element("img");
+			t5 = space();
+			button2 = element("button");
+			div2 = element("div");
+			t6 = text(t6_value);
+			t7 = space();
+			img2 = element("img");
+			t8 = space();
+			button3 = element("button");
+			div3 = element("div");
+			t9 = text(t9_value);
+			t10 = space();
+			img3 = element("img");
+			t11 = space();
+			button4 = element("button");
+			div4 = element("div");
+			t12 = text(t12_value);
+			t13 = space();
+			img4 = element("img");
+			t14 = space();
+			button5 = element("button");
+			div5 = element("div");
+			t15 = text(t15_value);
+			t16 = space();
+			img5 = element("img");
+			t17 = space();
+			button6 = element("button");
+			div6 = element("div");
+			t18 = text(t18_value);
+			t19 = space();
+			img6 = element("img");
+			t20 = space();
+			div16 = element("div");
+			button7 = element("button");
+			img7 = element("img");
+			t21 = space();
+			div15 = element("div");
+			button8 = element("button");
+			div8 = element("div");
+			t22 = text(t22_value);
+			t23 = space();
+			img8 = element("img");
+			t24 = space();
+			button9 = element("button");
+			div9 = element("div");
+			t25 = text(t25_value);
+			t26 = space();
+			img9 = element("img");
+			t27 = space();
+			button10 = element("button");
+			div10 = element("div");
+			t28 = text(t28_value);
+			t29 = space();
+			img10 = element("img");
+			t30 = space();
+			button11 = element("button");
+			div11 = element("div");
+			t31 = text(t31_value);
+			t32 = space();
+			img11 = element("img");
+			t33 = space();
+			button12 = element("button");
+			div12 = element("div");
+			t34 = text(t34_value);
+			t35 = space();
+			img12 = element("img");
+			t36 = space();
+			button13 = element("button");
+			div13 = element("div");
+			t37 = text(t37_value);
+			t38 = space();
+			img13 = element("img");
+			t39 = space();
+			button14 = element("button");
+			div14 = element("div");
+			t40 = text(t40_value);
+			t41 = space();
+			img14 = element("img");
+			attr_dev(div0, "class", "title svelte-1istrcx");
+			add_location(div0, file$q, 58, 6, 2097);
+			if (!src_url_equal(img0.src, img0_src_value = img$r)) attr_dev(img0, "src", img0_src_value);
+			attr_dev(img0, "alt", "Assistant");
+			attr_dev(img0, "width", "25px");
+			attr_dev(img0, "height", "25px");
+			add_location(img0, file$q, 59, 6, 2169);
+			attr_dev(button0, "id", "Assistant-button");
+			attr_dev(button0, "class", "top-button svelte-1istrcx");
+			attr_dev(button0, "title", button0_title_value = /*$_*/ ctx[1]("editor.generalToolbar.assistant"));
+			add_location(button0, file$q, 52, 4, 1933);
+			attr_dev(div1, "class", "title svelte-1istrcx");
+			add_location(div1, file$q, 66, 6, 2384);
+			if (!src_url_equal(img1.src, img1_src_value = img$v)) attr_dev(img1, "src", img1_src_value);
+			attr_dev(img1, "alt", "Run Script");
+			attr_dev(img1, "width", "20px");
+			attr_dev(img1, "height", "20px");
+			add_location(img1, file$q, 67, 6, 2456);
+			attr_dev(button1, "id", "run-button");
+			attr_dev(button1, "class", "top-button svelte-1istrcx");
+			attr_dev(button1, "title", button1_title_value = /*$_*/ ctx[1]("editor.generalToolbar.runScript"));
+			add_location(button1, file$q, 61, 4, 2260);
+			attr_dev(div2, "class", "title svelte-1istrcx");
+			add_location(div2, file$q, 74, 6, 2676);
+			if (!src_url_equal(img2.src, img2_src_value = img$u)) attr_dev(img2, "src", img2_src_value);
+			attr_dev(img2, "alt", "Save File");
+			attr_dev(img2, "fill", "white");
+			attr_dev(img2, "width", "20px");
+			attr_dev(img2, "height", "20px");
+			add_location(img2, file$q, 75, 6, 2750);
+			attr_dev(button2, "id", "save-button");
+			attr_dev(button2, "class", "top-button svelte-1istrcx");
+			attr_dev(button2, "title", button2_title_value = /*$_*/ ctx[1]("editor.generalToolbar.saveProject"));
+			add_location(button2, file$q, 69, 4, 2549);
+			attr_dev(div3, "class", "title svelte-1istrcx");
+			add_location(div3, file$q, 88, 6, 3029);
+			if (!src_url_equal(img3.src, img3_src_value = img$t)) attr_dev(img3, "src", img3_src_value);
+			attr_dev(img3, "alt", "Format Code");
+			attr_dev(img3, "width", "20px");
+			attr_dev(img3, "height", "20px");
+			add_location(img3, file$q, 89, 6, 3098);
+			attr_dev(button3, "id", "format-button");
+			attr_dev(button3, "class", "top-button svelte-1istrcx");
+			attr_dev(button3, "title", button3_title_value = /*$_*/ ctx[1]("editor.generalToolbar.format"));
+			add_location(button3, file$q, 83, 4, 2905);
+			attr_dev(div4, "class", "title svelte-1istrcx");
+			add_location(div4, file$q, 96, 6, 3328);
+			if (!src_url_equal(img4.src, img4_src_value = img$s)) attr_dev(img4, "src", img4_src_value);
+			attr_dev(img4, "alt", "Copy to Clipboard");
+			attr_dev(img4, "width", "20px");
+			attr_dev(img4, "height", "20px");
+			add_location(img4, file$q, 97, 6, 3406);
+			attr_dev(button4, "id", "clipboard-button");
+			attr_dev(button4, "class", "top-button svelte-1istrcx");
+			attr_dev(button4, "title", button4_title_value = /*$_*/ ctx[1]("editor.generalToolbar.copyToClipboard"));
+			add_location(button4, file$q, 91, 4, 3192);
+			attr_dev(div5, "class", "title svelte-1istrcx");
+			add_location(div5, file$q, 110, 6, 3713);
+			if (!src_url_equal(img5.src, img5_src_value = img$q)) attr_dev(img5, "src", img5_src_value);
+			attr_dev(img5, "alt", "Save As");
+			attr_dev(img5, "width", "20px");
+			attr_dev(img5, "height", "20px");
+			add_location(img5, file$q, 111, 6, 3782);
+			attr_dev(button5, "class", "top-button svelte-1istrcx");
+			attr_dev(button5, "id", "save-as-button");
+			attr_dev(button5, "title", button5_title_value = /*$_*/ ctx[1]("editor.generalToolbar.saveAs"));
+			add_location(button5, file$q, 104, 4, 3554);
+			attr_dev(div6, "class", "title svelte-1istrcx");
+			add_location(div6, file$q, 119, 6, 4023);
+			if (!src_url_equal(img6.src, img6_src_value = img$p)) attr_dev(img6, "src", img6_src_value);
+			attr_dev(img6, "alt", "Expand");
+			attr_dev(img6, "width", "20px");
+			attr_dev(img6, "height", "20px");
+			add_location(img6, file$q, 120, 6, 4092);
+			attr_dev(button6, "class", "top-button svelte-1istrcx");
+			attr_dev(button6, "id", "expand-button");
+			attr_dev(button6, "title", button6_title_value = /*$_*/ ctx[1]("editor.generalToolbar.expand"));
+			add_location(button6, file$q, 113, 4, 3868);
+			attr_dev(div7, "class", "menu svelte-1istrcx");
+			add_location(div7, file$q, 51, 2, 1909);
+			if (!src_url_equal(img7.src, img7_src_value = img$o)) attr_dev(img7, "src", img7_src_value);
+			attr_dev(img7, "alt", "Tools");
+			attr_dev(img7, "width", "30px");
+			attr_dev(img7, "height", "30px");
+			set_style(img7, "transform", "translateY(5px)");
+			set_style(img7, "pointer-events", "none");
+			add_location(img7, file$q, 125, 6, 4284);
+			attr_dev(button7, "class", button7_class_value = "dropbtn " + (/*isDropdownExtended*/ ctx[0] ? 'extended' : '') + " svelte-1istrcx");
+			add_location(button7, file$q, 124, 4, 4213);
+			attr_dev(div8, "class", "title svelte-1istrcx");
+			add_location(div8, file$q, 140, 8, 4654);
+			if (!src_url_equal(img8.src, img8_src_value = img$r)) attr_dev(img8, "src", img8_src_value);
+			attr_dev(img8, "alt", "Assistant");
+			attr_dev(img8, "width", "25px");
+			attr_dev(img8, "height", "25px");
+			add_location(img8, file$q, 141, 8, 4728);
+			attr_dev(button8, "id", "Assistant-button");
+			attr_dev(button8, "class", "top-button svelte-1istrcx");
+			button8.disabled = true;
+			add_location(button8, file$q, 134, 6, 4515);
+			attr_dev(div9, "class", "title svelte-1istrcx");
+			add_location(div9, file$q, 144, 8, 4876);
+			if (!src_url_equal(img9.src, img9_src_value = img$v)) attr_dev(img9, "src", img9_src_value);
+			attr_dev(img9, "alt", "Run Script");
+			attr_dev(img9, "width", "20px");
+			attr_dev(img9, "height", "20px");
+			add_location(img9, file$q, 145, 8, 4950);
+			attr_dev(button9, "id", "run-button");
+			attr_dev(button9, "class", "top-button svelte-1istrcx");
+			add_location(button9, file$q, 143, 6, 4823);
+			attr_dev(div10, "class", "title svelte-1istrcx");
+			add_location(div10, file$q, 148, 8, 5101);
+			if (!src_url_equal(img10.src, img10_src_value = img$u)) attr_dev(img10, "src", img10_src_value);
+			attr_dev(img10, "alt", "Save File");
+			attr_dev(img10, "fill", "white");
+			attr_dev(img10, "width", "20px");
+			attr_dev(img10, "height", "20px");
+			add_location(img10, file$q, 149, 8, 5177);
+			attr_dev(button10, "id", "save-button");
+			attr_dev(button10, "class", "top-button svelte-1istrcx");
+			add_location(button10, file$q, 147, 6, 5047);
+			attr_dev(div11, "class", "title svelte-1istrcx");
+			add_location(div11, file$q, 158, 8, 5404);
+			if (!src_url_equal(img11.src, img11_src_value = img$t)) attr_dev(img11, "src", img11_src_value);
+			attr_dev(img11, "alt", "Format Code");
+			attr_dev(img11, "width", "20px");
+			attr_dev(img11, "height", "20px");
+			add_location(img11, file$q, 159, 8, 5475);
+			attr_dev(button11, "id", "format-button");
+			attr_dev(button11, "class", "top-button svelte-1istrcx");
+			add_location(button11, file$q, 157, 6, 5348);
+			attr_dev(div12, "class", "title svelte-1istrcx");
+			add_location(div12, file$q, 167, 8, 5685);
+			if (!src_url_equal(img12.src, img12_src_value = img$s)) attr_dev(img12, "src", img12_src_value);
+			attr_dev(img12, "alt", "Copy to Clipboard");
+			attr_dev(img12, "width", "20px");
+			attr_dev(img12, "height", "20px");
+			add_location(img12, file$q, 168, 8, 5765);
+			attr_dev(button12, "id", "clipboard-button");
+			attr_dev(button12, "class", "top-button svelte-1istrcx");
+			add_location(button12, file$q, 166, 6, 5626);
+			attr_dev(div13, "class", "title svelte-1istrcx");
+			add_location(div13, file$q, 176, 8, 6011);
+			if (!src_url_equal(img13.src, img13_src_value = img$q)) attr_dev(img13, "src", img13_src_value);
+			attr_dev(img13, "alt", "Save As");
+			attr_dev(img13, "width", "20px");
+			attr_dev(img13, "height", "20px");
+			add_location(img13, file$q, 177, 8, 6082);
+			attr_dev(button13, "class", "top-button svelte-1istrcx");
+			attr_dev(button13, "id", "save-as-button");
+			add_location(button13, file$q, 175, 6, 5927);
+			attr_dev(div14, "class", "title svelte-1istrcx");
+			add_location(div14, file$q, 180, 8, 6252);
+			if (!src_url_equal(img14.src, img14_src_value = img$p)) attr_dev(img14, "src", img14_src_value);
+			attr_dev(img14, "alt", "Expand");
+			attr_dev(img14, "width", "20px");
+			attr_dev(img14, "height", "20px");
+			add_location(img14, file$q, 181, 8, 6323);
+			attr_dev(button14, "class", "top-button svelte-1istrcx");
+			attr_dev(button14, "id", "expand-button");
+			add_location(button14, file$q, 179, 6, 6172);
+			attr_dev(div15, "class", "dropdown-content svelte-1istrcx");
+			add_location(div15, file$q, 133, 4, 4477);
+			attr_dev(div16, "class", "dropdown svelte-1istrcx");
+			add_location(div16, file$q, 123, 2, 4185);
+			attr_dev(div17, "id", "top-toolbar");
+			attr_dev(div17, "class", "svelte-1istrcx");
+			add_location(div17, file$q, 50, 0, 1883);
+		},
+		l: function claim(nodes) {
+			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+		},
+		m: function mount(target, anchor) {
+			insert_dev(target, div17, anchor);
+			append_dev(div17, div7);
+			append_dev(div7, button0);
+			append_dev(button0, div0);
+			append_dev(div0, t0);
+			append_dev(button0, t1);
+			append_dev(button0, img0);
+			append_dev(div7, t2);
+			append_dev(div7, button1);
+			append_dev(button1, div1);
+			append_dev(div1, t3);
+			append_dev(button1, t4);
+			append_dev(button1, img1);
+			append_dev(div7, t5);
+			append_dev(div7, button2);
+			append_dev(button2, div2);
+			append_dev(div2, t6);
+			append_dev(button2, t7);
+			append_dev(button2, img2);
+			append_dev(div7, t8);
+			append_dev(div7, button3);
+			append_dev(button3, div3);
+			append_dev(div3, t9);
+			append_dev(button3, t10);
+			append_dev(button3, img3);
+			append_dev(div7, t11);
+			append_dev(div7, button4);
+			append_dev(button4, div4);
+			append_dev(div4, t12);
+			append_dev(button4, t13);
+			append_dev(button4, img4);
+			append_dev(div7, t14);
+			append_dev(div7, button5);
+			append_dev(button5, div5);
+			append_dev(div5, t15);
+			append_dev(button5, t16);
+			append_dev(button5, img5);
+			append_dev(div7, t17);
+			append_dev(div7, button6);
+			append_dev(button6, div6);
+			append_dev(div6, t18);
+			append_dev(button6, t19);
+			append_dev(button6, img6);
+			append_dev(div17, t20);
+			append_dev(div17, div16);
+			append_dev(div16, button7);
+			append_dev(button7, img7);
+			append_dev(div16, t21);
+			append_dev(div16, div15);
+			append_dev(div15, button8);
+			append_dev(button8, div8);
+			append_dev(div8, t22);
+			append_dev(button8, t23);
+			append_dev(button8, img8);
+			append_dev(div15, t24);
+			append_dev(div15, button9);
+			append_dev(button9, div9);
+			append_dev(div9, t25);
+			append_dev(button9, t26);
+			append_dev(button9, img9);
+			append_dev(div15, t27);
+			append_dev(div15, button10);
+			append_dev(button10, div10);
+			append_dev(div10, t28);
+			append_dev(button10, t29);
+			append_dev(button10, img10);
+			append_dev(div15, t30);
+			append_dev(div15, button11);
+			append_dev(button11, div11);
+			append_dev(div11, t31);
+			append_dev(button11, t32);
+			append_dev(button11, img11);
+			append_dev(div15, t33);
+			append_dev(div15, button12);
+			append_dev(button12, div12);
+			append_dev(div12, t34);
+			append_dev(button12, t35);
+			append_dev(button12, img12);
+			append_dev(div15, t36);
+			append_dev(div15, button13);
+			append_dev(button13, div13);
+			append_dev(div13, t37);
+			append_dev(button13, t38);
+			append_dev(button13, img13);
+			append_dev(div15, t39);
+			append_dev(div15, button14);
+			append_dev(button14, div14);
+			append_dev(div14, t40);
+			append_dev(button14, t41);
+			append_dev(button14, img14);
+
+			if (!mounted) {
+				dispose = [
+					listen_dev(button0, "click", handleAssistant, false, false, false, false),
+					listen_dev(button5, "click", /*handleSaveLocal*/ ctx[2], false, false, false, false),
+					listen_dev(button6, "click", /*handleExpand*/ ctx[3], false, false, false, false),
+					listen_dev(button8, "click", handleAssistant, false, false, false, false),
+					listen_dev(button13, "click", /*handleSaveLocal*/ ctx[2], false, false, false, false),
+					listen_dev(button14, "click", /*handleExpand*/ ctx[3], false, false, false, false)
+				];
+
+				mounted = true;
+			}
+		},
+		p: function update(ctx, [dirty]) {
+			if (dirty & /*$_*/ 2 && t0_value !== (t0_value = /*$_*/ ctx[1]("editor.generalToolbar.assistant") + "")) set_data_dev(t0, t0_value);
+
+			if (dirty & /*$_*/ 2 && button0_title_value !== (button0_title_value = /*$_*/ ctx[1]("editor.generalToolbar.assistant"))) {
+				attr_dev(button0, "title", button0_title_value);
+			}
+
+			if (dirty & /*$_*/ 2 && t3_value !== (t3_value = /*$_*/ ctx[1]("editor.generalToolbar.runScript") + "")) set_data_dev(t3, t3_value);
+
+			if (dirty & /*$_*/ 2 && button1_title_value !== (button1_title_value = /*$_*/ ctx[1]("editor.generalToolbar.runScript"))) {
+				attr_dev(button1, "title", button1_title_value);
+			}
+
+			if (dirty & /*$_*/ 2 && t6_value !== (t6_value = /*$_*/ ctx[1]("editor.generalToolbar.saveProject") + "")) set_data_dev(t6, t6_value);
+
+			if (dirty & /*$_*/ 2 && button2_title_value !== (button2_title_value = /*$_*/ ctx[1]("editor.generalToolbar.saveProject"))) {
+				attr_dev(button2, "title", button2_title_value);
+			}
+
+			if (dirty & /*$_*/ 2 && t9_value !== (t9_value = /*$_*/ ctx[1]("editor.generalToolbar.format") + "")) set_data_dev(t9, t9_value);
+
+			if (dirty & /*$_*/ 2 && button3_title_value !== (button3_title_value = /*$_*/ ctx[1]("editor.generalToolbar.format"))) {
+				attr_dev(button3, "title", button3_title_value);
+			}
+
+			if (dirty & /*$_*/ 2 && t12_value !== (t12_value = /*$_*/ ctx[1]("editor.generalToolbar.copyToClipboard") + "")) set_data_dev(t12, t12_value);
+
+			if (dirty & /*$_*/ 2 && button4_title_value !== (button4_title_value = /*$_*/ ctx[1]("editor.generalToolbar.copyToClipboard"))) {
+				attr_dev(button4, "title", button4_title_value);
+			}
+
+			if (dirty & /*$_*/ 2 && t15_value !== (t15_value = /*$_*/ ctx[1]("editor.generalToolbar.saveAs") + "")) set_data_dev(t15, t15_value);
+
+			if (dirty & /*$_*/ 2 && button5_title_value !== (button5_title_value = /*$_*/ ctx[1]("editor.generalToolbar.saveAs"))) {
+				attr_dev(button5, "title", button5_title_value);
+			}
+
+			if (dirty & /*$_*/ 2 && t18_value !== (t18_value = /*$_*/ ctx[1]("editor.generalToolbar.expand") + "")) set_data_dev(t18, t18_value);
+
+			if (dirty & /*$_*/ 2 && button6_title_value !== (button6_title_value = /*$_*/ ctx[1]("editor.generalToolbar.expand"))) {
+				attr_dev(button6, "title", button6_title_value);
+			}
+
+			if (dirty & /*isDropdownExtended*/ 1 && button7_class_value !== (button7_class_value = "dropbtn " + (/*isDropdownExtended*/ ctx[0] ? 'extended' : '') + " svelte-1istrcx")) {
+				attr_dev(button7, "class", button7_class_value);
+			}
+
+			if (dirty & /*$_*/ 2 && t22_value !== (t22_value = /*$_*/ ctx[1]("editor.generalToolbar.assistant") + "")) set_data_dev(t22, t22_value);
+			if (dirty & /*$_*/ 2 && t25_value !== (t25_value = /*$_*/ ctx[1]("editor.generalToolbar.runScript") + "")) set_data_dev(t25, t25_value);
+			if (dirty & /*$_*/ 2 && t28_value !== (t28_value = /*$_*/ ctx[1]("editor.generalToolbar.saveProject") + "")) set_data_dev(t28, t28_value);
+			if (dirty & /*$_*/ 2 && t31_value !== (t31_value = /*$_*/ ctx[1]("editor.generalToolbar.format") + "")) set_data_dev(t31, t31_value);
+			if (dirty & /*$_*/ 2 && t34_value !== (t34_value = /*$_*/ ctx[1]("editor.generalToolbar.copyToClipboard") + "")) set_data_dev(t34, t34_value);
+			if (dirty & /*$_*/ 2 && t37_value !== (t37_value = /*$_*/ ctx[1]("editor.generalToolbar.saveAs") + "")) set_data_dev(t37, t37_value);
+			if (dirty & /*$_*/ 2 && t40_value !== (t40_value = /*$_*/ ctx[1]("editor.generalToolbar.expand") + "")) set_data_dev(t40, t40_value);
+		},
+		i: noop,
+		o: noop,
+		d: function destroy(detaching) {
+			if (detaching) detach_dev(div17);
+			mounted = false;
+			run_all(dispose);
+		}
+	};
+
+	dispatch_dev("SvelteRegisterBlock", {
+		block,
+		id: create_fragment$r.name,
+		type: "component",
+		source: "",
+		ctx
+	});
+
+	return block;
+}
+
+function handleAssistant() {
+	console.log("Assistant");
+}
+
+function instance$r($$self, $$props, $$invalidate) {
+	let $_;
+	validate_store($format, '_');
+	component_subscribe($$self, $format, $$value => $$invalidate(1, $_ = $$value));
+	let { $$slots: slots = {}, $$scope } = $$props;
+	validate_slots('GeneralToolbar', slots, []);
+	const dispatch = createEventDispatcher();
+	let isDropdownExtended = false;
+
+	function handleClick() {
+		dispatch("format");
+	}
+
+	function handleSaveLocal() {
+		dispatch("saveLocal");
+	}
+
+	function handleExpand() {
+		dispatch("expand");
+	}
+
+	onMount(() => {
+		const dropbtn = document.querySelector(".dropbtn");
+		const dropdownContent = document.querySelector(".dropdown-content");
+
+		dropbtn.addEventListener("click", () => {
+			dropdownContent.style.display = dropdownContent.style.display === "block"
+			? "none"
+			: "block";
+
+			$$invalidate(0, isDropdownExtended = dropdownContent.style.display === "block");
+		});
+
+		// Close the dropdown if the user clicks outside of it
+		window.onclick = function (event) {
+			if (!event.target.matches(".dropbtn")) {
+				if (dropdownContent.style.display === "block") {
+					dropdownContent.style.display = "none";
+					$$invalidate(0, isDropdownExtended = false);
+				}
+			}
+		};
+	});
+
+	const writable_props = [];
+
+	Object.keys($$props).forEach(key => {
+		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console_1$7.warn(`<GeneralToolbar> was created with unknown prop '${key}'`);
+	});
+
+	$$self.$capture_state = () => ({
+		RunProjectIcon: img$v,
+		SaveFileIcon: img$u,
+		FormatCodeIcon: img$t,
+		CopyToClipboardIcon: img$s,
+		AssistantIcon: img$r,
+		SaveAsIcon: img$q,
+		ExpandIcon: img$p,
+		ToolsIcon: img$o,
+		createEventDispatcher,
+		onMount,
+		_: $format,
+		dispatch,
+		isDropdownExtended,
+		handleClick,
+		handleSaveLocal,
+		handleExpand,
+		handleAssistant,
+		$_
+	});
+
+	$$self.$inject_state = $$props => {
+		if ('isDropdownExtended' in $$props) $$invalidate(0, isDropdownExtended = $$props.isDropdownExtended);
+	};
+
+	if ($$props && "$$inject" in $$props) {
+		$$self.$inject_state($$props.$$inject);
+	}
+
+	return [isDropdownExtended, $_, handleSaveLocal, handleExpand];
+}
+
+class GeneralToolbar extends SvelteComponentDev {
+	constructor(options) {
+		super(options);
+		init$1(this, options, instance$r, create_fragment$r, safe_not_equal, {});
+
+		dispatch_dev("SvelteRegisterComponent", {
+			component: this,
+			tagName: "GeneralToolbar",
+			options,
+			id: create_fragment$r.name
+		});
+	}
+}
+
+var img$n = "data:image/svg+xml,%3csvg viewBox='0 0 576 512' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M544 32H432L400 0h-80c-17.62 0-32 14.38-32 32v160c0 17.62 14.38 32 32 32h224c17.62 0 32-14.38 32-32V64c0-17.62-14.4-32-32-32zm0 288H432l-32-32h-80c-17.62 0-32 14.38-32 32v160c0 17.62 14.38 32 32 32h224c17.62 0 32-14.38 32-32V352c0-17.6-14.4-32-32-32zM64 16c0-8.875-7.12-16-16-16H16C7.125 0 0 7.125 0 16v400c0 17.62 14.38 32 32 32h224v-64H64V160h192V96H64V16z' fill='white' class='fill-000000'%3e%3c/path%3e%3c/svg%3e";
+
+var img$m = "data:image/svg+xml,%3csvg viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3e%3cg data-name='20-chat'%3e%3cpath d='M31 3H1v20h7l6 6v-6h17V3z' fill='none' stroke='white' stroke-linecap='round' stroke-linejoin='round' stroke-width='2px' class='stroke-000000'%3e%3c/path%3e%3ccircle cx='7' cy='13' r='2' fill='none' stroke='white' stroke-linecap='round' stroke-linejoin='round' stroke-width='2px' class='stroke-000000'%3e%3c/circle%3e%3ccircle cx='16' cy='13' r='2' fill='none' stroke='white' stroke-linecap='round' stroke-linejoin='round' stroke-width='2px' class='stroke-000000'%3e%3c/circle%3e%3ccircle cx='25' cy='13' r='2' fill='none' stroke='white' stroke-linecap='round' stroke-linejoin='round' stroke-width='2px' class='stroke-000000'%3e%3c/circle%3e%3c/g%3e%3c/svg%3e";
+
+/* src\Components\Editor\NavigatorController.svelte generated by Svelte v3.59.2 */
+const file$p = "src\\Components\\Editor\\NavigatorController.svelte";
+
+function create_fragment$q(ctx) {
 	let div;
 	let button0;
 	let img0;
 	let img0_src_value;
 	let button0_title_value;
-	let t0;
+	let t;
 	let button1;
 	let img1;
 	let img1_src_value;
 	let button1_title_value;
-	let t1;
-	let button2;
-	let img2;
-	let img2_src_value;
-	let button2_title_value;
-	let t2;
-	let button3;
-	let img3;
-	let img3_src_value;
-	let button3_title_value;
-	let t3;
-	let button4;
-	let img4;
-	let img4_src_value;
-	let button4_title_value;
-	let t4;
-	let button5;
-	let img5;
-	let img5_src_value;
-	let button5_title_value;
 	let mounted;
 	let dispose;
 
@@ -12697,78 +13418,30 @@ function create_fragment$p(ctx) {
 			div = element("div");
 			button0 = element("button");
 			img0 = element("img");
-			t0 = space();
+			t = space();
 			button1 = element("button");
 			img1 = element("img");
-			t1 = space();
-			button2 = element("button");
-			img2 = element("img");
-			t2 = space();
-			button3 = element("button");
-			img3 = element("img");
-			t3 = space();
-			button4 = element("button");
-			img4 = element("img");
-			t4 = space();
-			button5 = element("button");
-			img5 = element("img");
-			if (!src_url_equal(img0.src, img0_src_value = img$p)) attr_dev(img0, "src", img0_src_value);
-			attr_dev(img0, "alt", "Run Script");
-			attr_dev(img0, "width", "20px");
-			attr_dev(img0, "height", "20px");
-			add_location(img0, file$o, 26, 4, 917);
-			attr_dev(button0, "title", button0_title_value = /*$_*/ ctx[0]("editor.generalToolbar.runScript"));
-			attr_dev(button0, "id", "run-button");
-			attr_dev(button0, "class", "top-button svelte-118q6l3");
-			add_location(button0, file$o, 21, 2, 808);
-			if (!src_url_equal(img1.src, img1_src_value = img$o)) attr_dev(img1, "src", img1_src_value);
-			attr_dev(img1, "alt", "Save File");
-			attr_dev(img1, "width", "20px");
-			attr_dev(img1, "height", "20px");
-			add_location(img1, file$o, 33, 4, 1116);
-			attr_dev(button1, "title", button1_title_value = /*$_*/ ctx[0]("editor.generalToolbar.saveProject"));
-			attr_dev(button1, "id", "save-button");
-			attr_dev(button1, "class", "top-button svelte-118q6l3");
-			add_location(button1, file$o, 28, 2, 1004);
-			if (!src_url_equal(img2.src, img2_src_value = img$n)) attr_dev(img2, "src", img2_src_value);
-			attr_dev(img2, "alt", "Format Code");
-			attr_dev(img2, "width", "20px");
-			attr_dev(img2, "height", "20px");
-			add_location(img2, file$o, 40, 4, 1309);
-			attr_dev(button2, "title", button2_title_value = /*$_*/ ctx[0]("editor.generalToolbar.format"));
-			attr_dev(button2, "id", "format-button");
-			attr_dev(button2, "class", "top-button svelte-118q6l3");
-			add_location(button2, file$o, 35, 2, 1200);
-			if (!src_url_equal(img3.src, img3_src_value = img$m)) attr_dev(img3, "src", img3_src_value);
-			attr_dev(img3, "alt", "Copy to Clipboard");
-			attr_dev(img3, "width", "20px");
-			attr_dev(img3, "height", "20px");
-			add_location(img3, file$o, 47, 4, 1518);
-			attr_dev(button3, "title", button3_title_value = /*$_*/ ctx[0]("editor.generalToolbar.copyToClipboard"));
-			attr_dev(button3, "id", "clipboard-button");
-			attr_dev(button3, "class", "top-button svelte-118q6l3");
-			add_location(button3, file$o, 42, 2, 1397);
-			if (!src_url_equal(img4.src, img4_src_value = img$l)) attr_dev(img4, "src", img4_src_value);
-			attr_dev(img4, "alt", "Save As");
-			attr_dev(img4, "width", "20px");
-			attr_dev(img4, "height", "20px");
-			add_location(img4, file$o, 60, 4, 1786);
-			attr_dev(button4, "title", button4_title_value = /*$_*/ ctx[0]("editor.generalToolbar.saveAs"));
-			attr_dev(button4, "id", "save-as-button");
-			attr_dev(button4, "class", "top-button svelte-118q6l3");
-			add_location(button4, file$o, 54, 2, 1645);
-			if (!src_url_equal(img5.src, img5_src_value = img$k)) attr_dev(img5, "src", img5_src_value);
-			attr_dev(img5, "alt", "Expand");
-			attr_dev(img5, "width", "20px");
-			attr_dev(img5, "height", "20px");
-			add_location(img5, file$o, 67, 4, 1975);
-			attr_dev(button5, "title", button5_title_value = /*$_*/ ctx[0]("editor.generalToolbar.expand"));
-			attr_dev(button5, "id", "expand-button");
-			attr_dev(button5, "class", "top-button svelte-118q6l3");
-			add_location(button5, file$o, 62, 2, 1866);
-			attr_dev(div, "id", "top-toolbar");
-			attr_dev(div, "class", "svelte-118q6l3");
-			add_location(div, file$o, 20, 0, 783);
+			if (!src_url_equal(img0.src, img0_src_value = img$n)) attr_dev(img0, "src", img0_src_value);
+			attr_dev(img0, "alt", "Projects");
+			attr_dev(img0, "width", "30px");
+			attr_dev(img0, "height", "30px");
+			add_location(img0, file$p, 24, 4, 718);
+			attr_dev(button0, "title", button0_title_value = /*$_*/ ctx[0]("editor.navigatorController.explorer"));
+			attr_dev(button0, "id", "projectExpand-btn");
+			attr_dev(button0, "class", "nav-buttons svelte-1h8tjf0");
+			add_location(button0, file$p, 18, 2, 558);
+			if (!src_url_equal(img1.src, img1_src_value = img$m)) attr_dev(img1, "src", img1_src_value);
+			attr_dev(img1, "alt", "Projects");
+			attr_dev(img1, "width", "30px");
+			attr_dev(img1, "height", "30px");
+			add_location(img1, file$p, 32, 4, 964);
+			attr_dev(button1, "title", button1_title_value = /*$_*/ ctx[0]("editor.navigatorController.assistant"));
+			attr_dev(button1, "id", "projectAssistant-btn");
+			attr_dev(button1, "class", "nav-buttons svelte-1h8tjf0");
+			add_location(button1, file$p, 26, 2, 799);
+			attr_dev(div, "id", "nav-controller");
+			attr_dev(div, "class", "svelte-1h8tjf0");
+			add_location(div, file$p, 17, 0, 529);
 		},
 		l: function claim(nodes) {
 			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -12777,50 +13450,26 @@ function create_fragment$p(ctx) {
 			insert_dev(target, div, anchor);
 			append_dev(div, button0);
 			append_dev(button0, img0);
-			append_dev(div, t0);
+			append_dev(div, t);
 			append_dev(div, button1);
 			append_dev(button1, img1);
-			append_dev(div, t1);
-			append_dev(div, button2);
-			append_dev(button2, img2);
-			append_dev(div, t2);
-			append_dev(div, button3);
-			append_dev(button3, img3);
-			append_dev(div, t3);
-			append_dev(div, button4);
-			append_dev(button4, img4);
-			append_dev(div, t4);
-			append_dev(div, button5);
-			append_dev(button5, img5);
 
 			if (!mounted) {
-				dispose = listen_dev(button4, "click", /*handleSaveLocal*/ ctx[1], false, false, false, false);
+				dispose = [
+					listen_dev(button0, "click", /*handleExplorerBtn*/ ctx[1], false, false, false, false),
+					listen_dev(button1, "click", /*handleAssistantBtn*/ ctx[2], false, false, false, false)
+				];
+
 				mounted = true;
 			}
 		},
 		p: function update(ctx, [dirty]) {
-			if (dirty & /*$_*/ 1 && button0_title_value !== (button0_title_value = /*$_*/ ctx[0]("editor.generalToolbar.runScript"))) {
+			if (dirty & /*$_*/ 1 && button0_title_value !== (button0_title_value = /*$_*/ ctx[0]("editor.navigatorController.explorer"))) {
 				attr_dev(button0, "title", button0_title_value);
 			}
 
-			if (dirty & /*$_*/ 1 && button1_title_value !== (button1_title_value = /*$_*/ ctx[0]("editor.generalToolbar.saveProject"))) {
+			if (dirty & /*$_*/ 1 && button1_title_value !== (button1_title_value = /*$_*/ ctx[0]("editor.navigatorController.assistant"))) {
 				attr_dev(button1, "title", button1_title_value);
-			}
-
-			if (dirty & /*$_*/ 1 && button2_title_value !== (button2_title_value = /*$_*/ ctx[0]("editor.generalToolbar.format"))) {
-				attr_dev(button2, "title", button2_title_value);
-			}
-
-			if (dirty & /*$_*/ 1 && button3_title_value !== (button3_title_value = /*$_*/ ctx[0]("editor.generalToolbar.copyToClipboard"))) {
-				attr_dev(button3, "title", button3_title_value);
-			}
-
-			if (dirty & /*$_*/ 1 && button4_title_value !== (button4_title_value = /*$_*/ ctx[0]("editor.generalToolbar.saveAs"))) {
-				attr_dev(button4, "title", button4_title_value);
-			}
-
-			if (dirty & /*$_*/ 1 && button5_title_value !== (button5_title_value = /*$_*/ ctx[0]("editor.generalToolbar.expand"))) {
-				attr_dev(button5, "title", button5_title_value);
 			}
 		},
 		i: noop,
@@ -12828,7 +13477,355 @@ function create_fragment$p(ctx) {
 		d: function destroy(detaching) {
 			if (detaching) detach_dev(div);
 			mounted = false;
-			dispose();
+			run_all(dispose);
+		}
+	};
+
+	dispatch_dev("SvelteRegisterBlock", {
+		block,
+		id: create_fragment$q.name,
+		type: "component",
+		source: "",
+		ctx
+	});
+
+	return block;
+}
+
+function instance$q($$self, $$props, $$invalidate) {
+	let $_;
+	validate_store($format, '_');
+	component_subscribe($$self, $format, $$value => $$invalidate(0, $_ = $$value));
+	let { $$slots: slots = {}, $$scope } = $$props;
+	validate_slots('NavigatorController', slots, []);
+
+	function handleExplorerBtn() {
+		projectExplorer.update(value => !value);
+		projectAssistant.set(false);
+	}
+
+	function handleAssistantBtn() {
+		projectExplorer.set(false);
+		projectAssistant.update(value => !value);
+	}
+
+	const writable_props = [];
+
+	Object.keys($$props).forEach(key => {
+		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<NavigatorController> was created with unknown prop '${key}'`);
+	});
+
+	$$self.$capture_state = () => ({
+		Projects: img$n,
+		Assistant: img$m,
+		projectAssistant,
+		projectExplorer,
+		_: $format,
+		handleExplorerBtn,
+		handleAssistantBtn,
+		$_
+	});
+
+	return [$_, handleExplorerBtn, handleAssistantBtn];
+}
+
+class NavigatorController extends SvelteComponentDev {
+	constructor(options) {
+		super(options);
+		init$1(this, options, instance$q, create_fragment$q, safe_not_equal, {});
+
+		dispatch_dev("SvelteRegisterComponent", {
+			component: this,
+			tagName: "NavigatorController",
+			options,
+			id: create_fragment$q.name
+		});
+	}
+}
+
+var img$l = "data:image/svg+xml,%3c%3fxml version='1.0' %3f%3e%3csvg height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='m21.426 11.095-17-8A.999.999 0 0 0 3.03 4.242L4.969 12 3.03 19.758a.998.998 0 0 0 1.396 1.147l17-8a1 1 0 0 0 0-1.81zM5.481 18.197l.839-3.357L12 12 6.32 9.16l-.839-3.357L18.651 12l-13.17 6.197z'/%3e%3c/svg%3e";
+
+var img$k = "data:image/svg+xml,%3csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M0 0h24v24H0z' fill='none'%3e%3c/path%3e%3cpath d='M14 3v2H4v13.385L5.763 17H20v-7h2v8a1 1 0 0 1-1 1H6.455L2 22.5V4a1 1 0 0 1 1-1h11zm5 0V0h2v3h3v2h-3v3h-2V5h-3V3h3z' fill='white' class='fill-000000'%3e%3c/path%3e%3c/svg%3e";
+
+/* src\Components\Editor\Assistant\ChatSystem.svelte generated by Svelte v3.59.2 */
+
+const { Map: Map_1 } = globals;
+const file$o = "src\\Components\\Editor\\Assistant\\ChatSystem.svelte";
+
+function get_each_context$3(ctx, list, i) {
+	const child_ctx = ctx.slice();
+	child_ctx[6] = list[i][0];
+	child_ctx[7] = list[i][1];
+	return child_ctx;
+}
+
+// (36:2) {#if chatMessage}
+function create_if_block$j(ctx) {
+	let div2;
+	let div0;
+	let strong;
+
+	let t0_value = (/*chatMessage*/ ctx[7].sender
+	? /*chatMessage*/ ctx[7].sender.name
+	: "Unknown") + "";
+
+	let t0;
+	let t1;
+	let div1;
+	let t2;
+	let div2_class_value;
+
+	function select_block_type(ctx, dirty) {
+		if (/*chatMessage*/ ctx[7].privileged) return create_if_block_1$8;
+		return create_else_block$6;
+	}
+
+	let current_block_type = select_block_type(ctx);
+	let if_block = current_block_type(ctx);
+
+	const block = {
+		c: function create() {
+			div2 = element("div");
+			div0 = element("div");
+			strong = element("strong");
+			t0 = text(t0_value);
+			t1 = space();
+			div1 = element("div");
+			if_block.c();
+			t2 = space();
+			add_location(strong, file$o, 38, 8, 1312);
+			set_style(div0, "display", "block");
+			add_location(div0, file$o, 37, 6, 1273);
+			add_location(div1, file$o, 42, 6, 1431);
+
+			attr_dev(div2, "class", div2_class_value = "" + (null_to_empty(/*chatMessage*/ ctx[7].privileged
+			? "messages"
+			: "messages light") + " svelte-1szbnbg"));
+
+			add_location(div2, file$o, 36, 4, 1197);
+		},
+		m: function mount(target, anchor) {
+			insert_dev(target, div2, anchor);
+			append_dev(div2, div0);
+			append_dev(div0, strong);
+			append_dev(strong, t0);
+			append_dev(div2, t1);
+			append_dev(div2, div1);
+			if_block.m(div1, null);
+			append_dev(div2, t2);
+		},
+		p: function update(ctx, dirty) {
+			if (dirty & /*$chatMessages*/ 2 && t0_value !== (t0_value = (/*chatMessage*/ ctx[7].sender
+			? /*chatMessage*/ ctx[7].sender.name
+			: "Unknown") + "")) set_data_dev(t0, t0_value);
+
+			if (current_block_type === (current_block_type = select_block_type(ctx)) && if_block) {
+				if_block.p(ctx, dirty);
+			} else {
+				if_block.d(1);
+				if_block = current_block_type(ctx);
+
+				if (if_block) {
+					if_block.c();
+					if_block.m(div1, null);
+				}
+			}
+
+			if (dirty & /*$chatMessages*/ 2 && div2_class_value !== (div2_class_value = "" + (null_to_empty(/*chatMessage*/ ctx[7].privileged
+			? "messages"
+			: "messages light") + " svelte-1szbnbg"))) {
+				attr_dev(div2, "class", div2_class_value);
+			}
+		},
+		d: function destroy(detaching) {
+			if (detaching) detach_dev(div2);
+			if_block.d();
+		}
+	};
+
+	dispatch_dev("SvelteRegisterBlock", {
+		block,
+		id: create_if_block$j.name,
+		type: "if",
+		source: "(36:2) {#if chatMessage}",
+		ctx
+	});
+
+	return block;
+}
+
+// (46:8) {:else}
+function create_else_block$6(ctx) {
+	let t_value = /*chatMessage*/ ctx[7].message + "";
+	let t;
+
+	const block = {
+		c: function create() {
+			t = text(t_value);
+		},
+		m: function mount(target, anchor) {
+			insert_dev(target, t, anchor);
+		},
+		p: function update(ctx, dirty) {
+			if (dirty & /*$chatMessages*/ 2 && t_value !== (t_value = /*chatMessage*/ ctx[7].message + "")) set_data_dev(t, t_value);
+		},
+		d: function destroy(detaching) {
+			if (detaching) detach_dev(t);
+		}
+	};
+
+	dispatch_dev("SvelteRegisterBlock", {
+		block,
+		id: create_else_block$6.name,
+		type: "else",
+		source: "(46:8) {:else}",
+		ctx
+	});
+
+	return block;
+}
+
+// (44:8) {#if chatMessage.privileged}
+function create_if_block_1$8(ctx) {
+	let html_tag;
+	let raw_value = /*chatMessage*/ ctx[7].message + "";
+	let html_anchor;
+
+	const block = {
+		c: function create() {
+			html_tag = new HtmlTag(false);
+			html_anchor = empty();
+			html_tag.a = html_anchor;
+		},
+		m: function mount(target, anchor) {
+			html_tag.m(raw_value, target, anchor);
+			insert_dev(target, html_anchor, anchor);
+		},
+		p: function update(ctx, dirty) {
+			if (dirty & /*$chatMessages*/ 2 && raw_value !== (raw_value = /*chatMessage*/ ctx[7].message + "")) html_tag.p(raw_value);
+		},
+		d: function destroy(detaching) {
+			if (detaching) detach_dev(html_anchor);
+			if (detaching) html_tag.d();
+		}
+	};
+
+	dispatch_dev("SvelteRegisterBlock", {
+		block,
+		id: create_if_block_1$8.name,
+		type: "if",
+		source: "(44:8) {#if chatMessage.privileged}",
+		ctx
+	});
+
+	return block;
+}
+
+// (35:0) {#each Array.from($chatMessages) as [id, chatMessage] (id)}
+function create_each_block$3(key_1, ctx) {
+	let first;
+	let if_block_anchor;
+	let if_block = /*chatMessage*/ ctx[7] && create_if_block$j(ctx);
+
+	const block = {
+		key: key_1,
+		first: null,
+		c: function create() {
+			first = empty();
+			if (if_block) if_block.c();
+			if_block_anchor = empty();
+			this.first = first;
+		},
+		m: function mount(target, anchor) {
+			insert_dev(target, first, anchor);
+			if (if_block) if_block.m(target, anchor);
+			insert_dev(target, if_block_anchor, anchor);
+		},
+		p: function update(new_ctx, dirty) {
+			ctx = new_ctx;
+
+			if (/*chatMessage*/ ctx[7]) {
+				if (if_block) {
+					if_block.p(ctx, dirty);
+				} else {
+					if_block = create_if_block$j(ctx);
+					if_block.c();
+					if_block.m(if_block_anchor.parentNode, if_block_anchor);
+				}
+			} else if (if_block) {
+				if_block.d(1);
+				if_block = null;
+			}
+		},
+		d: function destroy(detaching) {
+			if (detaching) detach_dev(first);
+			if (if_block) if_block.d(detaching);
+			if (detaching) detach_dev(if_block_anchor);
+		}
+	};
+
+	dispatch_dev("SvelteRegisterBlock", {
+		block,
+		id: create_each_block$3.name,
+		type: "each",
+		source: "(35:0) {#each Array.from($chatMessages) as [id, chatMessage] (id)}",
+		ctx
+	});
+
+	return block;
+}
+
+function create_fragment$p(ctx) {
+	let each_blocks = [];
+	let each_1_lookup = new Map_1();
+	let each_1_anchor;
+	let each_value = Array.from(/*$chatMessages*/ ctx[1]);
+	validate_each_argument(each_value);
+	const get_key = ctx => /*id*/ ctx[6];
+	validate_each_keys(ctx, each_value, get_each_context$3, get_key);
+
+	for (let i = 0; i < each_value.length; i += 1) {
+		let child_ctx = get_each_context$3(ctx, each_value, i);
+		let key = get_key(child_ctx);
+		each_1_lookup.set(key, each_blocks[i] = create_each_block$3(key, child_ctx));
+	}
+
+	const block = {
+		c: function create() {
+			for (let i = 0; i < each_blocks.length; i += 1) {
+				each_blocks[i].c();
+			}
+
+			each_1_anchor = empty();
+		},
+		l: function claim(nodes) {
+			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+		},
+		m: function mount(target, anchor) {
+			for (let i = 0; i < each_blocks.length; i += 1) {
+				if (each_blocks[i]) {
+					each_blocks[i].m(target, anchor);
+				}
+			}
+
+			insert_dev(target, each_1_anchor, anchor);
+		},
+		p: function update(ctx, [dirty]) {
+			if (dirty & /*Array, $chatMessages*/ 2) {
+				each_value = Array.from(/*$chatMessages*/ ctx[1]);
+				validate_each_argument(each_value);
+				validate_each_keys(ctx, each_value, get_each_context$3, get_key);
+				each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx, each_value, each_1_lookup, each_1_anchor.parentNode, destroy_block, create_each_block$3, each_1_anchor, get_each_context$3);
+			}
+		},
+		i: noop,
+		o: noop,
+		d: function destroy(detaching) {
+			for (let i = 0; i < each_blocks.length; i += 1) {
+				each_blocks[i].d(detaching);
+			}
+
+			if (detaching) detach_dev(each_1_anchor);
 		}
 	};
 
@@ -12844,113 +13841,4501 @@ function create_fragment$p(ctx) {
 }
 
 function instance$p($$self, $$props, $$invalidate) {
-	let $_;
-	validate_store($format, '_');
-	component_subscribe($$self, $format, $$value => $$invalidate(0, $_ = $$value));
-	let { $$slots: slots = {}, $$scope } = $$props;
-	validate_slots('GeneralToolbar', slots, []);
-	const dispatch = createEventDispatcher();
+	let $chatMessages,
+		$$unsubscribe_chatMessages = noop,
+		$$subscribe_chatMessages = () => ($$unsubscribe_chatMessages(), $$unsubscribe_chatMessages = subscribe(chatMessages, $$value => $$invalidate(1, $chatMessages = $$value)), chatMessages);
 
-	// function handleClick() {
-	//   dispatch("format");
-	// }
-	function handleSaveLocal() {
-		dispatch("saveLocal");
+	$$self.$$.on_destroy.push(() => $$unsubscribe_chatMessages());
+	let { $$slots: slots = {}, $$scope } = $$props;
+	validate_slots('ChatSystem', slots, []);
+	const storedMessages = localStorage.getItem("chatMessages");
+
+	let { chatMessages = writable(storedMessages
+	? new Map(JSON.parse(storedMessages))
+	: new Map()) } = $$props;
+
+	validate_store(chatMessages, 'chatMessages');
+	$$subscribe_chatMessages();
+
+	function isMapEmpty() {
+		let storedMessages = localStorage.getItem("chatMessages");
+		let messages = $chatMessages;
+
+		return messages.size === 0 && (!storedMessages || storedMessages === JSON.stringify([]))
+		? true
+		: false;
 	}
 
-	const writable_props = [];
+	function addMessage(id, sender, message, privileged) {
+		chatMessages.update(messages => {
+			messages.set(id, { sender, message, privileged });
+			localStorage.setItem("chatMessages", JSON.stringify(Array.from(messages)));
+			return messages;
+		});
+	}
+
+	function createNewMap() {
+		chatMessages.set(new Map());
+		localStorage.removeItem("chatMessages");
+	}
+
+	const writable_props = ['chatMessages'];
 
 	Object.keys($$props).forEach(key => {
-		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<GeneralToolbar> was created with unknown prop '${key}'`);
+		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<ChatSystem> was created with unknown prop '${key}'`);
 	});
+
+	$$self.$$set = $$props => {
+		if ('chatMessages' in $$props) $$subscribe_chatMessages($$invalidate(0, chatMessages = $$props.chatMessages));
+	};
 
 	$$self.$capture_state = () => ({
-		RunProjectIcon: img$p,
-		SaveFileIcon: img$o,
-		FormatCodeIcon: img$n,
-		CopyToClipboardIcon: img$m,
-		SaveAsIcon: img$l,
-		ExpandIcon: img$k,
-		createEventDispatcher,
-		_: $format,
-		dispatch,
-		handleSaveLocal,
-		$_
+		writable,
+		storedMessages,
+		chatMessages,
+		isMapEmpty,
+		addMessage,
+		createNewMap,
+		$chatMessages
 	});
 
-	return [$_, handleSaveLocal];
+	$$self.$inject_state = $$props => {
+		if ('chatMessages' in $$props) $$subscribe_chatMessages($$invalidate(0, chatMessages = $$props.chatMessages));
+	};
+
+	if ($$props && "$$inject" in $$props) {
+		$$self.$inject_state($$props.$$inject);
+	}
+
+	return [chatMessages, $chatMessages, isMapEmpty, addMessage, createNewMap];
 }
 
-class GeneralToolbar extends SvelteComponentDev {
+class ChatSystem extends SvelteComponentDev {
 	constructor(options) {
 		super(options);
-		init$1(this, options, instance$p, create_fragment$p, safe_not_equal, {});
+
+		init$1(this, options, instance$p, create_fragment$p, safe_not_equal, {
+			chatMessages: 0,
+			isMapEmpty: 2,
+			addMessage: 3,
+			createNewMap: 4
+		});
 
 		dispatch_dev("SvelteRegisterComponent", {
 			component: this,
-			tagName: "GeneralToolbar",
+			tagName: "ChatSystem",
 			options,
 			id: create_fragment$p.name
 		});
 	}
+
+	get chatMessages() {
+		throw new Error("<ChatSystem>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+	}
+
+	set chatMessages(value) {
+		throw new Error("<ChatSystem>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+	}
+
+	get isMapEmpty() {
+		return this.$$.ctx[2];
+	}
+
+	set isMapEmpty(value) {
+		throw new Error("<ChatSystem>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+	}
+
+	get addMessage() {
+		return this.$$.ctx[3];
+	}
+
+	set addMessage(value) {
+		throw new Error("<ChatSystem>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+	}
+
+	get createNewMap() {
+		return this.$$.ctx[4];
+	}
+
+	set createNewMap(value) {
+		throw new Error("<ChatSystem>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+	}
 }
 
-var img$j = "data:image/svg+xml,%3c%3fxml version='1.0' %3f%3e%3csvg enable-background='new 0 0 500 500' id='Layer_1' version='1.1' viewBox='0 0 500 500' xml:space='preserve' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'%3e%3cg%3e%3cg%3e%3cpolygon points='400.1%2c401.1 60.5%2c401.1 60.5%2c100 203.1%2c99.9 230.4%2c127.3 402.7%2c127.3 402.7%2c192.7 375.3%2c192.7 375.3%2c154.7 219.1%2c154.7 191.7%2c127.3 87.9%2c127.3 87.9%2c373.7 377.9%2c373.7 406.7%2c236.8 375.3%2c236.8 375.3%2c220.7 389%2c220.7 389%2c209.4 440.5%2c209.4 '/%3e%3c/g%3e%3cg%3e%3cpolygon points='94.5%2c335.1 67.6%2c330.2 97%2c168.4 419.3%2c168.4 408.2%2c225.7 381.3%2c220.5 386.1%2c195.7 119.8%2c195.7 '/%3e%3c/g%3e%3cg%3e%3cpolygon points='87.5%2c390.7 60.9%2c384 98.1%2c236.8 226.3%2c236.8 253.7%2c209.4 416.4%2c209.4 416.4%2c236.8 265%2c236.8 237.7%2c264.2 119.5%2c264.2 '/%3e%3c/g%3e%3c/g%3e%3c/svg%3e";
+/**
+ * marked v12.0.2 - a markdown parser
+ * Copyright (c) 2011-2024, Christopher Jeffrey. (MIT Licensed)
+ * https://github.com/markedjs/marked
+ */
 
-/* src\Components\Editor\NavigatorController.svelte generated by Svelte v3.59.2 */
-const file$n = "src\\Components\\Editor\\NavigatorController.svelte";
+/**
+ * DO NOT EDIT THIS FILE
+ * The code in this file is generated from files in ./src/
+ */
 
-function create_fragment$o(ctx) {
-	let div;
-	let button;
+/**
+ * Gets the original marked default options.
+ */
+function _getDefaults() {
+    return {
+        async: false,
+        breaks: false,
+        extensions: null,
+        gfm: true,
+        hooks: null,
+        pedantic: false,
+        renderer: null,
+        silent: false,
+        tokenizer: null,
+        walkTokens: null
+    };
+}
+let _defaults = _getDefaults();
+function changeDefaults(newDefaults) {
+    _defaults = newDefaults;
+}
+
+/**
+ * Helpers
+ */
+const escapeTest = /[&<>"']/;
+const escapeReplace = new RegExp(escapeTest.source, 'g');
+const escapeTestNoEncode = /[<>"']|&(?!(#\d{1,7}|#[Xx][a-fA-F0-9]{1,6}|\w+);)/;
+const escapeReplaceNoEncode = new RegExp(escapeTestNoEncode.source, 'g');
+const escapeReplacements = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+};
+const getEscapeReplacement = (ch) => escapeReplacements[ch];
+function escape$1(html, encode) {
+    if (encode) {
+        if (escapeTest.test(html)) {
+            return html.replace(escapeReplace, getEscapeReplacement);
+        }
+    }
+    else {
+        if (escapeTestNoEncode.test(html)) {
+            return html.replace(escapeReplaceNoEncode, getEscapeReplacement);
+        }
+    }
+    return html;
+}
+const unescapeTest = /&(#(?:\d+)|(?:#x[0-9A-Fa-f]+)|(?:\w+));?/ig;
+function unescape(html) {
+    // explicitly match decimal, hex, and named HTML entities
+    return html.replace(unescapeTest, (_, n) => {
+        n = n.toLowerCase();
+        if (n === 'colon')
+            return ':';
+        if (n.charAt(0) === '#') {
+            return n.charAt(1) === 'x'
+                ? String.fromCharCode(parseInt(n.substring(2), 16))
+                : String.fromCharCode(+n.substring(1));
+        }
+        return '';
+    });
+}
+const caret = /(^|[^\[])\^/g;
+function edit(regex, opt) {
+    let source = typeof regex === 'string' ? regex : regex.source;
+    opt = opt || '';
+    const obj = {
+        replace: (name, val) => {
+            let valSource = typeof val === 'string' ? val : val.source;
+            valSource = valSource.replace(caret, '$1');
+            source = source.replace(name, valSource);
+            return obj;
+        },
+        getRegex: () => {
+            return new RegExp(source, opt);
+        }
+    };
+    return obj;
+}
+function cleanUrl(href) {
+    try {
+        href = encodeURI(href).replace(/%25/g, '%');
+    }
+    catch (e) {
+        return null;
+    }
+    return href;
+}
+const noopTest = { exec: () => null };
+function splitCells(tableRow, count) {
+    // ensure that every cell-delimiting pipe has a space
+    // before it to distinguish it from an escaped pipe
+    const row = tableRow.replace(/\|/g, (match, offset, str) => {
+        let escaped = false;
+        let curr = offset;
+        while (--curr >= 0 && str[curr] === '\\')
+            escaped = !escaped;
+        if (escaped) {
+            // odd number of slashes means | is escaped
+            // so we leave it alone
+            return '|';
+        }
+        else {
+            // add space before unescaped |
+            return ' |';
+        }
+    }), cells = row.split(/ \|/);
+    let i = 0;
+    // First/last cell in a row cannot be empty if it has no leading/trailing pipe
+    if (!cells[0].trim()) {
+        cells.shift();
+    }
+    if (cells.length > 0 && !cells[cells.length - 1].trim()) {
+        cells.pop();
+    }
+    if (count) {
+        if (cells.length > count) {
+            cells.splice(count);
+        }
+        else {
+            while (cells.length < count)
+                cells.push('');
+        }
+    }
+    for (; i < cells.length; i++) {
+        // leading or trailing whitespace is ignored per the gfm spec
+        cells[i] = cells[i].trim().replace(/\\\|/g, '|');
+    }
+    return cells;
+}
+/**
+ * Remove trailing 'c's. Equivalent to str.replace(/c*$/, '').
+ * /c*$/ is vulnerable to REDOS.
+ *
+ * @param str
+ * @param c
+ * @param invert Remove suffix of non-c chars instead. Default falsey.
+ */
+function rtrim(str, c, invert) {
+    const l = str.length;
+    if (l === 0) {
+        return '';
+    }
+    // Length of suffix matching the invert condition.
+    let suffLen = 0;
+    // Step left until we fail to match the invert condition.
+    while (suffLen < l) {
+        const currChar = str.charAt(l - suffLen - 1);
+        if (currChar === c && !invert) {
+            suffLen++;
+        }
+        else if (currChar !== c && invert) {
+            suffLen++;
+        }
+        else {
+            break;
+        }
+    }
+    return str.slice(0, l - suffLen);
+}
+function findClosingBracket(str, b) {
+    if (str.indexOf(b[1]) === -1) {
+        return -1;
+    }
+    let level = 0;
+    for (let i = 0; i < str.length; i++) {
+        if (str[i] === '\\') {
+            i++;
+        }
+        else if (str[i] === b[0]) {
+            level++;
+        }
+        else if (str[i] === b[1]) {
+            level--;
+            if (level < 0) {
+                return i;
+            }
+        }
+    }
+    return -1;
+}
+
+function outputLink(cap, link, raw, lexer) {
+    const href = link.href;
+    const title = link.title ? escape$1(link.title) : null;
+    const text = cap[1].replace(/\\([\[\]])/g, '$1');
+    if (cap[0].charAt(0) !== '!') {
+        lexer.state.inLink = true;
+        const token = {
+            type: 'link',
+            raw,
+            href,
+            title,
+            text,
+            tokens: lexer.inlineTokens(text)
+        };
+        lexer.state.inLink = false;
+        return token;
+    }
+    return {
+        type: 'image',
+        raw,
+        href,
+        title,
+        text: escape$1(text)
+    };
+}
+function indentCodeCompensation(raw, text) {
+    const matchIndentToCode = raw.match(/^(\s+)(?:```)/);
+    if (matchIndentToCode === null) {
+        return text;
+    }
+    const indentToCode = matchIndentToCode[1];
+    return text
+        .split('\n')
+        .map(node => {
+        const matchIndentInNode = node.match(/^\s+/);
+        if (matchIndentInNode === null) {
+            return node;
+        }
+        const [indentInNode] = matchIndentInNode;
+        if (indentInNode.length >= indentToCode.length) {
+            return node.slice(indentToCode.length);
+        }
+        return node;
+    })
+        .join('\n');
+}
+/**
+ * Tokenizer
+ */
+class _Tokenizer {
+    options;
+    rules; // set by the lexer
+    lexer; // set by the lexer
+    constructor(options) {
+        this.options = options || _defaults;
+    }
+    space(src) {
+        const cap = this.rules.block.newline.exec(src);
+        if (cap && cap[0].length > 0) {
+            return {
+                type: 'space',
+                raw: cap[0]
+            };
+        }
+    }
+    code(src) {
+        const cap = this.rules.block.code.exec(src);
+        if (cap) {
+            const text = cap[0].replace(/^ {1,4}/gm, '');
+            return {
+                type: 'code',
+                raw: cap[0],
+                codeBlockStyle: 'indented',
+                text: !this.options.pedantic
+                    ? rtrim(text, '\n')
+                    : text
+            };
+        }
+    }
+    fences(src) {
+        const cap = this.rules.block.fences.exec(src);
+        if (cap) {
+            const raw = cap[0];
+            const text = indentCodeCompensation(raw, cap[3] || '');
+            return {
+                type: 'code',
+                raw,
+                lang: cap[2] ? cap[2].trim().replace(this.rules.inline.anyPunctuation, '$1') : cap[2],
+                text
+            };
+        }
+    }
+    heading(src) {
+        const cap = this.rules.block.heading.exec(src);
+        if (cap) {
+            let text = cap[2].trim();
+            // remove trailing #s
+            if (/#$/.test(text)) {
+                const trimmed = rtrim(text, '#');
+                if (this.options.pedantic) {
+                    text = trimmed.trim();
+                }
+                else if (!trimmed || / $/.test(trimmed)) {
+                    // CommonMark requires space before trailing #s
+                    text = trimmed.trim();
+                }
+            }
+            return {
+                type: 'heading',
+                raw: cap[0],
+                depth: cap[1].length,
+                text,
+                tokens: this.lexer.inline(text)
+            };
+        }
+    }
+    hr(src) {
+        const cap = this.rules.block.hr.exec(src);
+        if (cap) {
+            return {
+                type: 'hr',
+                raw: cap[0]
+            };
+        }
+    }
+    blockquote(src) {
+        const cap = this.rules.block.blockquote.exec(src);
+        if (cap) {
+            // precede setext continuation with 4 spaces so it isn't a setext
+            let text = cap[0].replace(/\n {0,3}((?:=+|-+) *)(?=\n|$)/g, '\n    $1');
+            text = rtrim(text.replace(/^ *>[ \t]?/gm, ''), '\n');
+            const top = this.lexer.state.top;
+            this.lexer.state.top = true;
+            const tokens = this.lexer.blockTokens(text);
+            this.lexer.state.top = top;
+            return {
+                type: 'blockquote',
+                raw: cap[0],
+                tokens,
+                text
+            };
+        }
+    }
+    list(src) {
+        let cap = this.rules.block.list.exec(src);
+        if (cap) {
+            let bull = cap[1].trim();
+            const isordered = bull.length > 1;
+            const list = {
+                type: 'list',
+                raw: '',
+                ordered: isordered,
+                start: isordered ? +bull.slice(0, -1) : '',
+                loose: false,
+                items: []
+            };
+            bull = isordered ? `\\d{1,9}\\${bull.slice(-1)}` : `\\${bull}`;
+            if (this.options.pedantic) {
+                bull = isordered ? bull : '[*+-]';
+            }
+            // Get next list item
+            const itemRegex = new RegExp(`^( {0,3}${bull})((?:[\t ][^\\n]*)?(?:\\n|$))`);
+            let raw = '';
+            let itemContents = '';
+            let endsWithBlankLine = false;
+            // Check if current bullet point can start a new List Item
+            while (src) {
+                let endEarly = false;
+                if (!(cap = itemRegex.exec(src))) {
+                    break;
+                }
+                if (this.rules.block.hr.test(src)) { // End list if bullet was actually HR (possibly move into itemRegex?)
+                    break;
+                }
+                raw = cap[0];
+                src = src.substring(raw.length);
+                let line = cap[2].split('\n', 1)[0].replace(/^\t+/, (t) => ' '.repeat(3 * t.length));
+                let nextLine = src.split('\n', 1)[0];
+                let indent = 0;
+                if (this.options.pedantic) {
+                    indent = 2;
+                    itemContents = line.trimStart();
+                }
+                else {
+                    indent = cap[2].search(/[^ ]/); // Find first non-space char
+                    indent = indent > 4 ? 1 : indent; // Treat indented code blocks (> 4 spaces) as having only 1 indent
+                    itemContents = line.slice(indent);
+                    indent += cap[1].length;
+                }
+                let blankLine = false;
+                if (!line && /^ *$/.test(nextLine)) { // Items begin with at most one blank line
+                    raw += nextLine + '\n';
+                    src = src.substring(nextLine.length + 1);
+                    endEarly = true;
+                }
+                if (!endEarly) {
+                    const nextBulletRegex = new RegExp(`^ {0,${Math.min(3, indent - 1)}}(?:[*+-]|\\d{1,9}[.)])((?:[ \t][^\\n]*)?(?:\\n|$))`);
+                    const hrRegex = new RegExp(`^ {0,${Math.min(3, indent - 1)}}((?:- *){3,}|(?:_ *){3,}|(?:\\* *){3,})(?:\\n+|$)`);
+                    const fencesBeginRegex = new RegExp(`^ {0,${Math.min(3, indent - 1)}}(?:\`\`\`|~~~)`);
+                    const headingBeginRegex = new RegExp(`^ {0,${Math.min(3, indent - 1)}}#`);
+                    // Check if following lines should be included in List Item
+                    while (src) {
+                        const rawLine = src.split('\n', 1)[0];
+                        nextLine = rawLine;
+                        // Re-align to follow commonmark nesting rules
+                        if (this.options.pedantic) {
+                            nextLine = nextLine.replace(/^ {1,4}(?=( {4})*[^ ])/g, '  ');
+                        }
+                        // End list item if found code fences
+                        if (fencesBeginRegex.test(nextLine)) {
+                            break;
+                        }
+                        // End list item if found start of new heading
+                        if (headingBeginRegex.test(nextLine)) {
+                            break;
+                        }
+                        // End list item if found start of new bullet
+                        if (nextBulletRegex.test(nextLine)) {
+                            break;
+                        }
+                        // Horizontal rule found
+                        if (hrRegex.test(src)) {
+                            break;
+                        }
+                        if (nextLine.search(/[^ ]/) >= indent || !nextLine.trim()) { // Dedent if possible
+                            itemContents += '\n' + nextLine.slice(indent);
+                        }
+                        else {
+                            // not enough indentation
+                            if (blankLine) {
+                                break;
+                            }
+                            // paragraph continuation unless last line was a different block level element
+                            if (line.search(/[^ ]/) >= 4) { // indented code block
+                                break;
+                            }
+                            if (fencesBeginRegex.test(line)) {
+                                break;
+                            }
+                            if (headingBeginRegex.test(line)) {
+                                break;
+                            }
+                            if (hrRegex.test(line)) {
+                                break;
+                            }
+                            itemContents += '\n' + nextLine;
+                        }
+                        if (!blankLine && !nextLine.trim()) { // Check if current line is blank
+                            blankLine = true;
+                        }
+                        raw += rawLine + '\n';
+                        src = src.substring(rawLine.length + 1);
+                        line = nextLine.slice(indent);
+                    }
+                }
+                if (!list.loose) {
+                    // If the previous item ended with a blank line, the list is loose
+                    if (endsWithBlankLine) {
+                        list.loose = true;
+                    }
+                    else if (/\n *\n *$/.test(raw)) {
+                        endsWithBlankLine = true;
+                    }
+                }
+                let istask = null;
+                let ischecked;
+                // Check for task list items
+                if (this.options.gfm) {
+                    istask = /^\[[ xX]\] /.exec(itemContents);
+                    if (istask) {
+                        ischecked = istask[0] !== '[ ] ';
+                        itemContents = itemContents.replace(/^\[[ xX]\] +/, '');
+                    }
+                }
+                list.items.push({
+                    type: 'list_item',
+                    raw,
+                    task: !!istask,
+                    checked: ischecked,
+                    loose: false,
+                    text: itemContents,
+                    tokens: []
+                });
+                list.raw += raw;
+            }
+            // Do not consume newlines at end of final item. Alternatively, make itemRegex *start* with any newlines to simplify/speed up endsWithBlankLine logic
+            list.items[list.items.length - 1].raw = raw.trimEnd();
+            (list.items[list.items.length - 1]).text = itemContents.trimEnd();
+            list.raw = list.raw.trimEnd();
+            // Item child tokens handled here at end because we needed to have the final item to trim it first
+            for (let i = 0; i < list.items.length; i++) {
+                this.lexer.state.top = false;
+                list.items[i].tokens = this.lexer.blockTokens(list.items[i].text, []);
+                if (!list.loose) {
+                    // Check if list should be loose
+                    const spacers = list.items[i].tokens.filter(t => t.type === 'space');
+                    const hasMultipleLineBreaks = spacers.length > 0 && spacers.some(t => /\n.*\n/.test(t.raw));
+                    list.loose = hasMultipleLineBreaks;
+                }
+            }
+            // Set all items to loose if list is loose
+            if (list.loose) {
+                for (let i = 0; i < list.items.length; i++) {
+                    list.items[i].loose = true;
+                }
+            }
+            return list;
+        }
+    }
+    html(src) {
+        const cap = this.rules.block.html.exec(src);
+        if (cap) {
+            const token = {
+                type: 'html',
+                block: true,
+                raw: cap[0],
+                pre: cap[1] === 'pre' || cap[1] === 'script' || cap[1] === 'style',
+                text: cap[0]
+            };
+            return token;
+        }
+    }
+    def(src) {
+        const cap = this.rules.block.def.exec(src);
+        if (cap) {
+            const tag = cap[1].toLowerCase().replace(/\s+/g, ' ');
+            const href = cap[2] ? cap[2].replace(/^<(.*)>$/, '$1').replace(this.rules.inline.anyPunctuation, '$1') : '';
+            const title = cap[3] ? cap[3].substring(1, cap[3].length - 1).replace(this.rules.inline.anyPunctuation, '$1') : cap[3];
+            return {
+                type: 'def',
+                tag,
+                raw: cap[0],
+                href,
+                title
+            };
+        }
+    }
+    table(src) {
+        const cap = this.rules.block.table.exec(src);
+        if (!cap) {
+            return;
+        }
+        if (!/[:|]/.test(cap[2])) {
+            // delimiter row must have a pipe (|) or colon (:) otherwise it is a setext heading
+            return;
+        }
+        const headers = splitCells(cap[1]);
+        const aligns = cap[2].replace(/^\||\| *$/g, '').split('|');
+        const rows = cap[3] && cap[3].trim() ? cap[3].replace(/\n[ \t]*$/, '').split('\n') : [];
+        const item = {
+            type: 'table',
+            raw: cap[0],
+            header: [],
+            align: [],
+            rows: []
+        };
+        if (headers.length !== aligns.length) {
+            // header and align columns must be equal, rows can be different.
+            return;
+        }
+        for (const align of aligns) {
+            if (/^ *-+: *$/.test(align)) {
+                item.align.push('right');
+            }
+            else if (/^ *:-+: *$/.test(align)) {
+                item.align.push('center');
+            }
+            else if (/^ *:-+ *$/.test(align)) {
+                item.align.push('left');
+            }
+            else {
+                item.align.push(null);
+            }
+        }
+        for (const header of headers) {
+            item.header.push({
+                text: header,
+                tokens: this.lexer.inline(header)
+            });
+        }
+        for (const row of rows) {
+            item.rows.push(splitCells(row, item.header.length).map(cell => {
+                return {
+                    text: cell,
+                    tokens: this.lexer.inline(cell)
+                };
+            }));
+        }
+        return item;
+    }
+    lheading(src) {
+        const cap = this.rules.block.lheading.exec(src);
+        if (cap) {
+            return {
+                type: 'heading',
+                raw: cap[0],
+                depth: cap[2].charAt(0) === '=' ? 1 : 2,
+                text: cap[1],
+                tokens: this.lexer.inline(cap[1])
+            };
+        }
+    }
+    paragraph(src) {
+        const cap = this.rules.block.paragraph.exec(src);
+        if (cap) {
+            const text = cap[1].charAt(cap[1].length - 1) === '\n'
+                ? cap[1].slice(0, -1)
+                : cap[1];
+            return {
+                type: 'paragraph',
+                raw: cap[0],
+                text,
+                tokens: this.lexer.inline(text)
+            };
+        }
+    }
+    text(src) {
+        const cap = this.rules.block.text.exec(src);
+        if (cap) {
+            return {
+                type: 'text',
+                raw: cap[0],
+                text: cap[0],
+                tokens: this.lexer.inline(cap[0])
+            };
+        }
+    }
+    escape(src) {
+        const cap = this.rules.inline.escape.exec(src);
+        if (cap) {
+            return {
+                type: 'escape',
+                raw: cap[0],
+                text: escape$1(cap[1])
+            };
+        }
+    }
+    tag(src) {
+        const cap = this.rules.inline.tag.exec(src);
+        if (cap) {
+            if (!this.lexer.state.inLink && /^<a /i.test(cap[0])) {
+                this.lexer.state.inLink = true;
+            }
+            else if (this.lexer.state.inLink && /^<\/a>/i.test(cap[0])) {
+                this.lexer.state.inLink = false;
+            }
+            if (!this.lexer.state.inRawBlock && /^<(pre|code|kbd|script)(\s|>)/i.test(cap[0])) {
+                this.lexer.state.inRawBlock = true;
+            }
+            else if (this.lexer.state.inRawBlock && /^<\/(pre|code|kbd|script)(\s|>)/i.test(cap[0])) {
+                this.lexer.state.inRawBlock = false;
+            }
+            return {
+                type: 'html',
+                raw: cap[0],
+                inLink: this.lexer.state.inLink,
+                inRawBlock: this.lexer.state.inRawBlock,
+                block: false,
+                text: cap[0]
+            };
+        }
+    }
+    link(src) {
+        const cap = this.rules.inline.link.exec(src);
+        if (cap) {
+            const trimmedUrl = cap[2].trim();
+            if (!this.options.pedantic && /^</.test(trimmedUrl)) {
+                // commonmark requires matching angle brackets
+                if (!(/>$/.test(trimmedUrl))) {
+                    return;
+                }
+                // ending angle bracket cannot be escaped
+                const rtrimSlash = rtrim(trimmedUrl.slice(0, -1), '\\');
+                if ((trimmedUrl.length - rtrimSlash.length) % 2 === 0) {
+                    return;
+                }
+            }
+            else {
+                // find closing parenthesis
+                const lastParenIndex = findClosingBracket(cap[2], '()');
+                if (lastParenIndex > -1) {
+                    const start = cap[0].indexOf('!') === 0 ? 5 : 4;
+                    const linkLen = start + cap[1].length + lastParenIndex;
+                    cap[2] = cap[2].substring(0, lastParenIndex);
+                    cap[0] = cap[0].substring(0, linkLen).trim();
+                    cap[3] = '';
+                }
+            }
+            let href = cap[2];
+            let title = '';
+            if (this.options.pedantic) {
+                // split pedantic href and title
+                const link = /^([^'"]*[^\s])\s+(['"])(.*)\2/.exec(href);
+                if (link) {
+                    href = link[1];
+                    title = link[3];
+                }
+            }
+            else {
+                title = cap[3] ? cap[3].slice(1, -1) : '';
+            }
+            href = href.trim();
+            if (/^</.test(href)) {
+                if (this.options.pedantic && !(/>$/.test(trimmedUrl))) {
+                    // pedantic allows starting angle bracket without ending angle bracket
+                    href = href.slice(1);
+                }
+                else {
+                    href = href.slice(1, -1);
+                }
+            }
+            return outputLink(cap, {
+                href: href ? href.replace(this.rules.inline.anyPunctuation, '$1') : href,
+                title: title ? title.replace(this.rules.inline.anyPunctuation, '$1') : title
+            }, cap[0], this.lexer);
+        }
+    }
+    reflink(src, links) {
+        let cap;
+        if ((cap = this.rules.inline.reflink.exec(src))
+            || (cap = this.rules.inline.nolink.exec(src))) {
+            const linkString = (cap[2] || cap[1]).replace(/\s+/g, ' ');
+            const link = links[linkString.toLowerCase()];
+            if (!link) {
+                const text = cap[0].charAt(0);
+                return {
+                    type: 'text',
+                    raw: text,
+                    text
+                };
+            }
+            return outputLink(cap, link, cap[0], this.lexer);
+        }
+    }
+    emStrong(src, maskedSrc, prevChar = '') {
+        let match = this.rules.inline.emStrongLDelim.exec(src);
+        if (!match)
+            return;
+        // _ can't be between two alphanumerics. \p{L}\p{N} includes non-english alphabet/numbers as well
+        if (match[3] && prevChar.match(/[\p{L}\p{N}]/u))
+            return;
+        const nextChar = match[1] || match[2] || '';
+        if (!nextChar || !prevChar || this.rules.inline.punctuation.exec(prevChar)) {
+            // unicode Regex counts emoji as 1 char; spread into array for proper count (used multiple times below)
+            const lLength = [...match[0]].length - 1;
+            let rDelim, rLength, delimTotal = lLength, midDelimTotal = 0;
+            const endReg = match[0][0] === '*' ? this.rules.inline.emStrongRDelimAst : this.rules.inline.emStrongRDelimUnd;
+            endReg.lastIndex = 0;
+            // Clip maskedSrc to same section of string as src (move to lexer?)
+            maskedSrc = maskedSrc.slice(-1 * src.length + lLength);
+            while ((match = endReg.exec(maskedSrc)) != null) {
+                rDelim = match[1] || match[2] || match[3] || match[4] || match[5] || match[6];
+                if (!rDelim)
+                    continue; // skip single * in __abc*abc__
+                rLength = [...rDelim].length;
+                if (match[3] || match[4]) { // found another Left Delim
+                    delimTotal += rLength;
+                    continue;
+                }
+                else if (match[5] || match[6]) { // either Left or Right Delim
+                    if (lLength % 3 && !((lLength + rLength) % 3)) {
+                        midDelimTotal += rLength;
+                        continue; // CommonMark Emphasis Rules 9-10
+                    }
+                }
+                delimTotal -= rLength;
+                if (delimTotal > 0)
+                    continue; // Haven't found enough closing delimiters
+                // Remove extra characters. *a*** -> *a*
+                rLength = Math.min(rLength, rLength + delimTotal + midDelimTotal);
+                // char length can be >1 for unicode characters;
+                const lastCharLength = [...match[0]][0].length;
+                const raw = src.slice(0, lLength + match.index + lastCharLength + rLength);
+                // Create `em` if smallest delimiter has odd char count. *a***
+                if (Math.min(lLength, rLength) % 2) {
+                    const text = raw.slice(1, -1);
+                    return {
+                        type: 'em',
+                        raw,
+                        text,
+                        tokens: this.lexer.inlineTokens(text)
+                    };
+                }
+                // Create 'strong' if smallest delimiter has even char count. **a***
+                const text = raw.slice(2, -2);
+                return {
+                    type: 'strong',
+                    raw,
+                    text,
+                    tokens: this.lexer.inlineTokens(text)
+                };
+            }
+        }
+    }
+    codespan(src) {
+        const cap = this.rules.inline.code.exec(src);
+        if (cap) {
+            let text = cap[2].replace(/\n/g, ' ');
+            const hasNonSpaceChars = /[^ ]/.test(text);
+            const hasSpaceCharsOnBothEnds = /^ /.test(text) && / $/.test(text);
+            if (hasNonSpaceChars && hasSpaceCharsOnBothEnds) {
+                text = text.substring(1, text.length - 1);
+            }
+            text = escape$1(text, true);
+            return {
+                type: 'codespan',
+                raw: cap[0],
+                text
+            };
+        }
+    }
+    br(src) {
+        const cap = this.rules.inline.br.exec(src);
+        if (cap) {
+            return {
+                type: 'br',
+                raw: cap[0]
+            };
+        }
+    }
+    del(src) {
+        const cap = this.rules.inline.del.exec(src);
+        if (cap) {
+            return {
+                type: 'del',
+                raw: cap[0],
+                text: cap[2],
+                tokens: this.lexer.inlineTokens(cap[2])
+            };
+        }
+    }
+    autolink(src) {
+        const cap = this.rules.inline.autolink.exec(src);
+        if (cap) {
+            let text, href;
+            if (cap[2] === '@') {
+                text = escape$1(cap[1]);
+                href = 'mailto:' + text;
+            }
+            else {
+                text = escape$1(cap[1]);
+                href = text;
+            }
+            return {
+                type: 'link',
+                raw: cap[0],
+                text,
+                href,
+                tokens: [
+                    {
+                        type: 'text',
+                        raw: text,
+                        text
+                    }
+                ]
+            };
+        }
+    }
+    url(src) {
+        let cap;
+        if (cap = this.rules.inline.url.exec(src)) {
+            let text, href;
+            if (cap[2] === '@') {
+                text = escape$1(cap[0]);
+                href = 'mailto:' + text;
+            }
+            else {
+                // do extended autolink path validation
+                let prevCapZero;
+                do {
+                    prevCapZero = cap[0];
+                    cap[0] = this.rules.inline._backpedal.exec(cap[0])?.[0] ?? '';
+                } while (prevCapZero !== cap[0]);
+                text = escape$1(cap[0]);
+                if (cap[1] === 'www.') {
+                    href = 'http://' + cap[0];
+                }
+                else {
+                    href = cap[0];
+                }
+            }
+            return {
+                type: 'link',
+                raw: cap[0],
+                text,
+                href,
+                tokens: [
+                    {
+                        type: 'text',
+                        raw: text,
+                        text
+                    }
+                ]
+            };
+        }
+    }
+    inlineText(src) {
+        const cap = this.rules.inline.text.exec(src);
+        if (cap) {
+            let text;
+            if (this.lexer.state.inRawBlock) {
+                text = cap[0];
+            }
+            else {
+                text = escape$1(cap[0]);
+            }
+            return {
+                type: 'text',
+                raw: cap[0],
+                text
+            };
+        }
+    }
+}
+
+/**
+ * Block-Level Grammar
+ */
+const newline = /^(?: *(?:\n|$))+/;
+const blockCode = /^( {4}[^\n]+(?:\n(?: *(?:\n|$))*)?)+/;
+const fences = /^ {0,3}(`{3,}(?=[^`\n]*(?:\n|$))|~{3,})([^\n]*)(?:\n|$)(?:|([\s\S]*?)(?:\n|$))(?: {0,3}\1[~`]* *(?=\n|$)|$)/;
+const hr = /^ {0,3}((?:-[\t ]*){3,}|(?:_[ \t]*){3,}|(?:\*[ \t]*){3,})(?:\n+|$)/;
+const heading = /^ {0,3}(#{1,6})(?=\s|$)(.*)(?:\n+|$)/;
+const bullet = /(?:[*+-]|\d{1,9}[.)])/;
+const lheading = edit(/^(?!bull |blockCode|fences|blockquote|heading|html)((?:.|\n(?!\s*?\n|bull |blockCode|fences|blockquote|heading|html))+?)\n {0,3}(=+|-+) *(?:\n+|$)/)
+    .replace(/bull/g, bullet) // lists can interrupt
+    .replace(/blockCode/g, / {4}/) // indented code blocks can interrupt
+    .replace(/fences/g, / {0,3}(?:`{3,}|~{3,})/) // fenced code blocks can interrupt
+    .replace(/blockquote/g, / {0,3}>/) // blockquote can interrupt
+    .replace(/heading/g, / {0,3}#{1,6}/) // ATX heading can interrupt
+    .replace(/html/g, / {0,3}<[^\n>]+>\n/) // block html can interrupt
+    .getRegex();
+const _paragraph = /^([^\n]+(?:\n(?!hr|heading|lheading|blockquote|fences|list|html|table| +\n)[^\n]+)*)/;
+const blockText = /^[^\n]+/;
+const _blockLabel = /(?!\s*\])(?:\\.|[^\[\]\\])+/;
+const def = edit(/^ {0,3}\[(label)\]: *(?:\n *)?([^<\s][^\s]*|<.*?>)(?:(?: +(?:\n *)?| *\n *)(title))? *(?:\n+|$)/)
+    .replace('label', _blockLabel)
+    .replace('title', /(?:"(?:\\"?|[^"\\])*"|'[^'\n]*(?:\n[^'\n]+)*\n?'|\([^()]*\))/)
+    .getRegex();
+const list = edit(/^( {0,3}bull)([ \t][^\n]+?)?(?:\n|$)/)
+    .replace(/bull/g, bullet)
+    .getRegex();
+const _tag = 'address|article|aside|base|basefont|blockquote|body|caption'
+    + '|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption'
+    + '|figure|footer|form|frame|frameset|h[1-6]|head|header|hr|html|iframe'
+    + '|legend|li|link|main|menu|menuitem|meta|nav|noframes|ol|optgroup|option'
+    + '|p|param|search|section|summary|table|tbody|td|tfoot|th|thead|title'
+    + '|tr|track|ul';
+const _comment = /<!--(?:-?>|[\s\S]*?(?:-->|$))/;
+const html = edit('^ {0,3}(?:' // optional indentation
+    + '<(script|pre|style|textarea)[\\s>][\\s\\S]*?(?:</\\1>[^\\n]*\\n+|$)' // (1)
+    + '|comment[^\\n]*(\\n+|$)' // (2)
+    + '|<\\?[\\s\\S]*?(?:\\?>\\n*|$)' // (3)
+    + '|<![A-Z][\\s\\S]*?(?:>\\n*|$)' // (4)
+    + '|<!\\[CDATA\\[[\\s\\S]*?(?:\\]\\]>\\n*|$)' // (5)
+    + '|</?(tag)(?: +|\\n|/?>)[\\s\\S]*?(?:(?:\\n *)+\\n|$)' // (6)
+    + '|<(?!script|pre|style|textarea)([a-z][\\w-]*)(?:attribute)*? */?>(?=[ \\t]*(?:\\n|$))[\\s\\S]*?(?:(?:\\n *)+\\n|$)' // (7) open tag
+    + '|</(?!script|pre|style|textarea)[a-z][\\w-]*\\s*>(?=[ \\t]*(?:\\n|$))[\\s\\S]*?(?:(?:\\n *)+\\n|$)' // (7) closing tag
+    + ')', 'i')
+    .replace('comment', _comment)
+    .replace('tag', _tag)
+    .replace('attribute', / +[a-zA-Z:_][\w.:-]*(?: *= *"[^"\n]*"| *= *'[^'\n]*'| *= *[^\s"'=<>`]+)?/)
+    .getRegex();
+const paragraph = edit(_paragraph)
+    .replace('hr', hr)
+    .replace('heading', ' {0,3}#{1,6}(?:\\s|$)')
+    .replace('|lheading', '') // setext headings don't interrupt commonmark paragraphs
+    .replace('|table', '')
+    .replace('blockquote', ' {0,3}>')
+    .replace('fences', ' {0,3}(?:`{3,}(?=[^`\\n]*\\n)|~{3,})[^\\n]*\\n')
+    .replace('list', ' {0,3}(?:[*+-]|1[.)]) ') // only lists starting from 1 can interrupt
+    .replace('html', '</?(?:tag)(?: +|\\n|/?>)|<(?:script|pre|style|textarea|!--)')
+    .replace('tag', _tag) // pars can be interrupted by type (6) html blocks
+    .getRegex();
+const blockquote = edit(/^( {0,3}> ?(paragraph|[^\n]*)(?:\n|$))+/)
+    .replace('paragraph', paragraph)
+    .getRegex();
+/**
+ * Normal Block Grammar
+ */
+const blockNormal = {
+    blockquote,
+    code: blockCode,
+    def,
+    fences,
+    heading,
+    hr,
+    html,
+    lheading,
+    list,
+    newline,
+    paragraph,
+    table: noopTest,
+    text: blockText
+};
+/**
+ * GFM Block Grammar
+ */
+const gfmTable = edit('^ *([^\\n ].*)\\n' // Header
+    + ' {0,3}((?:\\| *)?:?-+:? *(?:\\| *:?-+:? *)*(?:\\| *)?)' // Align
+    + '(?:\\n((?:(?! *\\n|hr|heading|blockquote|code|fences|list|html).*(?:\\n|$))*)\\n*|$)') // Cells
+    .replace('hr', hr)
+    .replace('heading', ' {0,3}#{1,6}(?:\\s|$)')
+    .replace('blockquote', ' {0,3}>')
+    .replace('code', ' {4}[^\\n]')
+    .replace('fences', ' {0,3}(?:`{3,}(?=[^`\\n]*\\n)|~{3,})[^\\n]*\\n')
+    .replace('list', ' {0,3}(?:[*+-]|1[.)]) ') // only lists starting from 1 can interrupt
+    .replace('html', '</?(?:tag)(?: +|\\n|/?>)|<(?:script|pre|style|textarea|!--)')
+    .replace('tag', _tag) // tables can be interrupted by type (6) html blocks
+    .getRegex();
+const blockGfm = {
+    ...blockNormal,
+    table: gfmTable,
+    paragraph: edit(_paragraph)
+        .replace('hr', hr)
+        .replace('heading', ' {0,3}#{1,6}(?:\\s|$)')
+        .replace('|lheading', '') // setext headings don't interrupt commonmark paragraphs
+        .replace('table', gfmTable) // interrupt paragraphs with table
+        .replace('blockquote', ' {0,3}>')
+        .replace('fences', ' {0,3}(?:`{3,}(?=[^`\\n]*\\n)|~{3,})[^\\n]*\\n')
+        .replace('list', ' {0,3}(?:[*+-]|1[.)]) ') // only lists starting from 1 can interrupt
+        .replace('html', '</?(?:tag)(?: +|\\n|/?>)|<(?:script|pre|style|textarea|!--)')
+        .replace('tag', _tag) // pars can be interrupted by type (6) html blocks
+        .getRegex()
+};
+/**
+ * Pedantic grammar (original John Gruber's loose markdown specification)
+ */
+const blockPedantic = {
+    ...blockNormal,
+    html: edit('^ *(?:comment *(?:\\n|\\s*$)'
+        + '|<(tag)[\\s\\S]+?</\\1> *(?:\\n{2,}|\\s*$)' // closed tag
+        + '|<tag(?:"[^"]*"|\'[^\']*\'|\\s[^\'"/>\\s]*)*?/?> *(?:\\n{2,}|\\s*$))')
+        .replace('comment', _comment)
+        .replace(/tag/g, '(?!(?:'
+        + 'a|em|strong|small|s|cite|q|dfn|abbr|data|time|code|var|samp|kbd|sub'
+        + '|sup|i|b|u|mark|ruby|rt|rp|bdi|bdo|span|br|wbr|ins|del|img)'
+        + '\\b)\\w+(?!:|[^\\w\\s@]*@)\\b')
+        .getRegex(),
+    def: /^ *\[([^\]]+)\]: *<?([^\s>]+)>?(?: +(["(][^\n]+[")]))? *(?:\n+|$)/,
+    heading: /^(#{1,6})(.*)(?:\n+|$)/,
+    fences: noopTest, // fences not supported
+    lheading: /^(.+?)\n {0,3}(=+|-+) *(?:\n+|$)/,
+    paragraph: edit(_paragraph)
+        .replace('hr', hr)
+        .replace('heading', ' *#{1,6} *[^\n]')
+        .replace('lheading', lheading)
+        .replace('|table', '')
+        .replace('blockquote', ' {0,3}>')
+        .replace('|fences', '')
+        .replace('|list', '')
+        .replace('|html', '')
+        .replace('|tag', '')
+        .getRegex()
+};
+/**
+ * Inline-Level Grammar
+ */
+const escape$2 = /^\\([!"#$%&'()*+,\-./:;<=>?@\[\]\\^_`{|}~])/;
+const inlineCode = /^(`+)([^`]|[^`][\s\S]*?[^`])\1(?!`)/;
+const br = /^( {2,}|\\)\n(?!\s*$)/;
+const inlineText = /^(`+|[^`])(?:(?= {2,}\n)|[\s\S]*?(?:(?=[\\<!\[`*_]|\b_|$)|[^ ](?= {2,}\n)))/;
+// list of unicode punctuation marks, plus any missing characters from CommonMark spec
+const _punctuation = '\\p{P}\\p{S}';
+const punctuation = edit(/^((?![*_])[\spunctuation])/, 'u')
+    .replace(/punctuation/g, _punctuation).getRegex();
+// sequences em should skip over [title](link), `code`, <html>
+const blockSkip = /\[[^[\]]*?\]\([^\(\)]*?\)|`[^`]*?`|<[^<>]*?>/g;
+const emStrongLDelim = edit(/^(?:\*+(?:((?!\*)[punct])|[^\s*]))|^_+(?:((?!_)[punct])|([^\s_]))/, 'u')
+    .replace(/punct/g, _punctuation)
+    .getRegex();
+const emStrongRDelimAst = edit('^[^_*]*?__[^_*]*?\\*[^_*]*?(?=__)' // Skip orphan inside strong
+    + '|[^*]+(?=[^*])' // Consume to delim
+    + '|(?!\\*)[punct](\\*+)(?=[\\s]|$)' // (1) #*** can only be a Right Delimiter
+    + '|[^punct\\s](\\*+)(?!\\*)(?=[punct\\s]|$)' // (2) a***#, a*** can only be a Right Delimiter
+    + '|(?!\\*)[punct\\s](\\*+)(?=[^punct\\s])' // (3) #***a, ***a can only be Left Delimiter
+    + '|[\\s](\\*+)(?!\\*)(?=[punct])' // (4) ***# can only be Left Delimiter
+    + '|(?!\\*)[punct](\\*+)(?!\\*)(?=[punct])' // (5) #***# can be either Left or Right Delimiter
+    + '|[^punct\\s](\\*+)(?=[^punct\\s])', 'gu') // (6) a***a can be either Left or Right Delimiter
+    .replace(/punct/g, _punctuation)
+    .getRegex();
+// (6) Not allowed for _
+const emStrongRDelimUnd = edit('^[^_*]*?\\*\\*[^_*]*?_[^_*]*?(?=\\*\\*)' // Skip orphan inside strong
+    + '|[^_]+(?=[^_])' // Consume to delim
+    + '|(?!_)[punct](_+)(?=[\\s]|$)' // (1) #___ can only be a Right Delimiter
+    + '|[^punct\\s](_+)(?!_)(?=[punct\\s]|$)' // (2) a___#, a___ can only be a Right Delimiter
+    + '|(?!_)[punct\\s](_+)(?=[^punct\\s])' // (3) #___a, ___a can only be Left Delimiter
+    + '|[\\s](_+)(?!_)(?=[punct])' // (4) ___# can only be Left Delimiter
+    + '|(?!_)[punct](_+)(?!_)(?=[punct])', 'gu') // (5) #___# can be either Left or Right Delimiter
+    .replace(/punct/g, _punctuation)
+    .getRegex();
+const anyPunctuation = edit(/\\([punct])/, 'gu')
+    .replace(/punct/g, _punctuation)
+    .getRegex();
+const autolink = edit(/^<(scheme:[^\s\x00-\x1f<>]*|email)>/)
+    .replace('scheme', /[a-zA-Z][a-zA-Z0-9+.-]{1,31}/)
+    .replace('email', /[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+(@)[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(?![-_])/)
+    .getRegex();
+const _inlineComment = edit(_comment).replace('(?:-->|$)', '-->').getRegex();
+const tag = edit('^comment'
+    + '|^</[a-zA-Z][\\w:-]*\\s*>' // self-closing tag
+    + '|^<[a-zA-Z][\\w-]*(?:attribute)*?\\s*/?>' // open tag
+    + '|^<\\?[\\s\\S]*?\\?>' // processing instruction, e.g. <?php ?>
+    + '|^<![a-zA-Z]+\\s[\\s\\S]*?>' // declaration, e.g. <!DOCTYPE html>
+    + '|^<!\\[CDATA\\[[\\s\\S]*?\\]\\]>') // CDATA section
+    .replace('comment', _inlineComment)
+    .replace('attribute', /\s+[a-zA-Z:_][\w.:-]*(?:\s*=\s*"[^"]*"|\s*=\s*'[^']*'|\s*=\s*[^\s"'=<>`]+)?/)
+    .getRegex();
+const _inlineLabel = /(?:\[(?:\\.|[^\[\]\\])*\]|\\.|`[^`]*`|[^\[\]\\`])*?/;
+const link = edit(/^!?\[(label)\]\(\s*(href)(?:\s+(title))?\s*\)/)
+    .replace('label', _inlineLabel)
+    .replace('href', /<(?:\\.|[^\n<>\\])+>|[^\s\x00-\x1f]*/)
+    .replace('title', /"(?:\\"?|[^"\\])*"|'(?:\\'?|[^'\\])*'|\((?:\\\)?|[^)\\])*\)/)
+    .getRegex();
+const reflink = edit(/^!?\[(label)\]\[(ref)\]/)
+    .replace('label', _inlineLabel)
+    .replace('ref', _blockLabel)
+    .getRegex();
+const nolink = edit(/^!?\[(ref)\](?:\[\])?/)
+    .replace('ref', _blockLabel)
+    .getRegex();
+const reflinkSearch = edit('reflink|nolink(?!\\()', 'g')
+    .replace('reflink', reflink)
+    .replace('nolink', nolink)
+    .getRegex();
+/**
+ * Normal Inline Grammar
+ */
+const inlineNormal = {
+    _backpedal: noopTest, // only used for GFM url
+    anyPunctuation,
+    autolink,
+    blockSkip,
+    br,
+    code: inlineCode,
+    del: noopTest,
+    emStrongLDelim,
+    emStrongRDelimAst,
+    emStrongRDelimUnd,
+    escape: escape$2,
+    link,
+    nolink,
+    punctuation,
+    reflink,
+    reflinkSearch,
+    tag,
+    text: inlineText,
+    url: noopTest
+};
+/**
+ * Pedantic Inline Grammar
+ */
+const inlinePedantic = {
+    ...inlineNormal,
+    link: edit(/^!?\[(label)\]\((.*?)\)/)
+        .replace('label', _inlineLabel)
+        .getRegex(),
+    reflink: edit(/^!?\[(label)\]\s*\[([^\]]*)\]/)
+        .replace('label', _inlineLabel)
+        .getRegex()
+};
+/**
+ * GFM Inline Grammar
+ */
+const inlineGfm = {
+    ...inlineNormal,
+    escape: edit(escape$2).replace('])', '~|])').getRegex(),
+    url: edit(/^((?:ftp|https?):\/\/|www\.)(?:[a-zA-Z0-9\-]+\.?)+[^\s<]*|^email/, 'i')
+        .replace('email', /[A-Za-z0-9._+-]+(@)[a-zA-Z0-9-_]+(?:\.[a-zA-Z0-9-_]*[a-zA-Z0-9])+(?![-_])/)
+        .getRegex(),
+    _backpedal: /(?:[^?!.,:;*_'"~()&]+|\([^)]*\)|&(?![a-zA-Z0-9]+;$)|[?!.,:;*_'"~)]+(?!$))+/,
+    del: /^(~~?)(?=[^\s~])([\s\S]*?[^\s~])\1(?=[^~]|$)/,
+    text: /^([`~]+|[^`~])(?:(?= {2,}\n)|(?=[a-zA-Z0-9.!#$%&'*+\/=?_`{\|}~-]+@)|[\s\S]*?(?:(?=[\\<!\[`*~_]|\b_|https?:\/\/|ftp:\/\/|www\.|$)|[^ ](?= {2,}\n)|[^a-zA-Z0-9.!#$%&'*+\/=?_`{\|}~-](?=[a-zA-Z0-9.!#$%&'*+\/=?_`{\|}~-]+@)))/
+};
+/**
+ * GFM + Line Breaks Inline Grammar
+ */
+const inlineBreaks = {
+    ...inlineGfm,
+    br: edit(br).replace('{2,}', '*').getRegex(),
+    text: edit(inlineGfm.text)
+        .replace('\\b_', '\\b_| {2,}\\n')
+        .replace(/\{2,\}/g, '*')
+        .getRegex()
+};
+/**
+ * exports
+ */
+const block = {
+    normal: blockNormal,
+    gfm: blockGfm,
+    pedantic: blockPedantic
+};
+const inline = {
+    normal: inlineNormal,
+    gfm: inlineGfm,
+    breaks: inlineBreaks,
+    pedantic: inlinePedantic
+};
+
+/**
+ * Block Lexer
+ */
+class _Lexer {
+    tokens;
+    options;
+    state;
+    tokenizer;
+    inlineQueue;
+    constructor(options) {
+        // TokenList cannot be created in one go
+        this.tokens = [];
+        this.tokens.links = Object.create(null);
+        this.options = options || _defaults;
+        this.options.tokenizer = this.options.tokenizer || new _Tokenizer();
+        this.tokenizer = this.options.tokenizer;
+        this.tokenizer.options = this.options;
+        this.tokenizer.lexer = this;
+        this.inlineQueue = [];
+        this.state = {
+            inLink: false,
+            inRawBlock: false,
+            top: true
+        };
+        const rules = {
+            block: block.normal,
+            inline: inline.normal
+        };
+        if (this.options.pedantic) {
+            rules.block = block.pedantic;
+            rules.inline = inline.pedantic;
+        }
+        else if (this.options.gfm) {
+            rules.block = block.gfm;
+            if (this.options.breaks) {
+                rules.inline = inline.breaks;
+            }
+            else {
+                rules.inline = inline.gfm;
+            }
+        }
+        this.tokenizer.rules = rules;
+    }
+    /**
+     * Expose Rules
+     */
+    static get rules() {
+        return {
+            block,
+            inline
+        };
+    }
+    /**
+     * Static Lex Method
+     */
+    static lex(src, options) {
+        const lexer = new _Lexer(options);
+        return lexer.lex(src);
+    }
+    /**
+     * Static Lex Inline Method
+     */
+    static lexInline(src, options) {
+        const lexer = new _Lexer(options);
+        return lexer.inlineTokens(src);
+    }
+    /**
+     * Preprocessing
+     */
+    lex(src) {
+        src = src
+            .replace(/\r\n|\r/g, '\n');
+        this.blockTokens(src, this.tokens);
+        for (let i = 0; i < this.inlineQueue.length; i++) {
+            const next = this.inlineQueue[i];
+            this.inlineTokens(next.src, next.tokens);
+        }
+        this.inlineQueue = [];
+        return this.tokens;
+    }
+    blockTokens(src, tokens = []) {
+        if (this.options.pedantic) {
+            src = src.replace(/\t/g, '    ').replace(/^ +$/gm, '');
+        }
+        else {
+            src = src.replace(/^( *)(\t+)/gm, (_, leading, tabs) => {
+                return leading + '    '.repeat(tabs.length);
+            });
+        }
+        let token;
+        let lastToken;
+        let cutSrc;
+        let lastParagraphClipped;
+        while (src) {
+            if (this.options.extensions
+                && this.options.extensions.block
+                && this.options.extensions.block.some((extTokenizer) => {
+                    if (token = extTokenizer.call({ lexer: this }, src, tokens)) {
+                        src = src.substring(token.raw.length);
+                        tokens.push(token);
+                        return true;
+                    }
+                    return false;
+                })) {
+                continue;
+            }
+            // newline
+            if (token = this.tokenizer.space(src)) {
+                src = src.substring(token.raw.length);
+                if (token.raw.length === 1 && tokens.length > 0) {
+                    // if there's a single \n as a spacer, it's terminating the last line,
+                    // so move it there so that we don't get unnecessary paragraph tags
+                    tokens[tokens.length - 1].raw += '\n';
+                }
+                else {
+                    tokens.push(token);
+                }
+                continue;
+            }
+            // code
+            if (token = this.tokenizer.code(src)) {
+                src = src.substring(token.raw.length);
+                lastToken = tokens[tokens.length - 1];
+                // An indented code block cannot interrupt a paragraph.
+                if (lastToken && (lastToken.type === 'paragraph' || lastToken.type === 'text')) {
+                    lastToken.raw += '\n' + token.raw;
+                    lastToken.text += '\n' + token.text;
+                    this.inlineQueue[this.inlineQueue.length - 1].src = lastToken.text;
+                }
+                else {
+                    tokens.push(token);
+                }
+                continue;
+            }
+            // fences
+            if (token = this.tokenizer.fences(src)) {
+                src = src.substring(token.raw.length);
+                tokens.push(token);
+                continue;
+            }
+            // heading
+            if (token = this.tokenizer.heading(src)) {
+                src = src.substring(token.raw.length);
+                tokens.push(token);
+                continue;
+            }
+            // hr
+            if (token = this.tokenizer.hr(src)) {
+                src = src.substring(token.raw.length);
+                tokens.push(token);
+                continue;
+            }
+            // blockquote
+            if (token = this.tokenizer.blockquote(src)) {
+                src = src.substring(token.raw.length);
+                tokens.push(token);
+                continue;
+            }
+            // list
+            if (token = this.tokenizer.list(src)) {
+                src = src.substring(token.raw.length);
+                tokens.push(token);
+                continue;
+            }
+            // html
+            if (token = this.tokenizer.html(src)) {
+                src = src.substring(token.raw.length);
+                tokens.push(token);
+                continue;
+            }
+            // def
+            if (token = this.tokenizer.def(src)) {
+                src = src.substring(token.raw.length);
+                lastToken = tokens[tokens.length - 1];
+                if (lastToken && (lastToken.type === 'paragraph' || lastToken.type === 'text')) {
+                    lastToken.raw += '\n' + token.raw;
+                    lastToken.text += '\n' + token.raw;
+                    this.inlineQueue[this.inlineQueue.length - 1].src = lastToken.text;
+                }
+                else if (!this.tokens.links[token.tag]) {
+                    this.tokens.links[token.tag] = {
+                        href: token.href,
+                        title: token.title
+                    };
+                }
+                continue;
+            }
+            // table (gfm)
+            if (token = this.tokenizer.table(src)) {
+                src = src.substring(token.raw.length);
+                tokens.push(token);
+                continue;
+            }
+            // lheading
+            if (token = this.tokenizer.lheading(src)) {
+                src = src.substring(token.raw.length);
+                tokens.push(token);
+                continue;
+            }
+            // top-level paragraph
+            // prevent paragraph consuming extensions by clipping 'src' to extension start
+            cutSrc = src;
+            if (this.options.extensions && this.options.extensions.startBlock) {
+                let startIndex = Infinity;
+                const tempSrc = src.slice(1);
+                let tempStart;
+                this.options.extensions.startBlock.forEach((getStartIndex) => {
+                    tempStart = getStartIndex.call({ lexer: this }, tempSrc);
+                    if (typeof tempStart === 'number' && tempStart >= 0) {
+                        startIndex = Math.min(startIndex, tempStart);
+                    }
+                });
+                if (startIndex < Infinity && startIndex >= 0) {
+                    cutSrc = src.substring(0, startIndex + 1);
+                }
+            }
+            if (this.state.top && (token = this.tokenizer.paragraph(cutSrc))) {
+                lastToken = tokens[tokens.length - 1];
+                if (lastParagraphClipped && lastToken.type === 'paragraph') {
+                    lastToken.raw += '\n' + token.raw;
+                    lastToken.text += '\n' + token.text;
+                    this.inlineQueue.pop();
+                    this.inlineQueue[this.inlineQueue.length - 1].src = lastToken.text;
+                }
+                else {
+                    tokens.push(token);
+                }
+                lastParagraphClipped = (cutSrc.length !== src.length);
+                src = src.substring(token.raw.length);
+                continue;
+            }
+            // text
+            if (token = this.tokenizer.text(src)) {
+                src = src.substring(token.raw.length);
+                lastToken = tokens[tokens.length - 1];
+                if (lastToken && lastToken.type === 'text') {
+                    lastToken.raw += '\n' + token.raw;
+                    lastToken.text += '\n' + token.text;
+                    this.inlineQueue.pop();
+                    this.inlineQueue[this.inlineQueue.length - 1].src = lastToken.text;
+                }
+                else {
+                    tokens.push(token);
+                }
+                continue;
+            }
+            if (src) {
+                const errMsg = 'Infinite loop on byte: ' + src.charCodeAt(0);
+                if (this.options.silent) {
+                    console.error(errMsg);
+                    break;
+                }
+                else {
+                    throw new Error(errMsg);
+                }
+            }
+        }
+        this.state.top = true;
+        return tokens;
+    }
+    inline(src, tokens = []) {
+        this.inlineQueue.push({ src, tokens });
+        return tokens;
+    }
+    /**
+     * Lexing/Compiling
+     */
+    inlineTokens(src, tokens = []) {
+        let token, lastToken, cutSrc;
+        // String with links masked to avoid interference with em and strong
+        let maskedSrc = src;
+        let match;
+        let keepPrevChar, prevChar;
+        // Mask out reflinks
+        if (this.tokens.links) {
+            const links = Object.keys(this.tokens.links);
+            if (links.length > 0) {
+                while ((match = this.tokenizer.rules.inline.reflinkSearch.exec(maskedSrc)) != null) {
+                    if (links.includes(match[0].slice(match[0].lastIndexOf('[') + 1, -1))) {
+                        maskedSrc = maskedSrc.slice(0, match.index) + '[' + 'a'.repeat(match[0].length - 2) + ']' + maskedSrc.slice(this.tokenizer.rules.inline.reflinkSearch.lastIndex);
+                    }
+                }
+            }
+        }
+        // Mask out other blocks
+        while ((match = this.tokenizer.rules.inline.blockSkip.exec(maskedSrc)) != null) {
+            maskedSrc = maskedSrc.slice(0, match.index) + '[' + 'a'.repeat(match[0].length - 2) + ']' + maskedSrc.slice(this.tokenizer.rules.inline.blockSkip.lastIndex);
+        }
+        // Mask out escaped characters
+        while ((match = this.tokenizer.rules.inline.anyPunctuation.exec(maskedSrc)) != null) {
+            maskedSrc = maskedSrc.slice(0, match.index) + '++' + maskedSrc.slice(this.tokenizer.rules.inline.anyPunctuation.lastIndex);
+        }
+        while (src) {
+            if (!keepPrevChar) {
+                prevChar = '';
+            }
+            keepPrevChar = false;
+            // extensions
+            if (this.options.extensions
+                && this.options.extensions.inline
+                && this.options.extensions.inline.some((extTokenizer) => {
+                    if (token = extTokenizer.call({ lexer: this }, src, tokens)) {
+                        src = src.substring(token.raw.length);
+                        tokens.push(token);
+                        return true;
+                    }
+                    return false;
+                })) {
+                continue;
+            }
+            // escape
+            if (token = this.tokenizer.escape(src)) {
+                src = src.substring(token.raw.length);
+                tokens.push(token);
+                continue;
+            }
+            // tag
+            if (token = this.tokenizer.tag(src)) {
+                src = src.substring(token.raw.length);
+                lastToken = tokens[tokens.length - 1];
+                if (lastToken && token.type === 'text' && lastToken.type === 'text') {
+                    lastToken.raw += token.raw;
+                    lastToken.text += token.text;
+                }
+                else {
+                    tokens.push(token);
+                }
+                continue;
+            }
+            // link
+            if (token = this.tokenizer.link(src)) {
+                src = src.substring(token.raw.length);
+                tokens.push(token);
+                continue;
+            }
+            // reflink, nolink
+            if (token = this.tokenizer.reflink(src, this.tokens.links)) {
+                src = src.substring(token.raw.length);
+                lastToken = tokens[tokens.length - 1];
+                if (lastToken && token.type === 'text' && lastToken.type === 'text') {
+                    lastToken.raw += token.raw;
+                    lastToken.text += token.text;
+                }
+                else {
+                    tokens.push(token);
+                }
+                continue;
+            }
+            // em & strong
+            if (token = this.tokenizer.emStrong(src, maskedSrc, prevChar)) {
+                src = src.substring(token.raw.length);
+                tokens.push(token);
+                continue;
+            }
+            // code
+            if (token = this.tokenizer.codespan(src)) {
+                src = src.substring(token.raw.length);
+                tokens.push(token);
+                continue;
+            }
+            // br
+            if (token = this.tokenizer.br(src)) {
+                src = src.substring(token.raw.length);
+                tokens.push(token);
+                continue;
+            }
+            // del (gfm)
+            if (token = this.tokenizer.del(src)) {
+                src = src.substring(token.raw.length);
+                tokens.push(token);
+                continue;
+            }
+            // autolink
+            if (token = this.tokenizer.autolink(src)) {
+                src = src.substring(token.raw.length);
+                tokens.push(token);
+                continue;
+            }
+            // url (gfm)
+            if (!this.state.inLink && (token = this.tokenizer.url(src))) {
+                src = src.substring(token.raw.length);
+                tokens.push(token);
+                continue;
+            }
+            // text
+            // prevent inlineText consuming extensions by clipping 'src' to extension start
+            cutSrc = src;
+            if (this.options.extensions && this.options.extensions.startInline) {
+                let startIndex = Infinity;
+                const tempSrc = src.slice(1);
+                let tempStart;
+                this.options.extensions.startInline.forEach((getStartIndex) => {
+                    tempStart = getStartIndex.call({ lexer: this }, tempSrc);
+                    if (typeof tempStart === 'number' && tempStart >= 0) {
+                        startIndex = Math.min(startIndex, tempStart);
+                    }
+                });
+                if (startIndex < Infinity && startIndex >= 0) {
+                    cutSrc = src.substring(0, startIndex + 1);
+                }
+            }
+            if (token = this.tokenizer.inlineText(cutSrc)) {
+                src = src.substring(token.raw.length);
+                if (token.raw.slice(-1) !== '_') { // Track prevChar before string of ____ started
+                    prevChar = token.raw.slice(-1);
+                }
+                keepPrevChar = true;
+                lastToken = tokens[tokens.length - 1];
+                if (lastToken && lastToken.type === 'text') {
+                    lastToken.raw += token.raw;
+                    lastToken.text += token.text;
+                }
+                else {
+                    tokens.push(token);
+                }
+                continue;
+            }
+            if (src) {
+                const errMsg = 'Infinite loop on byte: ' + src.charCodeAt(0);
+                if (this.options.silent) {
+                    console.error(errMsg);
+                    break;
+                }
+                else {
+                    throw new Error(errMsg);
+                }
+            }
+        }
+        return tokens;
+    }
+}
+
+/**
+ * Renderer
+ */
+class _Renderer {
+    options;
+    constructor(options) {
+        this.options = options || _defaults;
+    }
+    code(code, infostring, escaped) {
+        const lang = (infostring || '').match(/^\S*/)?.[0];
+        code = code.replace(/\n$/, '') + '\n';
+        if (!lang) {
+            return '<pre><code>'
+                + (escaped ? code : escape$1(code, true))
+                + '</code></pre>\n';
+        }
+        return '<pre><code class="language-'
+            + escape$1(lang)
+            + '">'
+            + (escaped ? code : escape$1(code, true))
+            + '</code></pre>\n';
+    }
+    blockquote(quote) {
+        return `<blockquote>\n${quote}</blockquote>\n`;
+    }
+    html(html, block) {
+        return html;
+    }
+    heading(text, level, raw) {
+        // ignore IDs
+        return `<h${level}>${text}</h${level}>\n`;
+    }
+    hr() {
+        return '<hr>\n';
+    }
+    list(body, ordered, start) {
+        const type = ordered ? 'ol' : 'ul';
+        const startatt = (ordered && start !== 1) ? (' start="' + start + '"') : '';
+        return '<' + type + startatt + '>\n' + body + '</' + type + '>\n';
+    }
+    listitem(text, task, checked) {
+        return `<li>${text}</li>\n`;
+    }
+    checkbox(checked) {
+        return '<input '
+            + (checked ? 'checked="" ' : '')
+            + 'disabled="" type="checkbox">';
+    }
+    paragraph(text) {
+        return `<p>${text}</p>\n`;
+    }
+    table(header, body) {
+        if (body)
+            body = `<tbody>${body}</tbody>`;
+        return '<table>\n'
+            + '<thead>\n'
+            + header
+            + '</thead>\n'
+            + body
+            + '</table>\n';
+    }
+    tablerow(content) {
+        return `<tr>\n${content}</tr>\n`;
+    }
+    tablecell(content, flags) {
+        const type = flags.header ? 'th' : 'td';
+        const tag = flags.align
+            ? `<${type} align="${flags.align}">`
+            : `<${type}>`;
+        return tag + content + `</${type}>\n`;
+    }
+    /**
+     * span level renderer
+     */
+    strong(text) {
+        return `<strong>${text}</strong>`;
+    }
+    em(text) {
+        return `<em>${text}</em>`;
+    }
+    codespan(text) {
+        return `<code>${text}</code>`;
+    }
+    br() {
+        return '<br>';
+    }
+    del(text) {
+        return `<del>${text}</del>`;
+    }
+    link(href, title, text) {
+        const cleanHref = cleanUrl(href);
+        if (cleanHref === null) {
+            return text;
+        }
+        href = cleanHref;
+        let out = '<a href="' + href + '"';
+        if (title) {
+            out += ' title="' + title + '"';
+        }
+        out += '>' + text + '</a>';
+        return out;
+    }
+    image(href, title, text) {
+        const cleanHref = cleanUrl(href);
+        if (cleanHref === null) {
+            return text;
+        }
+        href = cleanHref;
+        let out = `<img src="${href}" alt="${text}"`;
+        if (title) {
+            out += ` title="${title}"`;
+        }
+        out += '>';
+        return out;
+    }
+    text(text) {
+        return text;
+    }
+}
+
+/**
+ * TextRenderer
+ * returns only the textual part of the token
+ */
+class _TextRenderer {
+    // no need for block level renderers
+    strong(text) {
+        return text;
+    }
+    em(text) {
+        return text;
+    }
+    codespan(text) {
+        return text;
+    }
+    del(text) {
+        return text;
+    }
+    html(text) {
+        return text;
+    }
+    text(text) {
+        return text;
+    }
+    link(href, title, text) {
+        return '' + text;
+    }
+    image(href, title, text) {
+        return '' + text;
+    }
+    br() {
+        return '';
+    }
+}
+
+/**
+ * Parsing & Compiling
+ */
+class _Parser {
+    options;
+    renderer;
+    textRenderer;
+    constructor(options) {
+        this.options = options || _defaults;
+        this.options.renderer = this.options.renderer || new _Renderer();
+        this.renderer = this.options.renderer;
+        this.renderer.options = this.options;
+        this.textRenderer = new _TextRenderer();
+    }
+    /**
+     * Static Parse Method
+     */
+    static parse(tokens, options) {
+        const parser = new _Parser(options);
+        return parser.parse(tokens);
+    }
+    /**
+     * Static Parse Inline Method
+     */
+    static parseInline(tokens, options) {
+        const parser = new _Parser(options);
+        return parser.parseInline(tokens);
+    }
+    /**
+     * Parse Loop
+     */
+    parse(tokens, top = true) {
+        let out = '';
+        for (let i = 0; i < tokens.length; i++) {
+            const token = tokens[i];
+            // Run any renderer extensions
+            if (this.options.extensions && this.options.extensions.renderers && this.options.extensions.renderers[token.type]) {
+                const genericToken = token;
+                const ret = this.options.extensions.renderers[genericToken.type].call({ parser: this }, genericToken);
+                if (ret !== false || !['space', 'hr', 'heading', 'code', 'table', 'blockquote', 'list', 'html', 'paragraph', 'text'].includes(genericToken.type)) {
+                    out += ret || '';
+                    continue;
+                }
+            }
+            switch (token.type) {
+                case 'space': {
+                    continue;
+                }
+                case 'hr': {
+                    out += this.renderer.hr();
+                    continue;
+                }
+                case 'heading': {
+                    const headingToken = token;
+                    out += this.renderer.heading(this.parseInline(headingToken.tokens), headingToken.depth, unescape(this.parseInline(headingToken.tokens, this.textRenderer)));
+                    continue;
+                }
+                case 'code': {
+                    const codeToken = token;
+                    out += this.renderer.code(codeToken.text, codeToken.lang, !!codeToken.escaped);
+                    continue;
+                }
+                case 'table': {
+                    const tableToken = token;
+                    let header = '';
+                    // header
+                    let cell = '';
+                    for (let j = 0; j < tableToken.header.length; j++) {
+                        cell += this.renderer.tablecell(this.parseInline(tableToken.header[j].tokens), { header: true, align: tableToken.align[j] });
+                    }
+                    header += this.renderer.tablerow(cell);
+                    let body = '';
+                    for (let j = 0; j < tableToken.rows.length; j++) {
+                        const row = tableToken.rows[j];
+                        cell = '';
+                        for (let k = 0; k < row.length; k++) {
+                            cell += this.renderer.tablecell(this.parseInline(row[k].tokens), { header: false, align: tableToken.align[k] });
+                        }
+                        body += this.renderer.tablerow(cell);
+                    }
+                    out += this.renderer.table(header, body);
+                    continue;
+                }
+                case 'blockquote': {
+                    const blockquoteToken = token;
+                    const body = this.parse(blockquoteToken.tokens);
+                    out += this.renderer.blockquote(body);
+                    continue;
+                }
+                case 'list': {
+                    const listToken = token;
+                    const ordered = listToken.ordered;
+                    const start = listToken.start;
+                    const loose = listToken.loose;
+                    let body = '';
+                    for (let j = 0; j < listToken.items.length; j++) {
+                        const item = listToken.items[j];
+                        const checked = item.checked;
+                        const task = item.task;
+                        let itemBody = '';
+                        if (item.task) {
+                            const checkbox = this.renderer.checkbox(!!checked);
+                            if (loose) {
+                                if (item.tokens.length > 0 && item.tokens[0].type === 'paragraph') {
+                                    item.tokens[0].text = checkbox + ' ' + item.tokens[0].text;
+                                    if (item.tokens[0].tokens && item.tokens[0].tokens.length > 0 && item.tokens[0].tokens[0].type === 'text') {
+                                        item.tokens[0].tokens[0].text = checkbox + ' ' + item.tokens[0].tokens[0].text;
+                                    }
+                                }
+                                else {
+                                    item.tokens.unshift({
+                                        type: 'text',
+                                        text: checkbox + ' '
+                                    });
+                                }
+                            }
+                            else {
+                                itemBody += checkbox + ' ';
+                            }
+                        }
+                        itemBody += this.parse(item.tokens, loose);
+                        body += this.renderer.listitem(itemBody, task, !!checked);
+                    }
+                    out += this.renderer.list(body, ordered, start);
+                    continue;
+                }
+                case 'html': {
+                    const htmlToken = token;
+                    out += this.renderer.html(htmlToken.text, htmlToken.block);
+                    continue;
+                }
+                case 'paragraph': {
+                    const paragraphToken = token;
+                    out += this.renderer.paragraph(this.parseInline(paragraphToken.tokens));
+                    continue;
+                }
+                case 'text': {
+                    let textToken = token;
+                    let body = textToken.tokens ? this.parseInline(textToken.tokens) : textToken.text;
+                    while (i + 1 < tokens.length && tokens[i + 1].type === 'text') {
+                        textToken = tokens[++i];
+                        body += '\n' + (textToken.tokens ? this.parseInline(textToken.tokens) : textToken.text);
+                    }
+                    out += top ? this.renderer.paragraph(body) : body;
+                    continue;
+                }
+                default: {
+                    const errMsg = 'Token with "' + token.type + '" type was not found.';
+                    if (this.options.silent) {
+                        console.error(errMsg);
+                        return '';
+                    }
+                    else {
+                        throw new Error(errMsg);
+                    }
+                }
+            }
+        }
+        return out;
+    }
+    /**
+     * Parse Inline Tokens
+     */
+    parseInline(tokens, renderer) {
+        renderer = renderer || this.renderer;
+        let out = '';
+        for (let i = 0; i < tokens.length; i++) {
+            const token = tokens[i];
+            // Run any renderer extensions
+            if (this.options.extensions && this.options.extensions.renderers && this.options.extensions.renderers[token.type]) {
+                const ret = this.options.extensions.renderers[token.type].call({ parser: this }, token);
+                if (ret !== false || !['escape', 'html', 'link', 'image', 'strong', 'em', 'codespan', 'br', 'del', 'text'].includes(token.type)) {
+                    out += ret || '';
+                    continue;
+                }
+            }
+            switch (token.type) {
+                case 'escape': {
+                    const escapeToken = token;
+                    out += renderer.text(escapeToken.text);
+                    break;
+                }
+                case 'html': {
+                    const tagToken = token;
+                    out += renderer.html(tagToken.text);
+                    break;
+                }
+                case 'link': {
+                    const linkToken = token;
+                    out += renderer.link(linkToken.href, linkToken.title, this.parseInline(linkToken.tokens, renderer));
+                    break;
+                }
+                case 'image': {
+                    const imageToken = token;
+                    out += renderer.image(imageToken.href, imageToken.title, imageToken.text);
+                    break;
+                }
+                case 'strong': {
+                    const strongToken = token;
+                    out += renderer.strong(this.parseInline(strongToken.tokens, renderer));
+                    break;
+                }
+                case 'em': {
+                    const emToken = token;
+                    out += renderer.em(this.parseInline(emToken.tokens, renderer));
+                    break;
+                }
+                case 'codespan': {
+                    const codespanToken = token;
+                    out += renderer.codespan(codespanToken.text);
+                    break;
+                }
+                case 'br': {
+                    out += renderer.br();
+                    break;
+                }
+                case 'del': {
+                    const delToken = token;
+                    out += renderer.del(this.parseInline(delToken.tokens, renderer));
+                    break;
+                }
+                case 'text': {
+                    const textToken = token;
+                    out += renderer.text(textToken.text);
+                    break;
+                }
+                default: {
+                    const errMsg = 'Token with "' + token.type + '" type was not found.';
+                    if (this.options.silent) {
+                        console.error(errMsg);
+                        return '';
+                    }
+                    else {
+                        throw new Error(errMsg);
+                    }
+                }
+            }
+        }
+        return out;
+    }
+}
+
+class _Hooks {
+    options;
+    constructor(options) {
+        this.options = options || _defaults;
+    }
+    static passThroughHooks = new Set([
+        'preprocess',
+        'postprocess',
+        'processAllTokens'
+    ]);
+    /**
+     * Process markdown before marked
+     */
+    preprocess(markdown) {
+        return markdown;
+    }
+    /**
+     * Process HTML after marked is finished
+     */
+    postprocess(html) {
+        return html;
+    }
+    /**
+     * Process all tokens before walk tokens
+     */
+    processAllTokens(tokens) {
+        return tokens;
+    }
+}
+
+class Marked {
+    defaults = _getDefaults();
+    options = this.setOptions;
+    parse = this.#parseMarkdown(_Lexer.lex, _Parser.parse);
+    parseInline = this.#parseMarkdown(_Lexer.lexInline, _Parser.parseInline);
+    Parser = _Parser;
+    Renderer = _Renderer;
+    TextRenderer = _TextRenderer;
+    Lexer = _Lexer;
+    Tokenizer = _Tokenizer;
+    Hooks = _Hooks;
+    constructor(...args) {
+        this.use(...args);
+    }
+    /**
+     * Run callback for every token
+     */
+    walkTokens(tokens, callback) {
+        let values = [];
+        for (const token of tokens) {
+            values = values.concat(callback.call(this, token));
+            switch (token.type) {
+                case 'table': {
+                    const tableToken = token;
+                    for (const cell of tableToken.header) {
+                        values = values.concat(this.walkTokens(cell.tokens, callback));
+                    }
+                    for (const row of tableToken.rows) {
+                        for (const cell of row) {
+                            values = values.concat(this.walkTokens(cell.tokens, callback));
+                        }
+                    }
+                    break;
+                }
+                case 'list': {
+                    const listToken = token;
+                    values = values.concat(this.walkTokens(listToken.items, callback));
+                    break;
+                }
+                default: {
+                    const genericToken = token;
+                    if (this.defaults.extensions?.childTokens?.[genericToken.type]) {
+                        this.defaults.extensions.childTokens[genericToken.type].forEach((childTokens) => {
+                            const tokens = genericToken[childTokens].flat(Infinity);
+                            values = values.concat(this.walkTokens(tokens, callback));
+                        });
+                    }
+                    else if (genericToken.tokens) {
+                        values = values.concat(this.walkTokens(genericToken.tokens, callback));
+                    }
+                }
+            }
+        }
+        return values;
+    }
+    use(...args) {
+        const extensions = this.defaults.extensions || { renderers: {}, childTokens: {} };
+        args.forEach((pack) => {
+            // copy options to new object
+            const opts = { ...pack };
+            // set async to true if it was set to true before
+            opts.async = this.defaults.async || opts.async || false;
+            // ==-- Parse "addon" extensions --== //
+            if (pack.extensions) {
+                pack.extensions.forEach((ext) => {
+                    if (!ext.name) {
+                        throw new Error('extension name required');
+                    }
+                    if ('renderer' in ext) { // Renderer extensions
+                        const prevRenderer = extensions.renderers[ext.name];
+                        if (prevRenderer) {
+                            // Replace extension with func to run new extension but fall back if false
+                            extensions.renderers[ext.name] = function (...args) {
+                                let ret = ext.renderer.apply(this, args);
+                                if (ret === false) {
+                                    ret = prevRenderer.apply(this, args);
+                                }
+                                return ret;
+                            };
+                        }
+                        else {
+                            extensions.renderers[ext.name] = ext.renderer;
+                        }
+                    }
+                    if ('tokenizer' in ext) { // Tokenizer Extensions
+                        if (!ext.level || (ext.level !== 'block' && ext.level !== 'inline')) {
+                            throw new Error("extension level must be 'block' or 'inline'");
+                        }
+                        const extLevel = extensions[ext.level];
+                        if (extLevel) {
+                            extLevel.unshift(ext.tokenizer);
+                        }
+                        else {
+                            extensions[ext.level] = [ext.tokenizer];
+                        }
+                        if (ext.start) { // Function to check for start of token
+                            if (ext.level === 'block') {
+                                if (extensions.startBlock) {
+                                    extensions.startBlock.push(ext.start);
+                                }
+                                else {
+                                    extensions.startBlock = [ext.start];
+                                }
+                            }
+                            else if (ext.level === 'inline') {
+                                if (extensions.startInline) {
+                                    extensions.startInline.push(ext.start);
+                                }
+                                else {
+                                    extensions.startInline = [ext.start];
+                                }
+                            }
+                        }
+                    }
+                    if ('childTokens' in ext && ext.childTokens) { // Child tokens to be visited by walkTokens
+                        extensions.childTokens[ext.name] = ext.childTokens;
+                    }
+                });
+                opts.extensions = extensions;
+            }
+            // ==-- Parse "overwrite" extensions --== //
+            if (pack.renderer) {
+                const renderer = this.defaults.renderer || new _Renderer(this.defaults);
+                for (const prop in pack.renderer) {
+                    if (!(prop in renderer)) {
+                        throw new Error(`renderer '${prop}' does not exist`);
+                    }
+                    if (prop === 'options') {
+                        // ignore options property
+                        continue;
+                    }
+                    const rendererProp = prop;
+                    const rendererFunc = pack.renderer[rendererProp];
+                    const prevRenderer = renderer[rendererProp];
+                    // Replace renderer with func to run extension, but fall back if false
+                    renderer[rendererProp] = (...args) => {
+                        let ret = rendererFunc.apply(renderer, args);
+                        if (ret === false) {
+                            ret = prevRenderer.apply(renderer, args);
+                        }
+                        return ret || '';
+                    };
+                }
+                opts.renderer = renderer;
+            }
+            if (pack.tokenizer) {
+                const tokenizer = this.defaults.tokenizer || new _Tokenizer(this.defaults);
+                for (const prop in pack.tokenizer) {
+                    if (!(prop in tokenizer)) {
+                        throw new Error(`tokenizer '${prop}' does not exist`);
+                    }
+                    if (['options', 'rules', 'lexer'].includes(prop)) {
+                        // ignore options, rules, and lexer properties
+                        continue;
+                    }
+                    const tokenizerProp = prop;
+                    const tokenizerFunc = pack.tokenizer[tokenizerProp];
+                    const prevTokenizer = tokenizer[tokenizerProp];
+                    // Replace tokenizer with func to run extension, but fall back if false
+                    // @ts-expect-error cannot type tokenizer function dynamically
+                    tokenizer[tokenizerProp] = (...args) => {
+                        let ret = tokenizerFunc.apply(tokenizer, args);
+                        if (ret === false) {
+                            ret = prevTokenizer.apply(tokenizer, args);
+                        }
+                        return ret;
+                    };
+                }
+                opts.tokenizer = tokenizer;
+            }
+            // ==-- Parse Hooks extensions --== //
+            if (pack.hooks) {
+                const hooks = this.defaults.hooks || new _Hooks();
+                for (const prop in pack.hooks) {
+                    if (!(prop in hooks)) {
+                        throw new Error(`hook '${prop}' does not exist`);
+                    }
+                    if (prop === 'options') {
+                        // ignore options property
+                        continue;
+                    }
+                    const hooksProp = prop;
+                    const hooksFunc = pack.hooks[hooksProp];
+                    const prevHook = hooks[hooksProp];
+                    if (_Hooks.passThroughHooks.has(prop)) {
+                        // @ts-expect-error cannot type hook function dynamically
+                        hooks[hooksProp] = (arg) => {
+                            if (this.defaults.async) {
+                                return Promise.resolve(hooksFunc.call(hooks, arg)).then(ret => {
+                                    return prevHook.call(hooks, ret);
+                                });
+                            }
+                            const ret = hooksFunc.call(hooks, arg);
+                            return prevHook.call(hooks, ret);
+                        };
+                    }
+                    else {
+                        // @ts-expect-error cannot type hook function dynamically
+                        hooks[hooksProp] = (...args) => {
+                            let ret = hooksFunc.apply(hooks, args);
+                            if (ret === false) {
+                                ret = prevHook.apply(hooks, args);
+                            }
+                            return ret;
+                        };
+                    }
+                }
+                opts.hooks = hooks;
+            }
+            // ==-- Parse WalkTokens extensions --== //
+            if (pack.walkTokens) {
+                const walkTokens = this.defaults.walkTokens;
+                const packWalktokens = pack.walkTokens;
+                opts.walkTokens = function (token) {
+                    let values = [];
+                    values.push(packWalktokens.call(this, token));
+                    if (walkTokens) {
+                        values = values.concat(walkTokens.call(this, token));
+                    }
+                    return values;
+                };
+            }
+            this.defaults = { ...this.defaults, ...opts };
+        });
+        return this;
+    }
+    setOptions(opt) {
+        this.defaults = { ...this.defaults, ...opt };
+        return this;
+    }
+    lexer(src, options) {
+        return _Lexer.lex(src, options ?? this.defaults);
+    }
+    parser(tokens, options) {
+        return _Parser.parse(tokens, options ?? this.defaults);
+    }
+    #parseMarkdown(lexer, parser) {
+        return (src, options) => {
+            const origOpt = { ...options };
+            const opt = { ...this.defaults, ...origOpt };
+            // Show warning if an extension set async to true but the parse was called with async: false
+            if (this.defaults.async === true && origOpt.async === false) {
+                if (!opt.silent) {
+                    console.warn('marked(): The async option was set to true by an extension. The async: false option sent to parse will be ignored.');
+                }
+                opt.async = true;
+            }
+            const throwError = this.#onError(!!opt.silent, !!opt.async);
+            // throw error in case of non string input
+            if (typeof src === 'undefined' || src === null) {
+                return throwError(new Error('marked(): input parameter is undefined or null'));
+            }
+            if (typeof src !== 'string') {
+                return throwError(new Error('marked(): input parameter is of type '
+                    + Object.prototype.toString.call(src) + ', string expected'));
+            }
+            if (opt.hooks) {
+                opt.hooks.options = opt;
+            }
+            if (opt.async) {
+                return Promise.resolve(opt.hooks ? opt.hooks.preprocess(src) : src)
+                    .then(src => lexer(src, opt))
+                    .then(tokens => opt.hooks ? opt.hooks.processAllTokens(tokens) : tokens)
+                    .then(tokens => opt.walkTokens ? Promise.all(this.walkTokens(tokens, opt.walkTokens)).then(() => tokens) : tokens)
+                    .then(tokens => parser(tokens, opt))
+                    .then(html => opt.hooks ? opt.hooks.postprocess(html) : html)
+                    .catch(throwError);
+            }
+            try {
+                if (opt.hooks) {
+                    src = opt.hooks.preprocess(src);
+                }
+                let tokens = lexer(src, opt);
+                if (opt.hooks) {
+                    tokens = opt.hooks.processAllTokens(tokens);
+                }
+                if (opt.walkTokens) {
+                    this.walkTokens(tokens, opt.walkTokens);
+                }
+                let html = parser(tokens, opt);
+                if (opt.hooks) {
+                    html = opt.hooks.postprocess(html);
+                }
+                return html;
+            }
+            catch (e) {
+                return throwError(e);
+            }
+        };
+    }
+    #onError(silent, async) {
+        return (e) => {
+            e.message += '\nPlease report this to https://github.com/markedjs/marked.';
+            if (silent) {
+                const msg = '<p>An error occurred:</p><pre>'
+                    + escape$1(e.message + '', true)
+                    + '</pre>';
+                if (async) {
+                    return Promise.resolve(msg);
+                }
+                return msg;
+            }
+            if (async) {
+                return Promise.reject(e);
+            }
+            throw e;
+        };
+    }
+}
+
+const markedInstance = new Marked();
+function marked(src, opt) {
+    return markedInstance.parse(src, opt);
+}
+/**
+ * Sets the default options.
+ *
+ * @param options Hash of options
+ */
+marked.options =
+    marked.setOptions = function (options) {
+        markedInstance.setOptions(options);
+        marked.defaults = markedInstance.defaults;
+        changeDefaults(marked.defaults);
+        return marked;
+    };
+/**
+ * Gets the original marked default options.
+ */
+marked.getDefaults = _getDefaults;
+marked.defaults = _defaults;
+/**
+ * Use Extension
+ */
+marked.use = function (...args) {
+    markedInstance.use(...args);
+    marked.defaults = markedInstance.defaults;
+    changeDefaults(marked.defaults);
+    return marked;
+};
+/**
+ * Run callback for every token
+ */
+marked.walkTokens = function (tokens, callback) {
+    return markedInstance.walkTokens(tokens, callback);
+};
+/**
+ * Compiles markdown to HTML without enclosing `p` tag.
+ *
+ * @param src String of markdown source to be compiled
+ * @param options Hash of options
+ * @return String of compiled HTML
+ */
+marked.parseInline = markedInstance.parseInline;
+/**
+ * Expose
+ */
+marked.Parser = _Parser;
+marked.parser = _Parser.parse;
+marked.Renderer = _Renderer;
+marked.TextRenderer = _TextRenderer;
+marked.Lexer = _Lexer;
+marked.lexer = _Lexer.lex;
+marked.Tokenizer = _Tokenizer;
+marked.Hooks = _Hooks;
+marked.parse = marked;
+const options = marked.options;
+const setOptions = marked.setOptions;
+const use = marked.use;
+const walkTokens = marked.walkTokens;
+const parseInline = marked.parseInline;
+const parse = marked;
+const parser = _Parser.parse;
+const lexer = _Lexer.lex;
+
+var marked$1 = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    Hooks: _Hooks,
+    Lexer: _Lexer,
+    Marked: Marked,
+    Parser: _Parser,
+    Renderer: _Renderer,
+    TextRenderer: _TextRenderer,
+    Tokenizer: _Tokenizer,
+    get defaults () { return _defaults; },
+    getDefaults: _getDefaults,
+    lexer: lexer,
+    marked: marked,
+    options: options,
+    parse: parse,
+    parseInline: parseInline,
+    parser: parser,
+    setOptions: setOptions,
+    use: use,
+    walkTokens: walkTokens
+});
+
+var purify = {exports: {}};
+
+/*! @license DOMPurify 3.1.3 | (c) Cure53 and other contributors | Released under the Apache license 2.0 and Mozilla Public License 2.0 | github.com/cure53/DOMPurify/blob/3.1.3/LICENSE */
+
+(function (module, exports) {
+	(function (global, factory) {
+	  module.exports = factory() ;
+	})(commonjsGlobal, (function () {
+	  const {
+	    entries,
+	    setPrototypeOf,
+	    isFrozen,
+	    getPrototypeOf,
+	    getOwnPropertyDescriptor
+	  } = Object;
+	  let {
+	    freeze,
+	    seal,
+	    create
+	  } = Object; // eslint-disable-line import/no-mutable-exports
+	  let {
+	    apply,
+	    construct
+	  } = typeof Reflect !== 'undefined' && Reflect;
+	  if (!freeze) {
+	    freeze = function freeze(x) {
+	      return x;
+	    };
+	  }
+	  if (!seal) {
+	    seal = function seal(x) {
+	      return x;
+	    };
+	  }
+	  if (!apply) {
+	    apply = function apply(fun, thisValue, args) {
+	      return fun.apply(thisValue, args);
+	    };
+	  }
+	  if (!construct) {
+	    construct = function construct(Func, args) {
+	      return new Func(...args);
+	    };
+	  }
+	  const arrayForEach = unapply(Array.prototype.forEach);
+	  const arrayPop = unapply(Array.prototype.pop);
+	  const arrayPush = unapply(Array.prototype.push);
+	  const stringToLowerCase = unapply(String.prototype.toLowerCase);
+	  const stringToString = unapply(String.prototype.toString);
+	  const stringMatch = unapply(String.prototype.match);
+	  const stringReplace = unapply(String.prototype.replace);
+	  const stringIndexOf = unapply(String.prototype.indexOf);
+	  const stringTrim = unapply(String.prototype.trim);
+	  const objectHasOwnProperty = unapply(Object.prototype.hasOwnProperty);
+	  const regExpTest = unapply(RegExp.prototype.test);
+	  const typeErrorCreate = unconstruct(TypeError);
+	  const numberIsNaN = unapply(Number.isNaN);
+
+	  /**
+	   * Creates a new function that calls the given function with a specified thisArg and arguments.
+	   *
+	   * @param {Function} func - The function to be wrapped and called.
+	   * @returns {Function} A new function that calls the given function with a specified thisArg and arguments.
+	   */
+	  function unapply(func) {
+	    return function (thisArg) {
+	      for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+	        args[_key - 1] = arguments[_key];
+	      }
+	      return apply(func, thisArg, args);
+	    };
+	  }
+
+	  /**
+	   * Creates a new function that constructs an instance of the given constructor function with the provided arguments.
+	   *
+	   * @param {Function} func - The constructor function to be wrapped and called.
+	   * @returns {Function} A new function that constructs an instance of the given constructor function with the provided arguments.
+	   */
+	  function unconstruct(func) {
+	    return function () {
+	      for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+	        args[_key2] = arguments[_key2];
+	      }
+	      return construct(func, args);
+	    };
+	  }
+
+	  /**
+	   * Add properties to a lookup table
+	   *
+	   * @param {Object} set - The set to which elements will be added.
+	   * @param {Array} array - The array containing elements to be added to the set.
+	   * @param {Function} transformCaseFunc - An optional function to transform the case of each element before adding to the set.
+	   * @returns {Object} The modified set with added elements.
+	   */
+	  function addToSet(set, array) {
+	    let transformCaseFunc = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : stringToLowerCase;
+	    if (setPrototypeOf) {
+	      // Make 'in' and truthy checks like Boolean(set.constructor)
+	      // independent of any properties defined on Object.prototype.
+	      // Prevent prototype setters from intercepting set as a this value.
+	      setPrototypeOf(set, null);
+	    }
+	    let l = array.length;
+	    while (l--) {
+	      let element = array[l];
+	      if (typeof element === 'string') {
+	        const lcElement = transformCaseFunc(element);
+	        if (lcElement !== element) {
+	          // Config presets (e.g. tags.js, attrs.js) are immutable.
+	          if (!isFrozen(array)) {
+	            array[l] = lcElement;
+	          }
+	          element = lcElement;
+	        }
+	      }
+	      set[element] = true;
+	    }
+	    return set;
+	  }
+
+	  /**
+	   * Clean up an array to harden against CSPP
+	   *
+	   * @param {Array} array - The array to be cleaned.
+	   * @returns {Array} The cleaned version of the array
+	   */
+	  function cleanArray(array) {
+	    for (let index = 0; index < array.length; index++) {
+	      const isPropertyExist = objectHasOwnProperty(array, index);
+	      if (!isPropertyExist) {
+	        array[index] = null;
+	      }
+	    }
+	    return array;
+	  }
+
+	  /**
+	   * Shallow clone an object
+	   *
+	   * @param {Object} object - The object to be cloned.
+	   * @returns {Object} A new object that copies the original.
+	   */
+	  function clone(object) {
+	    const newObject = create(null);
+	    for (const [property, value] of entries(object)) {
+	      const isPropertyExist = objectHasOwnProperty(object, property);
+	      if (isPropertyExist) {
+	        if (Array.isArray(value)) {
+	          newObject[property] = cleanArray(value);
+	        } else if (value && typeof value === 'object' && value.constructor === Object) {
+	          newObject[property] = clone(value);
+	        } else {
+	          newObject[property] = value;
+	        }
+	      }
+	    }
+	    return newObject;
+	  }
+
+	  /**
+	   * This method automatically checks if the prop is function or getter and behaves accordingly.
+	   *
+	   * @param {Object} object - The object to look up the getter function in its prototype chain.
+	   * @param {String} prop - The property name for which to find the getter function.
+	   * @returns {Function} The getter function found in the prototype chain or a fallback function.
+	   */
+	  function lookupGetter(object, prop) {
+	    while (object !== null) {
+	      const desc = getOwnPropertyDescriptor(object, prop);
+	      if (desc) {
+	        if (desc.get) {
+	          return unapply(desc.get);
+	        }
+	        if (typeof desc.value === 'function') {
+	          return unapply(desc.value);
+	        }
+	      }
+	      object = getPrototypeOf(object);
+	    }
+	    function fallbackValue() {
+	      return null;
+	    }
+	    return fallbackValue;
+	  }
+
+	  const html$1 = freeze(['a', 'abbr', 'acronym', 'address', 'area', 'article', 'aside', 'audio', 'b', 'bdi', 'bdo', 'big', 'blink', 'blockquote', 'body', 'br', 'button', 'canvas', 'caption', 'center', 'cite', 'code', 'col', 'colgroup', 'content', 'data', 'datalist', 'dd', 'decorator', 'del', 'details', 'dfn', 'dialog', 'dir', 'div', 'dl', 'dt', 'element', 'em', 'fieldset', 'figcaption', 'figure', 'font', 'footer', 'form', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'head', 'header', 'hgroup', 'hr', 'html', 'i', 'img', 'input', 'ins', 'kbd', 'label', 'legend', 'li', 'main', 'map', 'mark', 'marquee', 'menu', 'menuitem', 'meter', 'nav', 'nobr', 'ol', 'optgroup', 'option', 'output', 'p', 'picture', 'pre', 'progress', 'q', 'rp', 'rt', 'ruby', 's', 'samp', 'section', 'select', 'shadow', 'small', 'source', 'spacer', 'span', 'strike', 'strong', 'style', 'sub', 'summary', 'sup', 'table', 'tbody', 'td', 'template', 'textarea', 'tfoot', 'th', 'thead', 'time', 'tr', 'track', 'tt', 'u', 'ul', 'var', 'video', 'wbr']);
+
+	  // SVG
+	  const svg$1 = freeze(['svg', 'a', 'altglyph', 'altglyphdef', 'altglyphitem', 'animatecolor', 'animatemotion', 'animatetransform', 'circle', 'clippath', 'defs', 'desc', 'ellipse', 'filter', 'font', 'g', 'glyph', 'glyphref', 'hkern', 'image', 'line', 'lineargradient', 'marker', 'mask', 'metadata', 'mpath', 'path', 'pattern', 'polygon', 'polyline', 'radialgradient', 'rect', 'stop', 'style', 'switch', 'symbol', 'text', 'textpath', 'title', 'tref', 'tspan', 'view', 'vkern']);
+	  const svgFilters = freeze(['feBlend', 'feColorMatrix', 'feComponentTransfer', 'feComposite', 'feConvolveMatrix', 'feDiffuseLighting', 'feDisplacementMap', 'feDistantLight', 'feDropShadow', 'feFlood', 'feFuncA', 'feFuncB', 'feFuncG', 'feFuncR', 'feGaussianBlur', 'feImage', 'feMerge', 'feMergeNode', 'feMorphology', 'feOffset', 'fePointLight', 'feSpecularLighting', 'feSpotLight', 'feTile', 'feTurbulence']);
+
+	  // List of SVG elements that are disallowed by default.
+	  // We still need to know them so that we can do namespace
+	  // checks properly in case one wants to add them to
+	  // allow-list.
+	  const svgDisallowed = freeze(['animate', 'color-profile', 'cursor', 'discard', 'font-face', 'font-face-format', 'font-face-name', 'font-face-src', 'font-face-uri', 'foreignobject', 'hatch', 'hatchpath', 'mesh', 'meshgradient', 'meshpatch', 'meshrow', 'missing-glyph', 'script', 'set', 'solidcolor', 'unknown', 'use']);
+	  const mathMl$1 = freeze(['math', 'menclose', 'merror', 'mfenced', 'mfrac', 'mglyph', 'mi', 'mlabeledtr', 'mmultiscripts', 'mn', 'mo', 'mover', 'mpadded', 'mphantom', 'mroot', 'mrow', 'ms', 'mspace', 'msqrt', 'mstyle', 'msub', 'msup', 'msubsup', 'mtable', 'mtd', 'mtext', 'mtr', 'munder', 'munderover', 'mprescripts']);
+
+	  // Similarly to SVG, we want to know all MathML elements,
+	  // even those that we disallow by default.
+	  const mathMlDisallowed = freeze(['maction', 'maligngroup', 'malignmark', 'mlongdiv', 'mscarries', 'mscarry', 'msgroup', 'mstack', 'msline', 'msrow', 'semantics', 'annotation', 'annotation-xml', 'mprescripts', 'none']);
+	  const text = freeze(['#text']);
+
+	  const html = freeze(['accept', 'action', 'align', 'alt', 'autocapitalize', 'autocomplete', 'autopictureinpicture', 'autoplay', 'background', 'bgcolor', 'border', 'capture', 'cellpadding', 'cellspacing', 'checked', 'cite', 'class', 'clear', 'color', 'cols', 'colspan', 'controls', 'controlslist', 'coords', 'crossorigin', 'datetime', 'decoding', 'default', 'dir', 'disabled', 'disablepictureinpicture', 'disableremoteplayback', 'download', 'draggable', 'enctype', 'enterkeyhint', 'face', 'for', 'headers', 'height', 'hidden', 'high', 'href', 'hreflang', 'id', 'inputmode', 'integrity', 'ismap', 'kind', 'label', 'lang', 'list', 'loading', 'loop', 'low', 'max', 'maxlength', 'media', 'method', 'min', 'minlength', 'multiple', 'muted', 'name', 'nonce', 'noshade', 'novalidate', 'nowrap', 'open', 'optimum', 'pattern', 'placeholder', 'playsinline', 'poster', 'preload', 'pubdate', 'radiogroup', 'readonly', 'rel', 'required', 'rev', 'reversed', 'role', 'rows', 'rowspan', 'spellcheck', 'scope', 'selected', 'shape', 'size', 'sizes', 'span', 'srclang', 'start', 'src', 'srcset', 'step', 'style', 'summary', 'tabindex', 'title', 'translate', 'type', 'usemap', 'valign', 'value', 'width', 'wrap', 'xmlns', 'slot']);
+	  const svg = freeze(['accent-height', 'accumulate', 'additive', 'alignment-baseline', 'ascent', 'attributename', 'attributetype', 'azimuth', 'basefrequency', 'baseline-shift', 'begin', 'bias', 'by', 'class', 'clip', 'clippathunits', 'clip-path', 'clip-rule', 'color', 'color-interpolation', 'color-interpolation-filters', 'color-profile', 'color-rendering', 'cx', 'cy', 'd', 'dx', 'dy', 'diffuseconstant', 'direction', 'display', 'divisor', 'dur', 'edgemode', 'elevation', 'end', 'fill', 'fill-opacity', 'fill-rule', 'filter', 'filterunits', 'flood-color', 'flood-opacity', 'font-family', 'font-size', 'font-size-adjust', 'font-stretch', 'font-style', 'font-variant', 'font-weight', 'fx', 'fy', 'g1', 'g2', 'glyph-name', 'glyphref', 'gradientunits', 'gradienttransform', 'height', 'href', 'id', 'image-rendering', 'in', 'in2', 'k', 'k1', 'k2', 'k3', 'k4', 'kerning', 'keypoints', 'keysplines', 'keytimes', 'lang', 'lengthadjust', 'letter-spacing', 'kernelmatrix', 'kernelunitlength', 'lighting-color', 'local', 'marker-end', 'marker-mid', 'marker-start', 'markerheight', 'markerunits', 'markerwidth', 'maskcontentunits', 'maskunits', 'max', 'mask', 'media', 'method', 'mode', 'min', 'name', 'numoctaves', 'offset', 'operator', 'opacity', 'order', 'orient', 'orientation', 'origin', 'overflow', 'paint-order', 'path', 'pathlength', 'patterncontentunits', 'patterntransform', 'patternunits', 'points', 'preservealpha', 'preserveaspectratio', 'primitiveunits', 'r', 'rx', 'ry', 'radius', 'refx', 'refy', 'repeatcount', 'repeatdur', 'restart', 'result', 'rotate', 'scale', 'seed', 'shape-rendering', 'specularconstant', 'specularexponent', 'spreadmethod', 'startoffset', 'stddeviation', 'stitchtiles', 'stop-color', 'stop-opacity', 'stroke-dasharray', 'stroke-dashoffset', 'stroke-linecap', 'stroke-linejoin', 'stroke-miterlimit', 'stroke-opacity', 'stroke', 'stroke-width', 'style', 'surfacescale', 'systemlanguage', 'tabindex', 'targetx', 'targety', 'transform', 'transform-origin', 'text-anchor', 'text-decoration', 'text-rendering', 'textlength', 'type', 'u1', 'u2', 'unicode', 'values', 'viewbox', 'visibility', 'version', 'vert-adv-y', 'vert-origin-x', 'vert-origin-y', 'width', 'word-spacing', 'wrap', 'writing-mode', 'xchannelselector', 'ychannelselector', 'x', 'x1', 'x2', 'xmlns', 'y', 'y1', 'y2', 'z', 'zoomandpan']);
+	  const mathMl = freeze(['accent', 'accentunder', 'align', 'bevelled', 'close', 'columnsalign', 'columnlines', 'columnspan', 'denomalign', 'depth', 'dir', 'display', 'displaystyle', 'encoding', 'fence', 'frame', 'height', 'href', 'id', 'largeop', 'length', 'linethickness', 'lspace', 'lquote', 'mathbackground', 'mathcolor', 'mathsize', 'mathvariant', 'maxsize', 'minsize', 'movablelimits', 'notation', 'numalign', 'open', 'rowalign', 'rowlines', 'rowspacing', 'rowspan', 'rspace', 'rquote', 'scriptlevel', 'scriptminsize', 'scriptsizemultiplier', 'selection', 'separator', 'separators', 'stretchy', 'subscriptshift', 'supscriptshift', 'symmetric', 'voffset', 'width', 'xmlns']);
+	  const xml = freeze(['xlink:href', 'xml:id', 'xlink:title', 'xml:space', 'xmlns:xlink']);
+
+	  // eslint-disable-next-line unicorn/better-regex
+	  const MUSTACHE_EXPR = seal(/\{\{[\w\W]*|[\w\W]*\}\}/gm); // Specify template detection regex for SAFE_FOR_TEMPLATES mode
+	  const ERB_EXPR = seal(/<%[\w\W]*|[\w\W]*%>/gm);
+	  const TMPLIT_EXPR = seal(/\${[\w\W]*}/gm);
+	  const DATA_ATTR = seal(/^data-[\-\w.\u00B7-\uFFFF]/); // eslint-disable-line no-useless-escape
+	  const ARIA_ATTR = seal(/^aria-[\-\w]+$/); // eslint-disable-line no-useless-escape
+	  const IS_ALLOWED_URI = seal(/^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i // eslint-disable-line no-useless-escape
+	  );
+
+	  const IS_SCRIPT_OR_DATA = seal(/^(?:\w+script|data):/i);
+	  const ATTR_WHITESPACE = seal(/[\u0000-\u0020\u00A0\u1680\u180E\u2000-\u2029\u205F\u3000]/g // eslint-disable-line no-control-regex
+	  );
+
+	  const DOCTYPE_NAME = seal(/^html$/i);
+	  const CUSTOM_ELEMENT = seal(/^[a-z][.\w]*(-[.\w]+)+$/i);
+
+	  var EXPRESSIONS = /*#__PURE__*/Object.freeze({
+	    __proto__: null,
+	    MUSTACHE_EXPR: MUSTACHE_EXPR,
+	    ERB_EXPR: ERB_EXPR,
+	    TMPLIT_EXPR: TMPLIT_EXPR,
+	    DATA_ATTR: DATA_ATTR,
+	    ARIA_ATTR: ARIA_ATTR,
+	    IS_ALLOWED_URI: IS_ALLOWED_URI,
+	    IS_SCRIPT_OR_DATA: IS_SCRIPT_OR_DATA,
+	    ATTR_WHITESPACE: ATTR_WHITESPACE,
+	    DOCTYPE_NAME: DOCTYPE_NAME,
+	    CUSTOM_ELEMENT: CUSTOM_ELEMENT
+	  });
+
+	  // https://developer.mozilla.org/en-US/docs/Web/API/Node/nodeType
+	  const NODE_TYPE = {
+	    element: 1,
+	    attribute: 2,
+	    text: 3,
+	    cdataSection: 4,
+	    entityReference: 5,
+	    // Deprecated
+	    entityNode: 6,
+	    // Deprecated
+	    progressingInstruction: 7,
+	    comment: 8,
+	    document: 9,
+	    documentType: 10,
+	    documentFragment: 11,
+	    notation: 12 // Deprecated
+	  };
+
+	  const getGlobal = function getGlobal() {
+	    return typeof window === 'undefined' ? null : window;
+	  };
+
+	  /**
+	   * Creates a no-op policy for internal use only.
+	   * Don't export this function outside this module!
+	   * @param {TrustedTypePolicyFactory} trustedTypes The policy factory.
+	   * @param {HTMLScriptElement} purifyHostElement The Script element used to load DOMPurify (to determine policy name suffix).
+	   * @return {TrustedTypePolicy} The policy created (or null, if Trusted Types
+	   * are not supported or creating the policy failed).
+	   */
+	  const _createTrustedTypesPolicy = function _createTrustedTypesPolicy(trustedTypes, purifyHostElement) {
+	    if (typeof trustedTypes !== 'object' || typeof trustedTypes.createPolicy !== 'function') {
+	      return null;
+	    }
+
+	    // Allow the callers to control the unique policy name
+	    // by adding a data-tt-policy-suffix to the script element with the DOMPurify.
+	    // Policy creation with duplicate names throws in Trusted Types.
+	    let suffix = null;
+	    const ATTR_NAME = 'data-tt-policy-suffix';
+	    if (purifyHostElement && purifyHostElement.hasAttribute(ATTR_NAME)) {
+	      suffix = purifyHostElement.getAttribute(ATTR_NAME);
+	    }
+	    const policyName = 'dompurify' + (suffix ? '#' + suffix : '');
+	    try {
+	      return trustedTypes.createPolicy(policyName, {
+	        createHTML(html) {
+	          return html;
+	        },
+	        createScriptURL(scriptUrl) {
+	          return scriptUrl;
+	        }
+	      });
+	    } catch (_) {
+	      // Policy creation failed (most likely another DOMPurify script has
+	      // already run). Skip creating the policy, as this will only cause errors
+	      // if TT are enforced.
+	      console.warn('TrustedTypes policy ' + policyName + ' could not be created.');
+	      return null;
+	    }
+	  };
+	  function createDOMPurify() {
+	    let window = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : getGlobal();
+	    const DOMPurify = root => createDOMPurify(root);
+
+	    /**
+	     * Version label, exposed for easier checks
+	     * if DOMPurify is up to date or not
+	     */
+	    DOMPurify.version = '3.1.3';
+
+	    /**
+	     * Array of elements that DOMPurify removed during sanitation.
+	     * Empty if nothing was removed.
+	     */
+	    DOMPurify.removed = [];
+	    if (!window || !window.document || window.document.nodeType !== NODE_TYPE.document) {
+	      // Not running in a browser, provide a factory function
+	      // so that you can pass your own Window
+	      DOMPurify.isSupported = false;
+	      return DOMPurify;
+	    }
+	    let {
+	      document
+	    } = window;
+	    const originalDocument = document;
+	    const currentScript = originalDocument.currentScript;
+	    const {
+	      DocumentFragment,
+	      HTMLTemplateElement,
+	      Node,
+	      Element,
+	      NodeFilter,
+	      NamedNodeMap = window.NamedNodeMap || window.MozNamedAttrMap,
+	      HTMLFormElement,
+	      DOMParser,
+	      trustedTypes
+	    } = window;
+	    const ElementPrototype = Element.prototype;
+	    const cloneNode = lookupGetter(ElementPrototype, 'cloneNode');
+	    const getNextSibling = lookupGetter(ElementPrototype, 'nextSibling');
+	    const getChildNodes = lookupGetter(ElementPrototype, 'childNodes');
+	    const getParentNode = lookupGetter(ElementPrototype, 'parentNode');
+
+	    // As per issue #47, the web-components registry is inherited by a
+	    // new document created via createHTMLDocument. As per the spec
+	    // (http://w3c.github.io/webcomponents/spec/custom/#creating-and-passing-registries)
+	    // a new empty registry is used when creating a template contents owner
+	    // document, so we use that as our parent document to ensure nothing
+	    // is inherited.
+	    if (typeof HTMLTemplateElement === 'function') {
+	      const template = document.createElement('template');
+	      if (template.content && template.content.ownerDocument) {
+	        document = template.content.ownerDocument;
+	      }
+	    }
+	    let trustedTypesPolicy;
+	    let emptyHTML = '';
+	    const {
+	      implementation,
+	      createNodeIterator,
+	      createDocumentFragment,
+	      getElementsByTagName
+	    } = document;
+	    const {
+	      importNode
+	    } = originalDocument;
+	    let hooks = {};
+
+	    /**
+	     * Expose whether this browser supports running the full DOMPurify.
+	     */
+	    DOMPurify.isSupported = typeof entries === 'function' && typeof getParentNode === 'function' && implementation && implementation.createHTMLDocument !== undefined;
+	    const {
+	      MUSTACHE_EXPR,
+	      ERB_EXPR,
+	      TMPLIT_EXPR,
+	      DATA_ATTR,
+	      ARIA_ATTR,
+	      IS_SCRIPT_OR_DATA,
+	      ATTR_WHITESPACE,
+	      CUSTOM_ELEMENT
+	    } = EXPRESSIONS;
+	    let {
+	      IS_ALLOWED_URI: IS_ALLOWED_URI$1
+	    } = EXPRESSIONS;
+
+	    /**
+	     * We consider the elements and attributes below to be safe. Ideally
+	     * don't add any new ones but feel free to remove unwanted ones.
+	     */
+
+	    /* allowed element names */
+	    let ALLOWED_TAGS = null;
+	    const DEFAULT_ALLOWED_TAGS = addToSet({}, [...html$1, ...svg$1, ...svgFilters, ...mathMl$1, ...text]);
+
+	    /* Allowed attribute names */
+	    let ALLOWED_ATTR = null;
+	    const DEFAULT_ALLOWED_ATTR = addToSet({}, [...html, ...svg, ...mathMl, ...xml]);
+
+	    /*
+	     * Configure how DOMPUrify should handle custom elements and their attributes as well as customized built-in elements.
+	     * @property {RegExp|Function|null} tagNameCheck one of [null, regexPattern, predicate]. Default: `null` (disallow any custom elements)
+	     * @property {RegExp|Function|null} attributeNameCheck one of [null, regexPattern, predicate]. Default: `null` (disallow any attributes not on the allow list)
+	     * @property {boolean} allowCustomizedBuiltInElements allow custom elements derived from built-ins if they pass CUSTOM_ELEMENT_HANDLING.tagNameCheck. Default: `false`.
+	     */
+	    let CUSTOM_ELEMENT_HANDLING = Object.seal(create(null, {
+	      tagNameCheck: {
+	        writable: true,
+	        configurable: false,
+	        enumerable: true,
+	        value: null
+	      },
+	      attributeNameCheck: {
+	        writable: true,
+	        configurable: false,
+	        enumerable: true,
+	        value: null
+	      },
+	      allowCustomizedBuiltInElements: {
+	        writable: true,
+	        configurable: false,
+	        enumerable: true,
+	        value: false
+	      }
+	    }));
+
+	    /* Explicitly forbidden tags (overrides ALLOWED_TAGS/ADD_TAGS) */
+	    let FORBID_TAGS = null;
+
+	    /* Explicitly forbidden attributes (overrides ALLOWED_ATTR/ADD_ATTR) */
+	    let FORBID_ATTR = null;
+
+	    /* Decide if ARIA attributes are okay */
+	    let ALLOW_ARIA_ATTR = true;
+
+	    /* Decide if custom data attributes are okay */
+	    let ALLOW_DATA_ATTR = true;
+
+	    /* Decide if unknown protocols are okay */
+	    let ALLOW_UNKNOWN_PROTOCOLS = false;
+
+	    /* Decide if self-closing tags in attributes are allowed.
+	     * Usually removed due to a mXSS issue in jQuery 3.0 */
+	    let ALLOW_SELF_CLOSE_IN_ATTR = true;
+
+	    /* Output should be safe for common template engines.
+	     * This means, DOMPurify removes data attributes, mustaches and ERB
+	     */
+	    let SAFE_FOR_TEMPLATES = false;
+
+	    /* Output should be safe even for XML used within HTML and alike.
+	     * This means, DOMPurify removes comments when containing risky content.
+	     */
+	    let SAFE_FOR_XML = true;
+
+	    /* Decide if document with <html>... should be returned */
+	    let WHOLE_DOCUMENT = false;
+
+	    /* Track whether config is already set on this instance of DOMPurify. */
+	    let SET_CONFIG = false;
+
+	    /* Decide if all elements (e.g. style, script) must be children of
+	     * document.body. By default, browsers might move them to document.head */
+	    let FORCE_BODY = false;
+
+	    /* Decide if a DOM `HTMLBodyElement` should be returned, instead of a html
+	     * string (or a TrustedHTML object if Trusted Types are supported).
+	     * If `WHOLE_DOCUMENT` is enabled a `HTMLHtmlElement` will be returned instead
+	     */
+	    let RETURN_DOM = false;
+
+	    /* Decide if a DOM `DocumentFragment` should be returned, instead of a html
+	     * string  (or a TrustedHTML object if Trusted Types are supported) */
+	    let RETURN_DOM_FRAGMENT = false;
+
+	    /* Try to return a Trusted Type object instead of a string, return a string in
+	     * case Trusted Types are not supported  */
+	    let RETURN_TRUSTED_TYPE = false;
+
+	    /* Output should be free from DOM clobbering attacks?
+	     * This sanitizes markups named with colliding, clobberable built-in DOM APIs.
+	     */
+	    let SANITIZE_DOM = true;
+
+	    /* Achieve full DOM Clobbering protection by isolating the namespace of named
+	     * properties and JS variables, mitigating attacks that abuse the HTML/DOM spec rules.
+	     *
+	     * HTML/DOM spec rules that enable DOM Clobbering:
+	     *   - Named Access on Window (§7.3.3)
+	     *   - DOM Tree Accessors (§3.1.5)
+	     *   - Form Element Parent-Child Relations (§4.10.3)
+	     *   - Iframe srcdoc / Nested WindowProxies (§4.8.5)
+	     *   - HTMLCollection (§4.2.10.2)
+	     *
+	     * Namespace isolation is implemented by prefixing `id` and `name` attributes
+	     * with a constant string, i.e., `user-content-`
+	     */
+	    let SANITIZE_NAMED_PROPS = false;
+	    const SANITIZE_NAMED_PROPS_PREFIX = 'user-content-';
+
+	    /* Keep element content when removing element? */
+	    let KEEP_CONTENT = true;
+
+	    /* If a `Node` is passed to sanitize(), then performs sanitization in-place instead
+	     * of importing it into a new Document and returning a sanitized copy */
+	    let IN_PLACE = false;
+
+	    /* Allow usage of profiles like html, svg and mathMl */
+	    let USE_PROFILES = {};
+
+	    /* Tags to ignore content of when KEEP_CONTENT is true */
+	    let FORBID_CONTENTS = null;
+	    const DEFAULT_FORBID_CONTENTS = addToSet({}, ['annotation-xml', 'audio', 'colgroup', 'desc', 'foreignobject', 'head', 'iframe', 'math', 'mi', 'mn', 'mo', 'ms', 'mtext', 'noembed', 'noframes', 'noscript', 'plaintext', 'script', 'style', 'svg', 'template', 'thead', 'title', 'video', 'xmp']);
+
+	    /* Tags that are safe for data: URIs */
+	    let DATA_URI_TAGS = null;
+	    const DEFAULT_DATA_URI_TAGS = addToSet({}, ['audio', 'video', 'img', 'source', 'image', 'track']);
+
+	    /* Attributes safe for values like "javascript:" */
+	    let URI_SAFE_ATTRIBUTES = null;
+	    const DEFAULT_URI_SAFE_ATTRIBUTES = addToSet({}, ['alt', 'class', 'for', 'id', 'label', 'name', 'pattern', 'placeholder', 'role', 'summary', 'title', 'value', 'style', 'xmlns']);
+	    const MATHML_NAMESPACE = 'http://www.w3.org/1998/Math/MathML';
+	    const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
+	    const HTML_NAMESPACE = 'http://www.w3.org/1999/xhtml';
+	    /* Document namespace */
+	    let NAMESPACE = HTML_NAMESPACE;
+	    let IS_EMPTY_INPUT = false;
+
+	    /* Allowed XHTML+XML namespaces */
+	    let ALLOWED_NAMESPACES = null;
+	    const DEFAULT_ALLOWED_NAMESPACES = addToSet({}, [MATHML_NAMESPACE, SVG_NAMESPACE, HTML_NAMESPACE], stringToString);
+
+	    /* Parsing of strict XHTML documents */
+	    let PARSER_MEDIA_TYPE = null;
+	    const SUPPORTED_PARSER_MEDIA_TYPES = ['application/xhtml+xml', 'text/html'];
+	    const DEFAULT_PARSER_MEDIA_TYPE = 'text/html';
+	    let transformCaseFunc = null;
+
+	    /* Keep a reference to config to pass to hooks */
+	    let CONFIG = null;
+
+	    /* Specify the maximum element nesting depth to prevent mXSS */
+	    const MAX_NESTING_DEPTH = 255;
+
+	    /* Ideally, do not touch anything below this line */
+	    /* ______________________________________________ */
+
+	    const formElement = document.createElement('form');
+	    const isRegexOrFunction = function isRegexOrFunction(testValue) {
+	      return testValue instanceof RegExp || testValue instanceof Function;
+	    };
+
+	    /**
+	     * _parseConfig
+	     *
+	     * @param  {Object} cfg optional config literal
+	     */
+	    // eslint-disable-next-line complexity
+	    const _parseConfig = function _parseConfig() {
+	      let cfg = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+	      if (CONFIG && CONFIG === cfg) {
+	        return;
+	      }
+
+	      /* Shield configuration object from tampering */
+	      if (!cfg || typeof cfg !== 'object') {
+	        cfg = {};
+	      }
+
+	      /* Shield configuration object from prototype pollution */
+	      cfg = clone(cfg);
+	      PARSER_MEDIA_TYPE =
+	      // eslint-disable-next-line unicorn/prefer-includes
+	      SUPPORTED_PARSER_MEDIA_TYPES.indexOf(cfg.PARSER_MEDIA_TYPE) === -1 ? DEFAULT_PARSER_MEDIA_TYPE : cfg.PARSER_MEDIA_TYPE;
+
+	      // HTML tags and attributes are not case-sensitive, converting to lowercase. Keeping XHTML as is.
+	      transformCaseFunc = PARSER_MEDIA_TYPE === 'application/xhtml+xml' ? stringToString : stringToLowerCase;
+
+	      /* Set configuration parameters */
+	      ALLOWED_TAGS = objectHasOwnProperty(cfg, 'ALLOWED_TAGS') ? addToSet({}, cfg.ALLOWED_TAGS, transformCaseFunc) : DEFAULT_ALLOWED_TAGS;
+	      ALLOWED_ATTR = objectHasOwnProperty(cfg, 'ALLOWED_ATTR') ? addToSet({}, cfg.ALLOWED_ATTR, transformCaseFunc) : DEFAULT_ALLOWED_ATTR;
+	      ALLOWED_NAMESPACES = objectHasOwnProperty(cfg, 'ALLOWED_NAMESPACES') ? addToSet({}, cfg.ALLOWED_NAMESPACES, stringToString) : DEFAULT_ALLOWED_NAMESPACES;
+	      URI_SAFE_ATTRIBUTES = objectHasOwnProperty(cfg, 'ADD_URI_SAFE_ATTR') ? addToSet(clone(DEFAULT_URI_SAFE_ATTRIBUTES),
+	      // eslint-disable-line indent
+	      cfg.ADD_URI_SAFE_ATTR,
+	      // eslint-disable-line indent
+	      transformCaseFunc // eslint-disable-line indent
+	      ) // eslint-disable-line indent
+	      : DEFAULT_URI_SAFE_ATTRIBUTES;
+	      DATA_URI_TAGS = objectHasOwnProperty(cfg, 'ADD_DATA_URI_TAGS') ? addToSet(clone(DEFAULT_DATA_URI_TAGS),
+	      // eslint-disable-line indent
+	      cfg.ADD_DATA_URI_TAGS,
+	      // eslint-disable-line indent
+	      transformCaseFunc // eslint-disable-line indent
+	      ) // eslint-disable-line indent
+	      : DEFAULT_DATA_URI_TAGS;
+	      FORBID_CONTENTS = objectHasOwnProperty(cfg, 'FORBID_CONTENTS') ? addToSet({}, cfg.FORBID_CONTENTS, transformCaseFunc) : DEFAULT_FORBID_CONTENTS;
+	      FORBID_TAGS = objectHasOwnProperty(cfg, 'FORBID_TAGS') ? addToSet({}, cfg.FORBID_TAGS, transformCaseFunc) : {};
+	      FORBID_ATTR = objectHasOwnProperty(cfg, 'FORBID_ATTR') ? addToSet({}, cfg.FORBID_ATTR, transformCaseFunc) : {};
+	      USE_PROFILES = objectHasOwnProperty(cfg, 'USE_PROFILES') ? cfg.USE_PROFILES : false;
+	      ALLOW_ARIA_ATTR = cfg.ALLOW_ARIA_ATTR !== false; // Default true
+	      ALLOW_DATA_ATTR = cfg.ALLOW_DATA_ATTR !== false; // Default true
+	      ALLOW_UNKNOWN_PROTOCOLS = cfg.ALLOW_UNKNOWN_PROTOCOLS || false; // Default false
+	      ALLOW_SELF_CLOSE_IN_ATTR = cfg.ALLOW_SELF_CLOSE_IN_ATTR !== false; // Default true
+	      SAFE_FOR_TEMPLATES = cfg.SAFE_FOR_TEMPLATES || false; // Default false
+	      SAFE_FOR_XML = cfg.SAFE_FOR_XML !== false; // Default true
+	      WHOLE_DOCUMENT = cfg.WHOLE_DOCUMENT || false; // Default false
+	      RETURN_DOM = cfg.RETURN_DOM || false; // Default false
+	      RETURN_DOM_FRAGMENT = cfg.RETURN_DOM_FRAGMENT || false; // Default false
+	      RETURN_TRUSTED_TYPE = cfg.RETURN_TRUSTED_TYPE || false; // Default false
+	      FORCE_BODY = cfg.FORCE_BODY || false; // Default false
+	      SANITIZE_DOM = cfg.SANITIZE_DOM !== false; // Default true
+	      SANITIZE_NAMED_PROPS = cfg.SANITIZE_NAMED_PROPS || false; // Default false
+	      KEEP_CONTENT = cfg.KEEP_CONTENT !== false; // Default true
+	      IN_PLACE = cfg.IN_PLACE || false; // Default false
+	      IS_ALLOWED_URI$1 = cfg.ALLOWED_URI_REGEXP || IS_ALLOWED_URI;
+	      NAMESPACE = cfg.NAMESPACE || HTML_NAMESPACE;
+	      CUSTOM_ELEMENT_HANDLING = cfg.CUSTOM_ELEMENT_HANDLING || {};
+	      if (cfg.CUSTOM_ELEMENT_HANDLING && isRegexOrFunction(cfg.CUSTOM_ELEMENT_HANDLING.tagNameCheck)) {
+	        CUSTOM_ELEMENT_HANDLING.tagNameCheck = cfg.CUSTOM_ELEMENT_HANDLING.tagNameCheck;
+	      }
+	      if (cfg.CUSTOM_ELEMENT_HANDLING && isRegexOrFunction(cfg.CUSTOM_ELEMENT_HANDLING.attributeNameCheck)) {
+	        CUSTOM_ELEMENT_HANDLING.attributeNameCheck = cfg.CUSTOM_ELEMENT_HANDLING.attributeNameCheck;
+	      }
+	      if (cfg.CUSTOM_ELEMENT_HANDLING && typeof cfg.CUSTOM_ELEMENT_HANDLING.allowCustomizedBuiltInElements === 'boolean') {
+	        CUSTOM_ELEMENT_HANDLING.allowCustomizedBuiltInElements = cfg.CUSTOM_ELEMENT_HANDLING.allowCustomizedBuiltInElements;
+	      }
+	      if (SAFE_FOR_TEMPLATES) {
+	        ALLOW_DATA_ATTR = false;
+	      }
+	      if (RETURN_DOM_FRAGMENT) {
+	        RETURN_DOM = true;
+	      }
+
+	      /* Parse profile info */
+	      if (USE_PROFILES) {
+	        ALLOWED_TAGS = addToSet({}, text);
+	        ALLOWED_ATTR = [];
+	        if (USE_PROFILES.html === true) {
+	          addToSet(ALLOWED_TAGS, html$1);
+	          addToSet(ALLOWED_ATTR, html);
+	        }
+	        if (USE_PROFILES.svg === true) {
+	          addToSet(ALLOWED_TAGS, svg$1);
+	          addToSet(ALLOWED_ATTR, svg);
+	          addToSet(ALLOWED_ATTR, xml);
+	        }
+	        if (USE_PROFILES.svgFilters === true) {
+	          addToSet(ALLOWED_TAGS, svgFilters);
+	          addToSet(ALLOWED_ATTR, svg);
+	          addToSet(ALLOWED_ATTR, xml);
+	        }
+	        if (USE_PROFILES.mathMl === true) {
+	          addToSet(ALLOWED_TAGS, mathMl$1);
+	          addToSet(ALLOWED_ATTR, mathMl);
+	          addToSet(ALLOWED_ATTR, xml);
+	        }
+	      }
+
+	      /* Merge configuration parameters */
+	      if (cfg.ADD_TAGS) {
+	        if (ALLOWED_TAGS === DEFAULT_ALLOWED_TAGS) {
+	          ALLOWED_TAGS = clone(ALLOWED_TAGS);
+	        }
+	        addToSet(ALLOWED_TAGS, cfg.ADD_TAGS, transformCaseFunc);
+	      }
+	      if (cfg.ADD_ATTR) {
+	        if (ALLOWED_ATTR === DEFAULT_ALLOWED_ATTR) {
+	          ALLOWED_ATTR = clone(ALLOWED_ATTR);
+	        }
+	        addToSet(ALLOWED_ATTR, cfg.ADD_ATTR, transformCaseFunc);
+	      }
+	      if (cfg.ADD_URI_SAFE_ATTR) {
+	        addToSet(URI_SAFE_ATTRIBUTES, cfg.ADD_URI_SAFE_ATTR, transformCaseFunc);
+	      }
+	      if (cfg.FORBID_CONTENTS) {
+	        if (FORBID_CONTENTS === DEFAULT_FORBID_CONTENTS) {
+	          FORBID_CONTENTS = clone(FORBID_CONTENTS);
+	        }
+	        addToSet(FORBID_CONTENTS, cfg.FORBID_CONTENTS, transformCaseFunc);
+	      }
+
+	      /* Add #text in case KEEP_CONTENT is set to true */
+	      if (KEEP_CONTENT) {
+	        ALLOWED_TAGS['#text'] = true;
+	      }
+
+	      /* Add html, head and body to ALLOWED_TAGS in case WHOLE_DOCUMENT is true */
+	      if (WHOLE_DOCUMENT) {
+	        addToSet(ALLOWED_TAGS, ['html', 'head', 'body']);
+	      }
+
+	      /* Add tbody to ALLOWED_TAGS in case tables are permitted, see #286, #365 */
+	      if (ALLOWED_TAGS.table) {
+	        addToSet(ALLOWED_TAGS, ['tbody']);
+	        delete FORBID_TAGS.tbody;
+	      }
+	      if (cfg.TRUSTED_TYPES_POLICY) {
+	        if (typeof cfg.TRUSTED_TYPES_POLICY.createHTML !== 'function') {
+	          throw typeErrorCreate('TRUSTED_TYPES_POLICY configuration option must provide a "createHTML" hook.');
+	        }
+	        if (typeof cfg.TRUSTED_TYPES_POLICY.createScriptURL !== 'function') {
+	          throw typeErrorCreate('TRUSTED_TYPES_POLICY configuration option must provide a "createScriptURL" hook.');
+	        }
+
+	        // Overwrite existing TrustedTypes policy.
+	        trustedTypesPolicy = cfg.TRUSTED_TYPES_POLICY;
+
+	        // Sign local variables required by `sanitize`.
+	        emptyHTML = trustedTypesPolicy.createHTML('');
+	      } else {
+	        // Uninitialized policy, attempt to initialize the internal dompurify policy.
+	        if (trustedTypesPolicy === undefined) {
+	          trustedTypesPolicy = _createTrustedTypesPolicy(trustedTypes, currentScript);
+	        }
+
+	        // If creating the internal policy succeeded sign internal variables.
+	        if (trustedTypesPolicy !== null && typeof emptyHTML === 'string') {
+	          emptyHTML = trustedTypesPolicy.createHTML('');
+	        }
+	      }
+
+	      // Prevent further manipulation of configuration.
+	      // Not available in IE8, Safari 5, etc.
+	      if (freeze) {
+	        freeze(cfg);
+	      }
+	      CONFIG = cfg;
+	    };
+	    const MATHML_TEXT_INTEGRATION_POINTS = addToSet({}, ['mi', 'mo', 'mn', 'ms', 'mtext']);
+	    const HTML_INTEGRATION_POINTS = addToSet({}, ['foreignobject', 'annotation-xml']);
+
+	    // Certain elements are allowed in both SVG and HTML
+	    // namespace. We need to specify them explicitly
+	    // so that they don't get erroneously deleted from
+	    // HTML namespace.
+	    const COMMON_SVG_AND_HTML_ELEMENTS = addToSet({}, ['title', 'style', 'font', 'a', 'script']);
+
+	    /* Keep track of all possible SVG and MathML tags
+	     * so that we can perform the namespace checks
+	     * correctly. */
+	    const ALL_SVG_TAGS = addToSet({}, [...svg$1, ...svgFilters, ...svgDisallowed]);
+	    const ALL_MATHML_TAGS = addToSet({}, [...mathMl$1, ...mathMlDisallowed]);
+
+	    /**
+	     * @param  {Element} element a DOM element whose namespace is being checked
+	     * @returns {boolean} Return false if the element has a
+	     *  namespace that a spec-compliant parser would never
+	     *  return. Return true otherwise.
+	     */
+	    const _checkValidNamespace = function _checkValidNamespace(element) {
+	      let parent = getParentNode(element);
+
+	      // In JSDOM, if we're inside shadow DOM, then parentNode
+	      // can be null. We just simulate parent in this case.
+	      if (!parent || !parent.tagName) {
+	        parent = {
+	          namespaceURI: NAMESPACE,
+	          tagName: 'template'
+	        };
+	      }
+	      const tagName = stringToLowerCase(element.tagName);
+	      const parentTagName = stringToLowerCase(parent.tagName);
+	      if (!ALLOWED_NAMESPACES[element.namespaceURI]) {
+	        return false;
+	      }
+	      if (element.namespaceURI === SVG_NAMESPACE) {
+	        // The only way to switch from HTML namespace to SVG
+	        // is via <svg>. If it happens via any other tag, then
+	        // it should be killed.
+	        if (parent.namespaceURI === HTML_NAMESPACE) {
+	          return tagName === 'svg';
+	        }
+
+	        // The only way to switch from MathML to SVG is via`
+	        // svg if parent is either <annotation-xml> or MathML
+	        // text integration points.
+	        if (parent.namespaceURI === MATHML_NAMESPACE) {
+	          return tagName === 'svg' && (parentTagName === 'annotation-xml' || MATHML_TEXT_INTEGRATION_POINTS[parentTagName]);
+	        }
+
+	        // We only allow elements that are defined in SVG
+	        // spec. All others are disallowed in SVG namespace.
+	        return Boolean(ALL_SVG_TAGS[tagName]);
+	      }
+	      if (element.namespaceURI === MATHML_NAMESPACE) {
+	        // The only way to switch from HTML namespace to MathML
+	        // is via <math>. If it happens via any other tag, then
+	        // it should be killed.
+	        if (parent.namespaceURI === HTML_NAMESPACE) {
+	          return tagName === 'math';
+	        }
+
+	        // The only way to switch from SVG to MathML is via
+	        // <math> and HTML integration points
+	        if (parent.namespaceURI === SVG_NAMESPACE) {
+	          return tagName === 'math' && HTML_INTEGRATION_POINTS[parentTagName];
+	        }
+
+	        // We only allow elements that are defined in MathML
+	        // spec. All others are disallowed in MathML namespace.
+	        return Boolean(ALL_MATHML_TAGS[tagName]);
+	      }
+	      if (element.namespaceURI === HTML_NAMESPACE) {
+	        // The only way to switch from SVG to HTML is via
+	        // HTML integration points, and from MathML to HTML
+	        // is via MathML text integration points
+	        if (parent.namespaceURI === SVG_NAMESPACE && !HTML_INTEGRATION_POINTS[parentTagName]) {
+	          return false;
+	        }
+	        if (parent.namespaceURI === MATHML_NAMESPACE && !MATHML_TEXT_INTEGRATION_POINTS[parentTagName]) {
+	          return false;
+	        }
+
+	        // We disallow tags that are specific for MathML
+	        // or SVG and should never appear in HTML namespace
+	        return !ALL_MATHML_TAGS[tagName] && (COMMON_SVG_AND_HTML_ELEMENTS[tagName] || !ALL_SVG_TAGS[tagName]);
+	      }
+
+	      // For XHTML and XML documents that support custom namespaces
+	      if (PARSER_MEDIA_TYPE === 'application/xhtml+xml' && ALLOWED_NAMESPACES[element.namespaceURI]) {
+	        return true;
+	      }
+
+	      // The code should never reach this place (this means
+	      // that the element somehow got namespace that is not
+	      // HTML, SVG, MathML or allowed via ALLOWED_NAMESPACES).
+	      // Return false just in case.
+	      return false;
+	    };
+
+	    /**
+	     * _forceRemove
+	     *
+	     * @param  {Node} node a DOM node
+	     */
+	    const _forceRemove = function _forceRemove(node) {
+	      arrayPush(DOMPurify.removed, {
+	        element: node
+	      });
+	      try {
+	        // eslint-disable-next-line unicorn/prefer-dom-node-remove
+	        node.parentNode.removeChild(node);
+	      } catch (_) {
+	        node.remove();
+	      }
+	    };
+
+	    /**
+	     * _removeAttribute
+	     *
+	     * @param  {String} name an Attribute name
+	     * @param  {Node} node a DOM node
+	     */
+	    const _removeAttribute = function _removeAttribute(name, node) {
+	      try {
+	        arrayPush(DOMPurify.removed, {
+	          attribute: node.getAttributeNode(name),
+	          from: node
+	        });
+	      } catch (_) {
+	        arrayPush(DOMPurify.removed, {
+	          attribute: null,
+	          from: node
+	        });
+	      }
+	      node.removeAttribute(name);
+
+	      // We void attribute values for unremovable "is"" attributes
+	      if (name === 'is' && !ALLOWED_ATTR[name]) {
+	        if (RETURN_DOM || RETURN_DOM_FRAGMENT) {
+	          try {
+	            _forceRemove(node);
+	          } catch (_) {}
+	        } else {
+	          try {
+	            node.setAttribute(name, '');
+	          } catch (_) {}
+	        }
+	      }
+	    };
+
+	    /**
+	     * _initDocument
+	     *
+	     * @param  {String} dirty a string of dirty markup
+	     * @return {Document} a DOM, filled with the dirty markup
+	     */
+	    const _initDocument = function _initDocument(dirty) {
+	      /* Create a HTML document */
+	      let doc = null;
+	      let leadingWhitespace = null;
+	      if (FORCE_BODY) {
+	        dirty = '<remove></remove>' + dirty;
+	      } else {
+	        /* If FORCE_BODY isn't used, leading whitespace needs to be preserved manually */
+	        const matches = stringMatch(dirty, /^[\r\n\t ]+/);
+	        leadingWhitespace = matches && matches[0];
+	      }
+	      if (PARSER_MEDIA_TYPE === 'application/xhtml+xml' && NAMESPACE === HTML_NAMESPACE) {
+	        // Root of XHTML doc must contain xmlns declaration (see https://www.w3.org/TR/xhtml1/normative.html#strict)
+	        dirty = '<html xmlns="http://www.w3.org/1999/xhtml"><head></head><body>' + dirty + '</body></html>';
+	      }
+	      const dirtyPayload = trustedTypesPolicy ? trustedTypesPolicy.createHTML(dirty) : dirty;
+	      /*
+	       * Use the DOMParser API by default, fallback later if needs be
+	       * DOMParser not work for svg when has multiple root element.
+	       */
+	      if (NAMESPACE === HTML_NAMESPACE) {
+	        try {
+	          doc = new DOMParser().parseFromString(dirtyPayload, PARSER_MEDIA_TYPE);
+	        } catch (_) {}
+	      }
+
+	      /* Use createHTMLDocument in case DOMParser is not available */
+	      if (!doc || !doc.documentElement) {
+	        doc = implementation.createDocument(NAMESPACE, 'template', null);
+	        try {
+	          doc.documentElement.innerHTML = IS_EMPTY_INPUT ? emptyHTML : dirtyPayload;
+	        } catch (_) {
+	          // Syntax error if dirtyPayload is invalid xml
+	        }
+	      }
+	      const body = doc.body || doc.documentElement;
+	      if (dirty && leadingWhitespace) {
+	        body.insertBefore(document.createTextNode(leadingWhitespace), body.childNodes[0] || null);
+	      }
+
+	      /* Work on whole document or just its body */
+	      if (NAMESPACE === HTML_NAMESPACE) {
+	        return getElementsByTagName.call(doc, WHOLE_DOCUMENT ? 'html' : 'body')[0];
+	      }
+	      return WHOLE_DOCUMENT ? doc.documentElement : body;
+	    };
+
+	    /**
+	     * Creates a NodeIterator object that you can use to traverse filtered lists of nodes or elements in a document.
+	     *
+	     * @param  {Node} root The root element or node to start traversing on.
+	     * @return {NodeIterator} The created NodeIterator
+	     */
+	    const _createNodeIterator = function _createNodeIterator(root) {
+	      return createNodeIterator.call(root.ownerDocument || root, root,
+	      // eslint-disable-next-line no-bitwise
+	      NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_COMMENT | NodeFilter.SHOW_TEXT | NodeFilter.SHOW_PROCESSING_INSTRUCTION | NodeFilter.SHOW_CDATA_SECTION, null);
+	    };
+
+	    /**
+	     * _isClobbered
+	     *
+	     * @param  {Node} elm element to check for clobbering attacks
+	     * @return {Boolean} true if clobbered, false if safe
+	     */
+	    const _isClobbered = function _isClobbered(elm) {
+	      return elm instanceof HTMLFormElement && (
+	      // eslint-disable-next-line unicorn/no-typeof-undefined
+	      typeof elm.__depth !== 'undefined' && typeof elm.__depth !== 'number' ||
+	      // eslint-disable-next-line unicorn/no-typeof-undefined
+	      typeof elm.__removalCount !== 'undefined' && typeof elm.__removalCount !== 'number' || typeof elm.nodeName !== 'string' || typeof elm.textContent !== 'string' || typeof elm.removeChild !== 'function' || !(elm.attributes instanceof NamedNodeMap) || typeof elm.removeAttribute !== 'function' || typeof elm.setAttribute !== 'function' || typeof elm.namespaceURI !== 'string' || typeof elm.insertBefore !== 'function' || typeof elm.hasChildNodes !== 'function');
+	    };
+
+	    /**
+	     * Checks whether the given object is a DOM node.
+	     *
+	     * @param  {Node} object object to check whether it's a DOM node
+	     * @return {Boolean} true is object is a DOM node
+	     */
+	    const _isNode = function _isNode(object) {
+	      return typeof Node === 'function' && object instanceof Node;
+	    };
+
+	    /**
+	     * _executeHook
+	     * Execute user configurable hooks
+	     *
+	     * @param  {String} entryPoint  Name of the hook's entry point
+	     * @param  {Node} currentNode node to work on with the hook
+	     * @param  {Object} data additional hook parameters
+	     */
+	    const _executeHook = function _executeHook(entryPoint, currentNode, data) {
+	      if (!hooks[entryPoint]) {
+	        return;
+	      }
+	      arrayForEach(hooks[entryPoint], hook => {
+	        hook.call(DOMPurify, currentNode, data, CONFIG);
+	      });
+	    };
+
+	    /**
+	     * _sanitizeElements
+	     *
+	     * @protect nodeName
+	     * @protect textContent
+	     * @protect removeChild
+	     *
+	     * @param   {Node} currentNode to check for permission to exist
+	     * @return  {Boolean} true if node was killed, false if left alive
+	     */
+	    const _sanitizeElements = function _sanitizeElements(currentNode) {
+	      let content = null;
+
+	      /* Execute a hook if present */
+	      _executeHook('beforeSanitizeElements', currentNode, null);
+
+	      /* Check if element is clobbered or can clobber */
+	      if (_isClobbered(currentNode)) {
+	        _forceRemove(currentNode);
+	        return true;
+	      }
+
+	      /* Now let's check the element's type and name */
+	      const tagName = transformCaseFunc(currentNode.nodeName);
+
+	      /* Execute a hook if present */
+	      _executeHook('uponSanitizeElement', currentNode, {
+	        tagName,
+	        allowedTags: ALLOWED_TAGS
+	      });
+
+	      /* Detect mXSS attempts abusing namespace confusion */
+	      if (currentNode.hasChildNodes() && !_isNode(currentNode.firstElementChild) && regExpTest(/<[/\w]/g, currentNode.innerHTML) && regExpTest(/<[/\w]/g, currentNode.textContent)) {
+	        _forceRemove(currentNode);
+	        return true;
+	      }
+
+	      /* Remove any ocurrence of processing instructions */
+	      if (currentNode.nodeType === NODE_TYPE.progressingInstruction) {
+	        _forceRemove(currentNode);
+	        return true;
+	      }
+
+	      /* Remove any kind of possibly harmful comments */
+	      if (SAFE_FOR_XML && currentNode.nodeType === NODE_TYPE.comment && regExpTest(/<[/\w]/g, currentNode.data)) {
+	        _forceRemove(currentNode);
+	        return true;
+	      }
+
+	      /* Remove element if anything forbids its presence */
+	      if (!ALLOWED_TAGS[tagName] || FORBID_TAGS[tagName]) {
+	        /* Check if we have a custom element to handle */
+	        if (!FORBID_TAGS[tagName] && _isBasicCustomElement(tagName)) {
+	          if (CUSTOM_ELEMENT_HANDLING.tagNameCheck instanceof RegExp && regExpTest(CUSTOM_ELEMENT_HANDLING.tagNameCheck, tagName)) {
+	            return false;
+	          }
+	          if (CUSTOM_ELEMENT_HANDLING.tagNameCheck instanceof Function && CUSTOM_ELEMENT_HANDLING.tagNameCheck(tagName)) {
+	            return false;
+	          }
+	        }
+
+	        /* Keep content except for bad-listed elements */
+	        if (KEEP_CONTENT && !FORBID_CONTENTS[tagName]) {
+	          const parentNode = getParentNode(currentNode) || currentNode.parentNode;
+	          const childNodes = getChildNodes(currentNode) || currentNode.childNodes;
+	          if (childNodes && parentNode) {
+	            const childCount = childNodes.length;
+	            for (let i = childCount - 1; i >= 0; --i) {
+	              const childClone = cloneNode(childNodes[i], true);
+	              childClone.__removalCount = (currentNode.__removalCount || 0) + 1;
+	              parentNode.insertBefore(childClone, getNextSibling(currentNode));
+	            }
+	          }
+	        }
+	        _forceRemove(currentNode);
+	        return true;
+	      }
+
+	      /* Check whether element has a valid namespace */
+	      if (currentNode instanceof Element && !_checkValidNamespace(currentNode)) {
+	        _forceRemove(currentNode);
+	        return true;
+	      }
+
+	      /* Make sure that older browsers don't get fallback-tag mXSS */
+	      if ((tagName === 'noscript' || tagName === 'noembed' || tagName === 'noframes') && regExpTest(/<\/no(script|embed|frames)/i, currentNode.innerHTML)) {
+	        _forceRemove(currentNode);
+	        return true;
+	      }
+
+	      /* Sanitize element content to be template-safe */
+	      if (SAFE_FOR_TEMPLATES && currentNode.nodeType === NODE_TYPE.text) {
+	        /* Get the element's text content */
+	        content = currentNode.textContent;
+	        arrayForEach([MUSTACHE_EXPR, ERB_EXPR, TMPLIT_EXPR], expr => {
+	          content = stringReplace(content, expr, ' ');
+	        });
+	        if (currentNode.textContent !== content) {
+	          arrayPush(DOMPurify.removed, {
+	            element: currentNode.cloneNode()
+	          });
+	          currentNode.textContent = content;
+	        }
+	      }
+
+	      /* Execute a hook if present */
+	      _executeHook('afterSanitizeElements', currentNode, null);
+	      return false;
+	    };
+
+	    /**
+	     * _isValidAttribute
+	     *
+	     * @param  {string} lcTag Lowercase tag name of containing element.
+	     * @param  {string} lcName Lowercase attribute name.
+	     * @param  {string} value Attribute value.
+	     * @return {Boolean} Returns true if `value` is valid, otherwise false.
+	     */
+	    // eslint-disable-next-line complexity
+	    const _isValidAttribute = function _isValidAttribute(lcTag, lcName, value) {
+	      /* Make sure attribute cannot clobber */
+	      if (SANITIZE_DOM && (lcName === 'id' || lcName === 'name') && (value in document || value in formElement || value === '__depth' || value === '__removalCount')) {
+	        return false;
+	      }
+
+	      /* Allow valid data-* attributes: At least one character after "-"
+	          (https://html.spec.whatwg.org/multipage/dom.html#embedding-custom-non-visible-data-with-the-data-*-attributes)
+	          XML-compatible (https://html.spec.whatwg.org/multipage/infrastructure.html#xml-compatible and http://www.w3.org/TR/xml/#d0e804)
+	          We don't need to check the value; it's always URI safe. */
+	      if (ALLOW_DATA_ATTR && !FORBID_ATTR[lcName] && regExpTest(DATA_ATTR, lcName)) ; else if (ALLOW_ARIA_ATTR && regExpTest(ARIA_ATTR, lcName)) ; else if (!ALLOWED_ATTR[lcName] || FORBID_ATTR[lcName]) {
+	        if (
+	        // First condition does a very basic check if a) it's basically a valid custom element tagname AND
+	        // b) if the tagName passes whatever the user has configured for CUSTOM_ELEMENT_HANDLING.tagNameCheck
+	        // and c) if the attribute name passes whatever the user has configured for CUSTOM_ELEMENT_HANDLING.attributeNameCheck
+	        _isBasicCustomElement(lcTag) && (CUSTOM_ELEMENT_HANDLING.tagNameCheck instanceof RegExp && regExpTest(CUSTOM_ELEMENT_HANDLING.tagNameCheck, lcTag) || CUSTOM_ELEMENT_HANDLING.tagNameCheck instanceof Function && CUSTOM_ELEMENT_HANDLING.tagNameCheck(lcTag)) && (CUSTOM_ELEMENT_HANDLING.attributeNameCheck instanceof RegExp && regExpTest(CUSTOM_ELEMENT_HANDLING.attributeNameCheck, lcName) || CUSTOM_ELEMENT_HANDLING.attributeNameCheck instanceof Function && CUSTOM_ELEMENT_HANDLING.attributeNameCheck(lcName)) ||
+	        // Alternative, second condition checks if it's an `is`-attribute, AND
+	        // the value passes whatever the user has configured for CUSTOM_ELEMENT_HANDLING.tagNameCheck
+	        lcName === 'is' && CUSTOM_ELEMENT_HANDLING.allowCustomizedBuiltInElements && (CUSTOM_ELEMENT_HANDLING.tagNameCheck instanceof RegExp && regExpTest(CUSTOM_ELEMENT_HANDLING.tagNameCheck, value) || CUSTOM_ELEMENT_HANDLING.tagNameCheck instanceof Function && CUSTOM_ELEMENT_HANDLING.tagNameCheck(value))) ; else {
+	          return false;
+	        }
+	        /* Check value is safe. First, is attr inert? If so, is safe */
+	      } else if (URI_SAFE_ATTRIBUTES[lcName]) ; else if (regExpTest(IS_ALLOWED_URI$1, stringReplace(value, ATTR_WHITESPACE, ''))) ; else if ((lcName === 'src' || lcName === 'xlink:href' || lcName === 'href') && lcTag !== 'script' && stringIndexOf(value, 'data:') === 0 && DATA_URI_TAGS[lcTag]) ; else if (ALLOW_UNKNOWN_PROTOCOLS && !regExpTest(IS_SCRIPT_OR_DATA, stringReplace(value, ATTR_WHITESPACE, ''))) ; else if (value) {
+	        return false;
+	      } else ;
+	      return true;
+	    };
+
+	    /**
+	     * _isBasicCustomElement
+	     * checks if at least one dash is included in tagName, and it's not the first char
+	     * for more sophisticated checking see https://github.com/sindresorhus/validate-element-name
+	     *
+	     * @param {string} tagName name of the tag of the node to sanitize
+	     * @returns {boolean} Returns true if the tag name meets the basic criteria for a custom element, otherwise false.
+	     */
+	    const _isBasicCustomElement = function _isBasicCustomElement(tagName) {
+	      return tagName !== 'annotation-xml' && stringMatch(tagName, CUSTOM_ELEMENT);
+	    };
+
+	    /**
+	     * _sanitizeAttributes
+	     *
+	     * @protect attributes
+	     * @protect nodeName
+	     * @protect removeAttribute
+	     * @protect setAttribute
+	     *
+	     * @param  {Node} currentNode to sanitize
+	     */
+	    const _sanitizeAttributes = function _sanitizeAttributes(currentNode) {
+	      /* Execute a hook if present */
+	      _executeHook('beforeSanitizeAttributes', currentNode, null);
+	      const {
+	        attributes
+	      } = currentNode;
+
+	      /* Check if we have attributes; if not we might have a text node */
+	      if (!attributes) {
+	        return;
+	      }
+	      const hookEvent = {
+	        attrName: '',
+	        attrValue: '',
+	        keepAttr: true,
+	        allowedAttributes: ALLOWED_ATTR
+	      };
+	      let l = attributes.length;
+
+	      /* Go backwards over all attributes; safely remove bad ones */
+	      while (l--) {
+	        const attr = attributes[l];
+	        const {
+	          name,
+	          namespaceURI,
+	          value: attrValue
+	        } = attr;
+	        const lcName = transformCaseFunc(name);
+	        let value = name === 'value' ? attrValue : stringTrim(attrValue);
+
+	        /* Execute a hook if present */
+	        hookEvent.attrName = lcName;
+	        hookEvent.attrValue = value;
+	        hookEvent.keepAttr = true;
+	        hookEvent.forceKeepAttr = undefined; // Allows developers to see this is a property they can set
+	        _executeHook('uponSanitizeAttribute', currentNode, hookEvent);
+	        value = hookEvent.attrValue;
+	        /* Did the hooks approve of the attribute? */
+	        if (hookEvent.forceKeepAttr) {
+	          continue;
+	        }
+
+	        /* Remove attribute */
+	        _removeAttribute(name, currentNode);
+
+	        /* Did the hooks approve of the attribute? */
+	        if (!hookEvent.keepAttr) {
+	          continue;
+	        }
+
+	        /* Work around a security issue in jQuery 3.0 */
+	        if (!ALLOW_SELF_CLOSE_IN_ATTR && regExpTest(/\/>/i, value)) {
+	          _removeAttribute(name, currentNode);
+	          continue;
+	        }
+
+	        /* Work around a security issue with comments inside attributes */
+	        if (SAFE_FOR_XML && regExpTest(/((--!?|])>)|<\/(style|title)/i, value)) {
+	          _removeAttribute(name, currentNode);
+	          continue;
+	        }
+
+	        /* Sanitize attribute content to be template-safe */
+	        if (SAFE_FOR_TEMPLATES) {
+	          arrayForEach([MUSTACHE_EXPR, ERB_EXPR, TMPLIT_EXPR], expr => {
+	            value = stringReplace(value, expr, ' ');
+	          });
+	        }
+
+	        /* Is `value` valid for this attribute? */
+	        const lcTag = transformCaseFunc(currentNode.nodeName);
+	        if (!_isValidAttribute(lcTag, lcName, value)) {
+	          continue;
+	        }
+
+	        /* Full DOM Clobbering protection via namespace isolation,
+	         * Prefix id and name attributes with `user-content-`
+	         */
+	        if (SANITIZE_NAMED_PROPS && (lcName === 'id' || lcName === 'name')) {
+	          // Remove the attribute with this value
+	          _removeAttribute(name, currentNode);
+
+	          // Prefix the value and later re-create the attribute with the sanitized value
+	          value = SANITIZE_NAMED_PROPS_PREFIX + value;
+	        }
+
+	        /* Handle attributes that require Trusted Types */
+	        if (trustedTypesPolicy && typeof trustedTypes === 'object' && typeof trustedTypes.getAttributeType === 'function') {
+	          if (namespaceURI) ; else {
+	            switch (trustedTypes.getAttributeType(lcTag, lcName)) {
+	              case 'TrustedHTML':
+	                {
+	                  value = trustedTypesPolicy.createHTML(value);
+	                  break;
+	                }
+	              case 'TrustedScriptURL':
+	                {
+	                  value = trustedTypesPolicy.createScriptURL(value);
+	                  break;
+	                }
+	            }
+	          }
+	        }
+
+	        /* Handle invalid data-* attribute set by try-catching it */
+	        try {
+	          if (namespaceURI) {
+	            currentNode.setAttributeNS(namespaceURI, name, value);
+	          } else {
+	            /* Fallback to setAttribute() for browser-unrecognized namespaces e.g. "x-schema". */
+	            currentNode.setAttribute(name, value);
+	          }
+	          if (_isClobbered(currentNode)) {
+	            _forceRemove(currentNode);
+	          } else {
+	            arrayPop(DOMPurify.removed);
+	          }
+	        } catch (_) {}
+	      }
+
+	      /* Execute a hook if present */
+	      _executeHook('afterSanitizeAttributes', currentNode, null);
+	    };
+
+	    /**
+	     * _sanitizeShadowDOM
+	     *
+	     * @param  {DocumentFragment} fragment to iterate over recursively
+	     */
+	    const _sanitizeShadowDOM = function _sanitizeShadowDOM(fragment) {
+	      let shadowNode = null;
+	      const shadowIterator = _createNodeIterator(fragment);
+
+	      /* Execute a hook if present */
+	      _executeHook('beforeSanitizeShadowDOM', fragment, null);
+	      while (shadowNode = shadowIterator.nextNode()) {
+	        /* Execute a hook if present */
+	        _executeHook('uponSanitizeShadowNode', shadowNode, null);
+
+	        /* Sanitize tags and elements */
+	        if (_sanitizeElements(shadowNode)) {
+	          continue;
+	        }
+	        const parentNode = getParentNode(shadowNode);
+
+	        /* Set the nesting depth of an element */
+	        if (shadowNode.nodeType === NODE_TYPE.element) {
+	          if (parentNode && parentNode.__depth) {
+	            /*
+	              We want the depth of the node in the original tree, which can
+	              change when it's removed from its parent.
+	            */
+	            shadowNode.__depth = (shadowNode.__removalCount || 0) + parentNode.__depth + 1;
+	          } else {
+	            shadowNode.__depth = 1;
+	          }
+	        }
+
+	        /*
+	         * Remove an element if nested too deeply to avoid mXSS
+	         * or if the __depth might have been tampered with
+	         */
+	        if (shadowNode.__depth >= MAX_NESTING_DEPTH || shadowNode.__depth < 0 || numberIsNaN(shadowNode.__depth)) {
+	          _forceRemove(shadowNode);
+	        }
+
+	        /* Deep shadow DOM detected */
+	        if (shadowNode.content instanceof DocumentFragment) {
+	          shadowNode.content.__depth = shadowNode.__depth;
+	          _sanitizeShadowDOM(shadowNode.content);
+	        }
+
+	        /* Check attributes, sanitize if necessary */
+	        _sanitizeAttributes(shadowNode);
+	      }
+
+	      /* Execute a hook if present */
+	      _executeHook('afterSanitizeShadowDOM', fragment, null);
+	    };
+
+	    /**
+	     * Sanitize
+	     * Public method providing core sanitation functionality
+	     *
+	     * @param {String|Node} dirty string or DOM node
+	     * @param {Object} cfg object
+	     */
+	    // eslint-disable-next-line complexity
+	    DOMPurify.sanitize = function (dirty) {
+	      let cfg = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+	      let body = null;
+	      let importedNode = null;
+	      let currentNode = null;
+	      let returnNode = null;
+	      /* Make sure we have a string to sanitize.
+	        DO NOT return early, as this will return the wrong type if
+	        the user has requested a DOM object rather than a string */
+	      IS_EMPTY_INPUT = !dirty;
+	      if (IS_EMPTY_INPUT) {
+	        dirty = '<!-->';
+	      }
+
+	      /* Stringify, in case dirty is an object */
+	      if (typeof dirty !== 'string' && !_isNode(dirty)) {
+	        if (typeof dirty.toString === 'function') {
+	          dirty = dirty.toString();
+	          if (typeof dirty !== 'string') {
+	            throw typeErrorCreate('dirty is not a string, aborting');
+	          }
+	        } else {
+	          throw typeErrorCreate('toString is not a function');
+	        }
+	      }
+
+	      /* Return dirty HTML if DOMPurify cannot run */
+	      if (!DOMPurify.isSupported) {
+	        return dirty;
+	      }
+
+	      /* Assign config vars */
+	      if (!SET_CONFIG) {
+	        _parseConfig(cfg);
+	      }
+
+	      /* Clean up removed elements */
+	      DOMPurify.removed = [];
+
+	      /* Check if dirty is correctly typed for IN_PLACE */
+	      if (typeof dirty === 'string') {
+	        IN_PLACE = false;
+	      }
+	      if (IN_PLACE) {
+	        /* Do some early pre-sanitization to avoid unsafe root nodes */
+	        if (dirty.nodeName) {
+	          const tagName = transformCaseFunc(dirty.nodeName);
+	          if (!ALLOWED_TAGS[tagName] || FORBID_TAGS[tagName]) {
+	            throw typeErrorCreate('root node is forbidden and cannot be sanitized in-place');
+	          }
+	        }
+	      } else if (dirty instanceof Node) {
+	        /* If dirty is a DOM element, append to an empty document to avoid
+	           elements being stripped by the parser */
+	        body = _initDocument('<!---->');
+	        importedNode = body.ownerDocument.importNode(dirty, true);
+	        if (importedNode.nodeType === NODE_TYPE.element && importedNode.nodeName === 'BODY') {
+	          /* Node is already a body, use as is */
+	          body = importedNode;
+	        } else if (importedNode.nodeName === 'HTML') {
+	          body = importedNode;
+	        } else {
+	          // eslint-disable-next-line unicorn/prefer-dom-node-append
+	          body.appendChild(importedNode);
+	        }
+	      } else {
+	        /* Exit directly if we have nothing to do */
+	        if (!RETURN_DOM && !SAFE_FOR_TEMPLATES && !WHOLE_DOCUMENT &&
+	        // eslint-disable-next-line unicorn/prefer-includes
+	        dirty.indexOf('<') === -1) {
+	          return trustedTypesPolicy && RETURN_TRUSTED_TYPE ? trustedTypesPolicy.createHTML(dirty) : dirty;
+	        }
+
+	        /* Initialize the document to work on */
+	        body = _initDocument(dirty);
+
+	        /* Check we have a DOM node from the data */
+	        if (!body) {
+	          return RETURN_DOM ? null : RETURN_TRUSTED_TYPE ? emptyHTML : '';
+	        }
+	      }
+
+	      /* Remove first element node (ours) if FORCE_BODY is set */
+	      if (body && FORCE_BODY) {
+	        _forceRemove(body.firstChild);
+	      }
+
+	      /* Get node iterator */
+	      const nodeIterator = _createNodeIterator(IN_PLACE ? dirty : body);
+
+	      /* Now start iterating over the created document */
+	      while (currentNode = nodeIterator.nextNode()) {
+	        /* Sanitize tags and elements */
+	        if (_sanitizeElements(currentNode)) {
+	          continue;
+	        }
+	        const parentNode = getParentNode(currentNode);
+
+	        /* Set the nesting depth of an element */
+	        if (currentNode.nodeType === NODE_TYPE.element) {
+	          if (parentNode && parentNode.__depth) {
+	            /*
+	              We want the depth of the node in the original tree, which can
+	              change when it's removed from its parent.
+	            */
+	            currentNode.__depth = (currentNode.__removalCount || 0) + parentNode.__depth + 1;
+	          } else {
+	            currentNode.__depth = 1;
+	          }
+	        }
+
+	        /*
+	         * Remove an element if nested too deeply to avoid mXSS
+	         * or if the __depth might have been tampered with
+	         */
+	        if (currentNode.__depth >= MAX_NESTING_DEPTH || currentNode.__depth < 0 || numberIsNaN(currentNode.__depth)) {
+	          _forceRemove(currentNode);
+	        }
+
+	        /* Shadow DOM detected, sanitize it */
+	        if (currentNode.content instanceof DocumentFragment) {
+	          currentNode.content.__depth = currentNode.__depth;
+	          _sanitizeShadowDOM(currentNode.content);
+	        }
+
+	        /* Check attributes, sanitize if necessary */
+	        _sanitizeAttributes(currentNode);
+	      }
+
+	      /* If we sanitized `dirty` in-place, return it. */
+	      if (IN_PLACE) {
+	        return dirty;
+	      }
+
+	      /* Return sanitized string or DOM */
+	      if (RETURN_DOM) {
+	        if (RETURN_DOM_FRAGMENT) {
+	          returnNode = createDocumentFragment.call(body.ownerDocument);
+	          while (body.firstChild) {
+	            // eslint-disable-next-line unicorn/prefer-dom-node-append
+	            returnNode.appendChild(body.firstChild);
+	          }
+	        } else {
+	          returnNode = body;
+	        }
+	        if (ALLOWED_ATTR.shadowroot || ALLOWED_ATTR.shadowrootmode) {
+	          /*
+	            AdoptNode() is not used because internal state is not reset
+	            (e.g. the past names map of a HTMLFormElement), this is safe
+	            in theory but we would rather not risk another attack vector.
+	            The state that is cloned by importNode() is explicitly defined
+	            by the specs.
+	          */
+	          returnNode = importNode.call(originalDocument, returnNode, true);
+	        }
+	        return returnNode;
+	      }
+	      let serializedHTML = WHOLE_DOCUMENT ? body.outerHTML : body.innerHTML;
+
+	      /* Serialize doctype if allowed */
+	      if (WHOLE_DOCUMENT && ALLOWED_TAGS['!doctype'] && body.ownerDocument && body.ownerDocument.doctype && body.ownerDocument.doctype.name && regExpTest(DOCTYPE_NAME, body.ownerDocument.doctype.name)) {
+	        serializedHTML = '<!DOCTYPE ' + body.ownerDocument.doctype.name + '>\n' + serializedHTML;
+	      }
+
+	      /* Sanitize final string template-safe */
+	      if (SAFE_FOR_TEMPLATES) {
+	        arrayForEach([MUSTACHE_EXPR, ERB_EXPR, TMPLIT_EXPR], expr => {
+	          serializedHTML = stringReplace(serializedHTML, expr, ' ');
+	        });
+	      }
+	      return trustedTypesPolicy && RETURN_TRUSTED_TYPE ? trustedTypesPolicy.createHTML(serializedHTML) : serializedHTML;
+	    };
+
+	    /**
+	     * Public method to set the configuration once
+	     * setConfig
+	     *
+	     * @param {Object} cfg configuration object
+	     */
+	    DOMPurify.setConfig = function () {
+	      let cfg = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+	      _parseConfig(cfg);
+	      SET_CONFIG = true;
+	    };
+
+	    /**
+	     * Public method to remove the configuration
+	     * clearConfig
+	     *
+	     */
+	    DOMPurify.clearConfig = function () {
+	      CONFIG = null;
+	      SET_CONFIG = false;
+	    };
+
+	    /**
+	     * Public method to check if an attribute value is valid.
+	     * Uses last set config, if any. Otherwise, uses config defaults.
+	     * isValidAttribute
+	     *
+	     * @param  {String} tag Tag name of containing element.
+	     * @param  {String} attr Attribute name.
+	     * @param  {String} value Attribute value.
+	     * @return {Boolean} Returns true if `value` is valid. Otherwise, returns false.
+	     */
+	    DOMPurify.isValidAttribute = function (tag, attr, value) {
+	      /* Initialize shared config vars if necessary. */
+	      if (!CONFIG) {
+	        _parseConfig({});
+	      }
+	      const lcTag = transformCaseFunc(tag);
+	      const lcName = transformCaseFunc(attr);
+	      return _isValidAttribute(lcTag, lcName, value);
+	    };
+
+	    /**
+	     * AddHook
+	     * Public method to add DOMPurify hooks
+	     *
+	     * @param {String} entryPoint entry point for the hook to add
+	     * @param {Function} hookFunction function to execute
+	     */
+	    DOMPurify.addHook = function (entryPoint, hookFunction) {
+	      if (typeof hookFunction !== 'function') {
+	        return;
+	      }
+	      hooks[entryPoint] = hooks[entryPoint] || [];
+	      arrayPush(hooks[entryPoint], hookFunction);
+	    };
+
+	    /**
+	     * RemoveHook
+	     * Public method to remove a DOMPurify hook at a given entryPoint
+	     * (pops it from the stack of hooks if more are present)
+	     *
+	     * @param {String} entryPoint entry point for the hook to remove
+	     * @return {Function} removed(popped) hook
+	     */
+	    DOMPurify.removeHook = function (entryPoint) {
+	      if (hooks[entryPoint]) {
+	        return arrayPop(hooks[entryPoint]);
+	      }
+	    };
+
+	    /**
+	     * RemoveHooks
+	     * Public method to remove all DOMPurify hooks at a given entryPoint
+	     *
+	     * @param  {String} entryPoint entry point for the hooks to remove
+	     */
+	    DOMPurify.removeHooks = function (entryPoint) {
+	      if (hooks[entryPoint]) {
+	        hooks[entryPoint] = [];
+	      }
+	    };
+
+	    /**
+	     * RemoveAllHooks
+	     * Public method to remove all DOMPurify hooks
+	     */
+	    DOMPurify.removeAllHooks = function () {
+	      hooks = {};
+	    };
+	    return DOMPurify;
+	  }
+	  var purify = createDOMPurify();
+
+	  return purify;
+
+	}));
+	
+} (purify));
+
+var purifyExports = purify.exports;
+var DOMPurify = /*@__PURE__*/getDefaultExportFromCjs(purifyExports);
+
+/* src\Components\Editor\Assistant\Assistant.svelte generated by Svelte v3.59.2 */
+
+const { Error: Error_1$7, console: console_1$6 } = globals;
+const file$n = "src\\Components\\Editor\\Assistant\\Assistant.svelte";
+
+// (200:6) {:else}
+function create_else_block$5(ctx) {
 	let img;
 	let img_src_value;
-	let button_title_value;
-	let mounted;
-	let dispose;
+
+	const block = {
+		c: function create() {
+			img = element("img");
+			if (!src_url_equal(img.src, img_src_value = img$l)) attr_dev(img, "src", img_src_value);
+			attr_dev(img, "alt", "Send");
+			attr_dev(img, "class", "svelte-84nri3");
+			add_location(img, file$n, 200, 8, 6245);
+		},
+		m: function mount(target, anchor) {
+			insert_dev(target, img, anchor);
+		},
+		p: noop,
+		d: function destroy(detaching) {
+			if (detaching) detach_dev(img);
+		}
+	};
+
+	dispatch_dev("SvelteRegisterBlock", {
+		block,
+		id: create_else_block$5.name,
+		type: "else",
+		source: "(200:6) {:else}",
+		ctx
+	});
+
+	return block;
+}
+
+// (198:6) {#if isLoading}
+function create_if_block$i(ctx) {
+	let div;
 
 	const block = {
 		c: function create() {
 			div = element("div");
-			button = element("button");
-			img = element("img");
-			if (!src_url_equal(img.src, img_src_value = img$j)) attr_dev(img, "src", img_src_value);
-			attr_dev(img, "alt", "Projects");
-			attr_dev(img, "width", "40px");
-			attr_dev(img, "height", "40px");
-			add_location(img, file$n, 17, 4, 445);
-			attr_dev(button, "title", button_title_value = /*$_*/ ctx[0]("editor.navigatorController.explorer"));
-			attr_dev(button, "id", "projectExpand-btn");
-			attr_dev(button, "class", "nav-buttons svelte-14bjxtv");
-			add_location(button, file$n, 11, 2, 293);
-			attr_dev(div, "id", "nav-controller");
-			attr_dev(div, "class", "svelte-14bjxtv");
-			add_location(div, file$n, 10, 0, 265);
-		},
-		l: function claim(nodes) {
-			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+			attr_dev(div, "class", "loader svelte-84nri3");
+			add_location(div, file$n, 198, 8, 6194);
 		},
 		m: function mount(target, anchor) {
 			insert_dev(target, div, anchor);
-			append_dev(div, button);
-			append_dev(button, img);
+		},
+		p: noop,
+		d: function destroy(detaching) {
+			if (detaching) detach_dev(div);
+		}
+	};
+
+	dispatch_dev("SvelteRegisterBlock", {
+		block,
+		id: create_if_block$i.name,
+		type: "if",
+		source: "(198:6) {#if isLoading}",
+		ctx
+	});
+
+	return block;
+}
+
+function create_fragment$o(ctx) {
+	let div5;
+	let div1;
+	let div0;
+	let t0_value = /*$_*/ ctx[7]("editor.assistant.Chat") + "";
+	let t0;
+	let t1;
+	let button0;
+	let img;
+	let img_src_value;
+	let t2;
+	let div2;
+	let t3;
+	let a;
+	let button1;
+	let t5;
+	let div3;
+	let p;
+	let t6_value = /*$_*/ ctx[7]("editor.assistant.greeting1") + "";
+	let t6;
+	let t7;
+	let t8;
+	let t9;
+	let t10_value = /*$_*/ ctx[7]("editor.assistant.greeting2") + "";
+	let t10;
+	let t11;
+	let chatsystem;
+	let t12;
+	let div4;
+	let textarea;
+	let textarea_placeholder_value;
+	let t13;
+	let button2;
+	let button2_title_value;
+	let button2_disabled_value;
+	let current;
+	let mounted;
+	let dispose;
+	let chatsystem_props = {};
+	chatsystem = new ChatSystem({ props: chatsystem_props, $$inline: true });
+	/*chatsystem_binding*/ ctx[10](chatsystem);
+
+	function select_block_type(ctx, dirty) {
+		if (/*isLoading*/ ctx[3]) return create_if_block$i;
+		return create_else_block$5;
+	}
+
+	let current_block_type = select_block_type(ctx);
+	let if_block = current_block_type(ctx);
+
+	const block = {
+		c: function create() {
+			div5 = element("div");
+			div1 = element("div");
+			div0 = element("div");
+			t0 = text(t0_value);
+			t1 = space();
+			button0 = element("button");
+			img = element("img");
+			t2 = space();
+			div2 = element("div");
+			t3 = text("Login in to use the Studiosus assistant.\r\n    ");
+			a = element("a");
+			button1 = element("button");
+			button1.textContent = "Sign in to Studiosus";
+			t5 = space();
+			div3 = element("div");
+			p = element("p");
+			t6 = text(t6_value);
+			t7 = space();
+			t8 = text(/*$nameStore*/ ctx[1]);
+			t9 = text(", ");
+			t10 = text(t10_value);
+			t11 = space();
+			create_component(chatsystem.$$.fragment);
+			t12 = space();
+			div4 = element("div");
+			textarea = element("textarea");
+			t13 = space();
+			button2 = element("button");
+			if_block.c();
+			attr_dev(div0, "id", "textbox");
+			attr_dev(div0, "class", "svelte-84nri3");
+			add_location(div0, file$n, 166, 4, 5081);
+			if (!src_url_equal(img.src, img_src_value = img$k)) attr_dev(img, "src", img_src_value);
+			attr_dev(img, "alt", "New Chat");
+			attr_dev(img, "width", "20px");
+			attr_dev(img, "height", "20px");
+			attr_dev(img, "class", "svelte-84nri3");
+			add_location(img, file$n, 168, 6, 5202);
+			attr_dev(button0, "id", "new-chat-btn");
+			attr_dev(button0, "class", "svelte-84nri3");
+			add_location(button0, file$n, 167, 4, 5140);
+			attr_dev(div1, "id", "Assistant-controller");
+			attr_dev(div1, "class", "svelte-84nri3");
+			add_location(div1, file$n, 165, 2, 5044);
+			attr_dev(button1, "id", "login-button");
+			attr_dev(button1, "class", "svelte-84nri3");
+			add_location(button1, file$n, 174, 7, 5452);
+			attr_dev(a, "href", "/login");
+			set_style(a, "text-decoration", "none");
+			attr_dev(a, "class", "svelte-84nri3");
+			add_location(a, file$n, 173, 4, 5396);
+			attr_dev(div2, "id", "Inform-container");
+			set_style(div2, "display", "none");
+			attr_dev(div2, "class", "svelte-84nri3");
+			add_location(div2, file$n, 171, 2, 5294);
+			attr_dev(p, "class", "Introduction-container svelte-84nri3");
+			add_location(p, file$n, 178, 4, 5592);
+			attr_dev(div3, "id", "Output-container");
+			attr_dev(div3, "class", "svelte-84nri3");
+			add_location(div3, file$n, 177, 2, 5531);
+			attr_dev(textarea, "id", "Input-container");
+			attr_dev(textarea, "placeholder", textarea_placeholder_value = /*$_*/ ctx[7]("editor.assistant.Question"));
+			attr_dev(textarea, "class", "svelte-84nri3");
+			add_location(textarea, file$n, 185, 4, 5824);
+			attr_dev(button2, "id", "send-button");
+			attr_dev(button2, "title", button2_title_value = /*$_*/ ctx[7]("editor.assistant.Send"));
+			button2.disabled = button2_disabled_value = /*isInputEmpty*/ ctx[6] || /*inputLock*/ ctx[2];
+			attr_dev(button2, "class", "svelte-84nri3");
+			toggle_class(button2, "disabled", /*isInputEmpty*/ ctx[6]);
+			add_location(button2, file$n, 190, 4, 5969);
+			attr_dev(div4, "id", "input-controller");
+			attr_dev(div4, "class", "svelte-84nri3");
+			add_location(div4, file$n, 184, 2, 5791);
+			attr_dev(div5, "id", "Assistant-container");
+			attr_dev(div5, "class", "svelte-84nri3");
+			add_location(div5, file$n, 164, 0, 5010);
+		},
+		l: function claim(nodes) {
+			throw new Error_1$7("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+		},
+		m: function mount(target, anchor) {
+			insert_dev(target, div5, anchor);
+			append_dev(div5, div1);
+			append_dev(div1, div0);
+			append_dev(div0, t0);
+			append_dev(div1, t1);
+			append_dev(div1, button0);
+			append_dev(button0, img);
+			append_dev(div5, t2);
+			append_dev(div5, div2);
+			append_dev(div2, t3);
+			append_dev(div2, a);
+			append_dev(a, button1);
+			append_dev(div5, t5);
+			append_dev(div5, div3);
+			append_dev(div3, p);
+			append_dev(p, t6);
+			append_dev(p, t7);
+			append_dev(p, t8);
+			append_dev(p, t9);
+			append_dev(p, t10);
+			append_dev(div3, t11);
+			mount_component(chatsystem, div3, null);
+			/*div3_binding*/ ctx[11](div3);
+			append_dev(div5, t12);
+			append_dev(div5, div4);
+			append_dev(div4, textarea);
+			set_input_value(textarea, /*inputValue*/ ctx[0]);
+			append_dev(div4, t13);
+			append_dev(div4, button2);
+			if_block.m(button2, null);
+			current = true;
 
 			if (!mounted) {
-				dispose = listen_dev(button, "click", /*handleExpandBtn*/ ctx[1], false, false, false, false);
+				dispose = [
+					listen_dev(button0, "click", /*handleNewChatBtn*/ ctx[8], false, false, false, false),
+					listen_dev(textarea, "input", /*textarea_input_handler*/ ctx[12]),
+					listen_dev(button2, "click", /*handleInput*/ ctx[9], false, false, false, false)
+				];
+
 				mounted = true;
 			}
 		},
 		p: function update(ctx, [dirty]) {
-			if (dirty & /*$_*/ 1 && button_title_value !== (button_title_value = /*$_*/ ctx[0]("editor.navigatorController.explorer"))) {
-				attr_dev(button, "title", button_title_value);
+			if ((!current || dirty & /*$_*/ 128) && t0_value !== (t0_value = /*$_*/ ctx[7]("editor.assistant.Chat") + "")) set_data_dev(t0, t0_value);
+			if ((!current || dirty & /*$_*/ 128) && t6_value !== (t6_value = /*$_*/ ctx[7]("editor.assistant.greeting1") + "")) set_data_dev(t6, t6_value);
+			if (!current || dirty & /*$nameStore*/ 2) set_data_dev(t8, /*$nameStore*/ ctx[1]);
+			if ((!current || dirty & /*$_*/ 128) && t10_value !== (t10_value = /*$_*/ ctx[7]("editor.assistant.greeting2") + "")) set_data_dev(t10, t10_value);
+			const chatsystem_changes = {};
+			chatsystem.$set(chatsystem_changes);
+
+			if (!current || dirty & /*$_*/ 128 && textarea_placeholder_value !== (textarea_placeholder_value = /*$_*/ ctx[7]("editor.assistant.Question"))) {
+				attr_dev(textarea, "placeholder", textarea_placeholder_value);
+			}
+
+			if (dirty & /*inputValue*/ 1) {
+				set_input_value(textarea, /*inputValue*/ ctx[0]);
+			}
+
+			if (current_block_type === (current_block_type = select_block_type(ctx)) && if_block) {
+				if_block.p(ctx, dirty);
+			} else {
+				if_block.d(1);
+				if_block = current_block_type(ctx);
+
+				if (if_block) {
+					if_block.c();
+					if_block.m(button2, null);
+				}
+			}
+
+			if (!current || dirty & /*$_*/ 128 && button2_title_value !== (button2_title_value = /*$_*/ ctx[7]("editor.assistant.Send"))) {
+				attr_dev(button2, "title", button2_title_value);
+			}
+
+			if (!current || dirty & /*isInputEmpty, inputLock*/ 68 && button2_disabled_value !== (button2_disabled_value = /*isInputEmpty*/ ctx[6] || /*inputLock*/ ctx[2])) {
+				prop_dev(button2, "disabled", button2_disabled_value);
+			}
+
+			if (!current || dirty & /*isInputEmpty*/ 64) {
+				toggle_class(button2, "disabled", /*isInputEmpty*/ ctx[6]);
 			}
 		},
-		i: noop,
-		o: noop,
+		i: function intro(local) {
+			if (current) return;
+			transition_in(chatsystem.$$.fragment, local);
+			current = true;
+		},
+		o: function outro(local) {
+			transition_out(chatsystem.$$.fragment, local);
+			current = false;
+		},
 		d: function destroy(detaching) {
-			if (detaching) detach_dev(div);
+			if (detaching) detach_dev(div5);
+			/*chatsystem_binding*/ ctx[10](null);
+			destroy_component(chatsystem);
+			/*div3_binding*/ ctx[11](null);
+			if_block.d();
 			mounted = false;
-			dispose();
+			run_all(dispose);
 		}
 	};
 
@@ -12965,53 +18350,3065 @@ function create_fragment$o(ctx) {
 	return block;
 }
 
-function instance$o($$self, $$props, $$invalidate) {
-	let $_;
-	validate_store($format, '_');
-	component_subscribe($$self, $format, $$value => $$invalidate(0, $_ = $$value));
-	let { $$slots: slots = {}, $$scope } = $$props;
-	validate_slots('NavigatorController', slots, []);
+const backendUrl$9 = "http://localhost:8080";
 
-	function handleExpandBtn() {
-		projectExpanded.update(value => !value);
+async function handleNewAssistant() {
+	await fetch(backendUrl$9 + "/ai/newChat", {
+		method: "PUT",
+		headers: {
+			"Content-Type": "application/json",
+			Accept: "application/json"
+		},
+		credentials: "include"
+	}).then(response => {
+		if (!response.ok) {
+			throw new Error(`HTTP error! status: ${response.status}`);
+		}
+
+		return response.text();
+	});
+}
+
+function hideAssistantComponents() {
+	const outputContainer = document.getElementById("Output-container");
+	const inputContainer = document.getElementById("Input-container");
+	const inputController = document.getElementById("input-controller");
+	const informContainer = document.getElementById("Inform-container");
+	const newChatBtn = document.getElementById("new-chat-btn");
+	outputContainer.style.display = "none";
+	inputController.style.display = "none";
+	inputContainer.style.display = "none";
+	newChatBtn.style.display = "none";
+	informContainer.style.display = "flex";
+}
+
+function adjustTextareaHeight() {
+	const textarea = document.getElementById("Input-container");
+	const singleLineHeight = textarea.clientHeight - textarea.offsetHeight + textarea.scrollHeight;
+	const maxHeight = parseInt(getComputedStyle(textarea).maxHeight);
+	textarea.style.height = `${singleLineHeight}px`;
+
+	textarea.addEventListener("input", () => {
+		textarea.style.height = "auto";
+
+		if (textarea.scrollHeight > singleLineHeight && textarea.scrollHeight < maxHeight) {
+			textarea.style.height = `${textarea.scrollHeight}px`;
+		} else if (textarea.scrollHeight >= maxHeight) {
+			textarea.style.height = `${maxHeight}px`;
+		} else {
+			textarea.style.height = `${singleLineHeight}px`;
+		}
+	});
+}
+
+function instance$o($$self, $$props, $$invalidate) {
+	let isInputEmpty;
+	let $nameStore;
+	let $_;
+	let $textareaStore;
+	validate_store(nameStore, 'nameStore');
+	component_subscribe($$self, nameStore, $$value => $$invalidate(1, $nameStore = $$value));
+	validate_store($format, '_');
+	component_subscribe($$self, $format, $$value => $$invalidate(7, $_ = $$value));
+	validate_store(textareaStore, 'textareaStore');
+	component_subscribe($$self, textareaStore, $$value => $$invalidate(15, $textareaStore = $$value));
+	let { $$slots: slots = {}, $$scope } = $$props;
+	validate_slots('Assistant', slots, []);
+	let inputValue = "";
+	let message = "";
+	let inputLock = false;
+	let isLoading = false;
+	let isLoggedIn = false;
+	let outputContainer;
+	let chatSystem;
+
+	//check user authentication
+	function isUserLoggedIn() {
+		isLoggedIn = document.cookie.includes("JSESSIONID=");
 	}
+
+	//handle new chat creation
+	function handleNewChatBtn() {
+		if (!chatSystem.isMapEmpty()) {
+			chatSystem.createNewMap();
+			handleNewAssistant();
+		}
+	}
+
+	// main input handling function, primarily used for calling AI assistant
+	async function handleInput() {
+		chatSystem.addMessage(Date.now(), { name: $nameStore }, DOMPurify.sanitize(inputValue), false);
+		message = "This is the user code:" + $textareaStore + "\n" + "This is the user message:" + "\n" + inputValue;
+		$$invalidate(0, inputValue = "");
+		const textarea = document.getElementById("Input-container");
+		textarea.style.height = 39 + `px`;
+		await handleAssistant(message);
+	}
+
+	// main function to handle the AI assistant prompt and response
+	async function handleAssistant(message) {
+		$$invalidate(2, inputLock = true);
+		$$invalidate(3, isLoading = true);
+
+		await fetch(backendUrl$9 + "/ai/chat", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				Accept: "application/json"
+			},
+			credentials: "include",
+			body: message
+		}).then(response => {
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+
+			return response.text();
+		}).then(data => {
+			$$invalidate(2, inputLock = false);
+			$$invalidate(3, isLoading = false);
+
+			//Access chatsystem to add the response
+			chatSystem.addMessage(Date.now(), { name: $_("editor.assistant.Assistant") }, DOMPurify.sanitize(parse(data)), true);
+		}).catch(error => {
+			console.error("Error:", error);
+			$$invalidate(2, inputLock = false);
+		});
+	}
+
+	onMount(() => {
+		isUserLoggedIn();
+
+		if (!isLoggedIn) {
+			hideAssistantComponents();
+		} else {
+			adjustTextareaHeight();
+			const outputContainer = document.getElementById("Output-container");
+			outputContainer.scrollTop = outputContainer.scrollHeight;
+		}
+	});
+
+	afterUpdate(() => {
+		$$invalidate(4, outputContainer.scrollTop = outputContainer.scrollHeight, outputContainer);
+	});
 
 	const writable_props = [];
 
 	Object.keys($$props).forEach(key => {
-		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<NavigatorController> was created with unknown prop '${key}'`);
+		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console_1$6.warn(`<Assistant> was created with unknown prop '${key}'`);
 	});
+
+	function chatsystem_binding($$value) {
+		binding_callbacks[$$value ? 'unshift' : 'push'](() => {
+			chatSystem = $$value;
+			$$invalidate(5, chatSystem);
+		});
+	}
+
+	function div3_binding($$value) {
+		binding_callbacks[$$value ? 'unshift' : 'push'](() => {
+			outputContainer = $$value;
+			$$invalidate(4, outputContainer);
+		});
+	}
+
+	function textarea_input_handler() {
+		inputValue = this.value;
+		$$invalidate(0, inputValue);
+	}
 
 	$$self.$capture_state = () => ({
-		Projects: img$j,
-		projectExpanded,
+		nameStore,
+		textareaStore,
+		onMount,
+		afterUpdate,
+		sendIcon: img$l,
+		newChat: img$k,
+		ChatSystem,
 		_: $format,
-		handleExpandBtn,
-		$_
+		marked: marked$1,
+		DOMPurify,
+		backendUrl: backendUrl$9,
+		inputValue,
+		message,
+		inputLock,
+		isLoading,
+		isLoggedIn,
+		outputContainer,
+		chatSystem,
+		isUserLoggedIn,
+		handleNewChatBtn,
+		handleNewAssistant,
+		handleInput,
+		handleAssistant,
+		hideAssistantComponents,
+		adjustTextareaHeight,
+		isInputEmpty,
+		$nameStore,
+		$_,
+		$textareaStore
 	});
 
-	return [$_, handleExpandBtn];
+	$$self.$inject_state = $$props => {
+		if ('inputValue' in $$props) $$invalidate(0, inputValue = $$props.inputValue);
+		if ('message' in $$props) message = $$props.message;
+		if ('inputLock' in $$props) $$invalidate(2, inputLock = $$props.inputLock);
+		if ('isLoading' in $$props) $$invalidate(3, isLoading = $$props.isLoading);
+		if ('isLoggedIn' in $$props) isLoggedIn = $$props.isLoggedIn;
+		if ('outputContainer' in $$props) $$invalidate(4, outputContainer = $$props.outputContainer);
+		if ('chatSystem' in $$props) $$invalidate(5, chatSystem = $$props.chatSystem);
+		if ('isInputEmpty' in $$props) $$invalidate(6, isInputEmpty = $$props.isInputEmpty);
+	};
+
+	if ($$props && "$$inject" in $$props) {
+		$$self.$inject_state($$props.$$inject);
+	}
+
+	$$self.$$.update = () => {
+		if ($$self.$$.dirty & /*$nameStore*/ 2) {
+			{
+				if ($nameStore === null || $nameStore.trim() === "") {
+					nameStore.set("User");
+				}
+			}
+		}
+
+		if ($$self.$$.dirty & /*inputValue*/ 1) {
+			$$invalidate(6, isInputEmpty = !inputValue || inputValue.trim() === "");
+		}
+	};
+
+	return [
+		inputValue,
+		$nameStore,
+		inputLock,
+		isLoading,
+		outputContainer,
+		chatSystem,
+		isInputEmpty,
+		$_,
+		handleNewChatBtn,
+		handleInput,
+		chatsystem_binding,
+		div3_binding,
+		textarea_input_handler
+	];
 }
 
-class NavigatorController extends SvelteComponentDev {
+class Assistant extends SvelteComponentDev {
 	constructor(options) {
 		super(options);
 		init$1(this, options, instance$o, create_fragment$o, safe_not_equal, {});
 
 		dispatch_dev("SvelteRegisterComponent", {
 			component: this,
-			tagName: "NavigatorController",
+			tagName: "Assistant",
 			options,
 			id: create_fragment$o.name
 		});
 	}
 }
 
+/* eslint-disable no-multi-assign */
+
+function deepFreeze(obj) {
+  if (obj instanceof Map) {
+    obj.clear =
+      obj.delete =
+      obj.set =
+        function () {
+          throw new Error('map is read-only');
+        };
+  } else if (obj instanceof Set) {
+    obj.add =
+      obj.clear =
+      obj.delete =
+        function () {
+          throw new Error('set is read-only');
+        };
+  }
+
+  // Freeze self
+  Object.freeze(obj);
+
+  Object.getOwnPropertyNames(obj).forEach((name) => {
+    const prop = obj[name];
+    const type = typeof prop;
+
+    // Freeze prop if it is an object or function and also not already frozen
+    if ((type === 'object' || type === 'function') && !Object.isFrozen(prop)) {
+      deepFreeze(prop);
+    }
+  });
+
+  return obj;
+}
+
+/** @typedef {import('highlight.js').CallbackResponse} CallbackResponse */
+/** @typedef {import('highlight.js').CompiledMode} CompiledMode */
+/** @implements CallbackResponse */
+
+class Response {
+  /**
+   * @param {CompiledMode} mode
+   */
+  constructor(mode) {
+    // eslint-disable-next-line no-undefined
+    if (mode.data === undefined) mode.data = {};
+
+    this.data = mode.data;
+    this.isMatchIgnored = false;
+  }
+
+  ignoreMatch() {
+    this.isMatchIgnored = true;
+  }
+}
+
+/**
+ * @param {string} value
+ * @returns {string}
+ */
+function escapeHTML(value) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
+/**
+ * performs a shallow merge of multiple objects into one
+ *
+ * @template T
+ * @param {T} original
+ * @param {Record<string,any>[]} objects
+ * @returns {T} a single new object
+ */
+function inherit$1(original, ...objects) {
+  /** @type Record<string,any> */
+  const result = Object.create(null);
+
+  for (const key in original) {
+    result[key] = original[key];
+  }
+  objects.forEach(function(obj) {
+    for (const key in obj) {
+      result[key] = obj[key];
+    }
+  });
+  return /** @type {T} */ (result);
+}
+
+/**
+ * @typedef {object} Renderer
+ * @property {(text: string) => void} addText
+ * @property {(node: Node) => void} openNode
+ * @property {(node: Node) => void} closeNode
+ * @property {() => string} value
+ */
+
+/** @typedef {{scope?: string, language?: string, sublanguage?: boolean}} Node */
+/** @typedef {{walk: (r: Renderer) => void}} Tree */
+/** */
+
+const SPAN_CLOSE = '</span>';
+
+/**
+ * Determines if a node needs to be wrapped in <span>
+ *
+ * @param {Node} node */
+const emitsWrappingTags = (node) => {
+  // rarely we can have a sublanguage where language is undefined
+  // TODO: track down why
+  return !!node.scope;
+};
+
+/**
+ *
+ * @param {string} name
+ * @param {{prefix:string}} options
+ */
+const scopeToCSSClass = (name, { prefix }) => {
+  // sub-language
+  if (name.startsWith("language:")) {
+    return name.replace("language:", "language-");
+  }
+  // tiered scope: comment.line
+  if (name.includes(".")) {
+    const pieces = name.split(".");
+    return [
+      `${prefix}${pieces.shift()}`,
+      ...(pieces.map((x, i) => `${x}${"_".repeat(i + 1)}`))
+    ].join(" ");
+  }
+  // simple scope
+  return `${prefix}${name}`;
+};
+
+/** @type {Renderer} */
+class HTMLRenderer {
+  /**
+   * Creates a new HTMLRenderer
+   *
+   * @param {Tree} parseTree - the parse tree (must support `walk` API)
+   * @param {{classPrefix: string}} options
+   */
+  constructor(parseTree, options) {
+    this.buffer = "";
+    this.classPrefix = options.classPrefix;
+    parseTree.walk(this);
+  }
+
+  /**
+   * Adds texts to the output stream
+   *
+   * @param {string} text */
+  addText(text) {
+    this.buffer += escapeHTML(text);
+  }
+
+  /**
+   * Adds a node open to the output stream (if needed)
+   *
+   * @param {Node} node */
+  openNode(node) {
+    if (!emitsWrappingTags(node)) return;
+
+    const className = scopeToCSSClass(node.scope,
+      { prefix: this.classPrefix });
+    this.span(className);
+  }
+
+  /**
+   * Adds a node close to the output stream (if needed)
+   *
+   * @param {Node} node */
+  closeNode(node) {
+    if (!emitsWrappingTags(node)) return;
+
+    this.buffer += SPAN_CLOSE;
+  }
+
+  /**
+   * returns the accumulated buffer
+  */
+  value() {
+    return this.buffer;
+  }
+
+  // helpers
+
+  /**
+   * Builds a span element
+   *
+   * @param {string} className */
+  span(className) {
+    this.buffer += `<span class="${className}">`;
+  }
+}
+
+/** @typedef {{scope?: string, language?: string, children: Node[]} | string} Node */
+/** @typedef {{scope?: string, language?: string, children: Node[]} } DataNode */
+/** @typedef {import('highlight.js').Emitter} Emitter */
+/**  */
+
+/** @returns {DataNode} */
+const newNode = (opts = {}) => {
+  /** @type DataNode */
+  const result = { children: [] };
+  Object.assign(result, opts);
+  return result;
+};
+
+class TokenTree {
+  constructor() {
+    /** @type DataNode */
+    this.rootNode = newNode();
+    this.stack = [this.rootNode];
+  }
+
+  get top() {
+    return this.stack[this.stack.length - 1];
+  }
+
+  get root() { return this.rootNode; }
+
+  /** @param {Node} node */
+  add(node) {
+    this.top.children.push(node);
+  }
+
+  /** @param {string} scope */
+  openNode(scope) {
+    /** @type Node */
+    const node = newNode({ scope });
+    this.add(node);
+    this.stack.push(node);
+  }
+
+  closeNode() {
+    if (this.stack.length > 1) {
+      return this.stack.pop();
+    }
+    // eslint-disable-next-line no-undefined
+    return undefined;
+  }
+
+  closeAllNodes() {
+    while (this.closeNode());
+  }
+
+  toJSON() {
+    return JSON.stringify(this.rootNode, null, 4);
+  }
+
+  /**
+   * @typedef { import("./html_renderer").Renderer } Renderer
+   * @param {Renderer} builder
+   */
+  walk(builder) {
+    // this does not
+    return this.constructor._walk(builder, this.rootNode);
+    // this works
+    // return TokenTree._walk(builder, this.rootNode);
+  }
+
+  /**
+   * @param {Renderer} builder
+   * @param {Node} node
+   */
+  static _walk(builder, node) {
+    if (typeof node === "string") {
+      builder.addText(node);
+    } else if (node.children) {
+      builder.openNode(node);
+      node.children.forEach((child) => this._walk(builder, child));
+      builder.closeNode(node);
+    }
+    return builder;
+  }
+
+  /**
+   * @param {Node} node
+   */
+  static _collapse(node) {
+    if (typeof node === "string") return;
+    if (!node.children) return;
+
+    if (node.children.every(el => typeof el === "string")) {
+      // node.text = node.children.join("");
+      // delete node.children;
+      node.children = [node.children.join("")];
+    } else {
+      node.children.forEach((child) => {
+        TokenTree._collapse(child);
+      });
+    }
+  }
+}
+
+/**
+  Currently this is all private API, but this is the minimal API necessary
+  that an Emitter must implement to fully support the parser.
+
+  Minimal interface:
+
+  - addText(text)
+  - __addSublanguage(emitter, subLanguageName)
+  - startScope(scope)
+  - endScope()
+  - finalize()
+  - toHTML()
+
+*/
+
+/**
+ * @implements {Emitter}
+ */
+class TokenTreeEmitter extends TokenTree {
+  /**
+   * @param {*} options
+   */
+  constructor(options) {
+    super();
+    this.options = options;
+  }
+
+  /**
+   * @param {string} text
+   */
+  addText(text) {
+    if (text === "") { return; }
+
+    this.add(text);
+  }
+
+  /** @param {string} scope */
+  startScope(scope) {
+    this.openNode(scope);
+  }
+
+  endScope() {
+    this.closeNode();
+  }
+
+  /**
+   * @param {Emitter & {root: DataNode}} emitter
+   * @param {string} name
+   */
+  __addSublanguage(emitter, name) {
+    /** @type DataNode */
+    const node = emitter.root;
+    if (name) node.scope = `language:${name}`;
+
+    this.add(node);
+  }
+
+  toHTML() {
+    const renderer = new HTMLRenderer(this, this.options);
+    return renderer.value();
+  }
+
+  finalize() {
+    this.closeAllNodes();
+    return true;
+  }
+}
+
+/**
+ * @param {string} value
+ * @returns {RegExp}
+ * */
+
+/**
+ * @param {RegExp | string } re
+ * @returns {string}
+ */
+function source(re) {
+  if (!re) return null;
+  if (typeof re === "string") return re;
+
+  return re.source;
+}
+
+/**
+ * @param {RegExp | string } re
+ * @returns {string}
+ */
+function lookahead(re) {
+  return concat('(?=', re, ')');
+}
+
+/**
+ * @param {RegExp | string } re
+ * @returns {string}
+ */
+function anyNumberOfTimes(re) {
+  return concat('(?:', re, ')*');
+}
+
+/**
+ * @param {RegExp | string } re
+ * @returns {string}
+ */
+function optional(re) {
+  return concat('(?:', re, ')?');
+}
+
+/**
+ * @param {...(RegExp | string) } args
+ * @returns {string}
+ */
+function concat(...args) {
+  const joined = args.map((x) => source(x)).join("");
+  return joined;
+}
+
+/**
+ * @param { Array<string | RegExp | Object> } args
+ * @returns {object}
+ */
+function stripOptionsFromArgs(args) {
+  const opts = args[args.length - 1];
+
+  if (typeof opts === 'object' && opts.constructor === Object) {
+    args.splice(args.length - 1, 1);
+    return opts;
+  } else {
+    return {};
+  }
+}
+
+/** @typedef { {capture?: boolean} } RegexEitherOptions */
+
+/**
+ * Any of the passed expresssions may match
+ *
+ * Creates a huge this | this | that | that match
+ * @param {(RegExp | string)[] | [...(RegExp | string)[], RegexEitherOptions]} args
+ * @returns {string}
+ */
+function either(...args) {
+  /** @type { object & {capture?: boolean} }  */
+  const opts = stripOptionsFromArgs(args);
+  const joined = '('
+    + (opts.capture ? "" : "?:")
+    + args.map((x) => source(x)).join("|") + ")";
+  return joined;
+}
+
+/**
+ * @param {RegExp | string} re
+ * @returns {number}
+ */
+function countMatchGroups(re) {
+  return (new RegExp(re.toString() + '|')).exec('').length - 1;
+}
+
+/**
+ * Does lexeme start with a regular expression match at the beginning
+ * @param {RegExp} re
+ * @param {string} lexeme
+ */
+function startsWith(re, lexeme) {
+  const match = re && re.exec(lexeme);
+  return match && match.index === 0;
+}
+
+// BACKREF_RE matches an open parenthesis or backreference. To avoid
+// an incorrect parse, it additionally matches the following:
+// - [...] elements, where the meaning of parentheses and escapes change
+// - other escape sequences, so we do not misparse escape sequences as
+//   interesting elements
+// - non-matching or lookahead parentheses, which do not capture. These
+//   follow the '(' with a '?'.
+const BACKREF_RE = /\[(?:[^\\\]]|\\.)*\]|\(\??|\\([1-9][0-9]*)|\\./;
+
+// **INTERNAL** Not intended for outside usage
+// join logically computes regexps.join(separator), but fixes the
+// backreferences so they continue to match.
+// it also places each individual regular expression into it's own
+// match group, keeping track of the sequencing of those match groups
+// is currently an exercise for the caller. :-)
+/**
+ * @param {(string | RegExp)[]} regexps
+ * @param {{joinWith: string}} opts
+ * @returns {string}
+ */
+function _rewriteBackreferences(regexps, { joinWith }) {
+  let numCaptures = 0;
+
+  return regexps.map((regex) => {
+    numCaptures += 1;
+    const offset = numCaptures;
+    let re = source(regex);
+    let out = '';
+
+    while (re.length > 0) {
+      const match = BACKREF_RE.exec(re);
+      if (!match) {
+        out += re;
+        break;
+      }
+      out += re.substring(0, match.index);
+      re = re.substring(match.index + match[0].length);
+      if (match[0][0] === '\\' && match[1]) {
+        // Adjust the backreference.
+        out += '\\' + String(Number(match[1]) + offset);
+      } else {
+        out += match[0];
+        if (match[0] === '(') {
+          numCaptures++;
+        }
+      }
+    }
+    return out;
+  }).map(re => `(${re})`).join(joinWith);
+}
+
+/** @typedef {import('highlight.js').Mode} Mode */
+/** @typedef {import('highlight.js').ModeCallback} ModeCallback */
+
+// Common regexps
+const MATCH_NOTHING_RE = /\b\B/;
+const IDENT_RE = '[a-zA-Z]\\w*';
+const UNDERSCORE_IDENT_RE = '[a-zA-Z_]\\w*';
+const NUMBER_RE = '\\b\\d+(\\.\\d+)?';
+const C_NUMBER_RE = '(-?)(\\b0[xX][a-fA-F0-9]+|(\\b\\d+(\\.\\d*)?|\\.\\d+)([eE][-+]?\\d+)?)'; // 0x..., 0..., decimal, float
+const BINARY_NUMBER_RE = '\\b(0b[01]+)'; // 0b...
+const RE_STARTERS_RE = '!|!=|!==|%|%=|&|&&|&=|\\*|\\*=|\\+|\\+=|,|-|-=|/=|/|:|;|<<|<<=|<=|<|===|==|=|>>>=|>>=|>=|>>>|>>|>|\\?|\\[|\\{|\\(|\\^|\\^=|\\||\\|=|\\|\\||~';
+
+/**
+* @param { Partial<Mode> & {binary?: string | RegExp} } opts
+*/
+const SHEBANG = (opts = {}) => {
+  const beginShebang = /^#![ ]*\//;
+  if (opts.binary) {
+    opts.begin = concat(
+      beginShebang,
+      /.*\b/,
+      opts.binary,
+      /\b.*/);
+  }
+  return inherit$1({
+    scope: 'meta',
+    begin: beginShebang,
+    end: /$/,
+    relevance: 0,
+    /** @type {ModeCallback} */
+    "on:begin": (m, resp) => {
+      if (m.index !== 0) resp.ignoreMatch();
+    }
+  }, opts);
+};
+
+// Common modes
+const BACKSLASH_ESCAPE = {
+  begin: '\\\\[\\s\\S]', relevance: 0
+};
+const APOS_STRING_MODE = {
+  scope: 'string',
+  begin: '\'',
+  end: '\'',
+  illegal: '\\n',
+  contains: [BACKSLASH_ESCAPE]
+};
+const QUOTE_STRING_MODE = {
+  scope: 'string',
+  begin: '"',
+  end: '"',
+  illegal: '\\n',
+  contains: [BACKSLASH_ESCAPE]
+};
+const PHRASAL_WORDS_MODE = {
+  begin: /\b(a|an|the|are|I'm|isn't|don't|doesn't|won't|but|just|should|pretty|simply|enough|gonna|going|wtf|so|such|will|you|your|they|like|more)\b/
+};
+/**
+ * Creates a comment mode
+ *
+ * @param {string | RegExp} begin
+ * @param {string | RegExp} end
+ * @param {Mode | {}} [modeOptions]
+ * @returns {Partial<Mode>}
+ */
+const COMMENT = function(begin, end, modeOptions = {}) {
+  const mode = inherit$1(
+    {
+      scope: 'comment',
+      begin,
+      end,
+      contains: []
+    },
+    modeOptions
+  );
+  mode.contains.push({
+    scope: 'doctag',
+    // hack to avoid the space from being included. the space is necessary to
+    // match here to prevent the plain text rule below from gobbling up doctags
+    begin: '[ ]*(?=(TODO|FIXME|NOTE|BUG|OPTIMIZE|HACK|XXX):)',
+    end: /(TODO|FIXME|NOTE|BUG|OPTIMIZE|HACK|XXX):/,
+    excludeBegin: true,
+    relevance: 0
+  });
+  const ENGLISH_WORD = either(
+    // list of common 1 and 2 letter words in English
+    "I",
+    "a",
+    "is",
+    "so",
+    "us",
+    "to",
+    "at",
+    "if",
+    "in",
+    "it",
+    "on",
+    // note: this is not an exhaustive list of contractions, just popular ones
+    /[A-Za-z]+['](d|ve|re|ll|t|s|n)/, // contractions - can't we'd they're let's, etc
+    /[A-Za-z]+[-][a-z]+/, // `no-way`, etc.
+    /[A-Za-z][a-z]{2,}/ // allow capitalized words at beginning of sentences
+  );
+  // looking like plain text, more likely to be a comment
+  mode.contains.push(
+    {
+      // TODO: how to include ", (, ) without breaking grammars that use these for
+      // comment delimiters?
+      // begin: /[ ]+([()"]?([A-Za-z'-]{3,}|is|a|I|so|us|[tT][oO]|at|if|in|it|on)[.]?[()":]?([.][ ]|[ ]|\))){3}/
+      // ---
+
+      // this tries to find sequences of 3 english words in a row (without any
+      // "programming" type syntax) this gives us a strong signal that we've
+      // TRULY found a comment - vs perhaps scanning with the wrong language.
+      // It's possible to find something that LOOKS like the start of the
+      // comment - but then if there is no readable text - good chance it is a
+      // false match and not a comment.
+      //
+      // for a visual example please see:
+      // https://github.com/highlightjs/highlight.js/issues/2827
+
+      begin: concat(
+        /[ ]+/, // necessary to prevent us gobbling up doctags like /* @author Bob Mcgill */
+        '(',
+        ENGLISH_WORD,
+        /[.]?[:]?([.][ ]|[ ])/,
+        '){3}') // look for 3 words in a row
+    }
+  );
+  return mode;
+};
+const C_LINE_COMMENT_MODE = COMMENT('//', '$');
+const C_BLOCK_COMMENT_MODE = COMMENT('/\\*', '\\*/');
+const HASH_COMMENT_MODE = COMMENT('#', '$');
+const NUMBER_MODE = {
+  scope: 'number',
+  begin: NUMBER_RE,
+  relevance: 0
+};
+const C_NUMBER_MODE = {
+  scope: 'number',
+  begin: C_NUMBER_RE,
+  relevance: 0
+};
+const BINARY_NUMBER_MODE = {
+  scope: 'number',
+  begin: BINARY_NUMBER_RE,
+  relevance: 0
+};
+const REGEXP_MODE = {
+  scope: "regexp",
+  begin: /\/(?=[^/\n]*\/)/,
+  end: /\/[gimuy]*/,
+  contains: [
+    BACKSLASH_ESCAPE,
+    {
+      begin: /\[/,
+      end: /\]/,
+      relevance: 0,
+      contains: [BACKSLASH_ESCAPE]
+    }
+  ]
+};
+const TITLE_MODE = {
+  scope: 'title',
+  begin: IDENT_RE,
+  relevance: 0
+};
+const UNDERSCORE_TITLE_MODE = {
+  scope: 'title',
+  begin: UNDERSCORE_IDENT_RE,
+  relevance: 0
+};
+const METHOD_GUARD = {
+  // excludes method names from keyword processing
+  begin: '\\.\\s*' + UNDERSCORE_IDENT_RE,
+  relevance: 0
+};
+
+/**
+ * Adds end same as begin mechanics to a mode
+ *
+ * Your mode must include at least a single () match group as that first match
+ * group is what is used for comparison
+ * @param {Partial<Mode>} mode
+ */
+const END_SAME_AS_BEGIN = function(mode) {
+  return Object.assign(mode,
+    {
+      /** @type {ModeCallback} */
+      'on:begin': (m, resp) => { resp.data._beginMatch = m[1]; },
+      /** @type {ModeCallback} */
+      'on:end': (m, resp) => { if (resp.data._beginMatch !== m[1]) resp.ignoreMatch(); }
+    });
+};
+
+var MODES = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  APOS_STRING_MODE: APOS_STRING_MODE,
+  BACKSLASH_ESCAPE: BACKSLASH_ESCAPE,
+  BINARY_NUMBER_MODE: BINARY_NUMBER_MODE,
+  BINARY_NUMBER_RE: BINARY_NUMBER_RE,
+  COMMENT: COMMENT,
+  C_BLOCK_COMMENT_MODE: C_BLOCK_COMMENT_MODE,
+  C_LINE_COMMENT_MODE: C_LINE_COMMENT_MODE,
+  C_NUMBER_MODE: C_NUMBER_MODE,
+  C_NUMBER_RE: C_NUMBER_RE,
+  END_SAME_AS_BEGIN: END_SAME_AS_BEGIN,
+  HASH_COMMENT_MODE: HASH_COMMENT_MODE,
+  IDENT_RE: IDENT_RE,
+  MATCH_NOTHING_RE: MATCH_NOTHING_RE,
+  METHOD_GUARD: METHOD_GUARD,
+  NUMBER_MODE: NUMBER_MODE,
+  NUMBER_RE: NUMBER_RE,
+  PHRASAL_WORDS_MODE: PHRASAL_WORDS_MODE,
+  QUOTE_STRING_MODE: QUOTE_STRING_MODE,
+  REGEXP_MODE: REGEXP_MODE,
+  RE_STARTERS_RE: RE_STARTERS_RE,
+  SHEBANG: SHEBANG,
+  TITLE_MODE: TITLE_MODE,
+  UNDERSCORE_IDENT_RE: UNDERSCORE_IDENT_RE,
+  UNDERSCORE_TITLE_MODE: UNDERSCORE_TITLE_MODE
+});
+
+/**
+@typedef {import('highlight.js').CallbackResponse} CallbackResponse
+@typedef {import('highlight.js').CompilerExt} CompilerExt
+*/
+
+// Grammar extensions / plugins
+// See: https://github.com/highlightjs/highlight.js/issues/2833
+
+// Grammar extensions allow "syntactic sugar" to be added to the grammar modes
+// without requiring any underlying changes to the compiler internals.
+
+// `compileMatch` being the perfect small example of now allowing a grammar
+// author to write `match` when they desire to match a single expression rather
+// than being forced to use `begin`.  The extension then just moves `match` into
+// `begin` when it runs.  Ie, no features have been added, but we've just made
+// the experience of writing (and reading grammars) a little bit nicer.
+
+// ------
+
+// TODO: We need negative look-behind support to do this properly
+/**
+ * Skip a match if it has a preceding dot
+ *
+ * This is used for `beginKeywords` to prevent matching expressions such as
+ * `bob.keyword.do()`. The mode compiler automatically wires this up as a
+ * special _internal_ 'on:begin' callback for modes with `beginKeywords`
+ * @param {RegExpMatchArray} match
+ * @param {CallbackResponse} response
+ */
+function skipIfHasPrecedingDot(match, response) {
+  const before = match.input[match.index - 1];
+  if (before === ".") {
+    response.ignoreMatch();
+  }
+}
+
+/**
+ *
+ * @type {CompilerExt}
+ */
+function scopeClassName(mode, _parent) {
+  // eslint-disable-next-line no-undefined
+  if (mode.className !== undefined) {
+    mode.scope = mode.className;
+    delete mode.className;
+  }
+}
+
+/**
+ * `beginKeywords` syntactic sugar
+ * @type {CompilerExt}
+ */
+function beginKeywords(mode, parent) {
+  if (!parent) return;
+  if (!mode.beginKeywords) return;
+
+  // for languages with keywords that include non-word characters checking for
+  // a word boundary is not sufficient, so instead we check for a word boundary
+  // or whitespace - this does no harm in any case since our keyword engine
+  // doesn't allow spaces in keywords anyways and we still check for the boundary
+  // first
+  mode.begin = '\\b(' + mode.beginKeywords.split(' ').join('|') + ')(?!\\.)(?=\\b|\\s)';
+  mode.__beforeBegin = skipIfHasPrecedingDot;
+  mode.keywords = mode.keywords || mode.beginKeywords;
+  delete mode.beginKeywords;
+
+  // prevents double relevance, the keywords themselves provide
+  // relevance, the mode doesn't need to double it
+  // eslint-disable-next-line no-undefined
+  if (mode.relevance === undefined) mode.relevance = 0;
+}
+
+/**
+ * Allow `illegal` to contain an array of illegal values
+ * @type {CompilerExt}
+ */
+function compileIllegal(mode, _parent) {
+  if (!Array.isArray(mode.illegal)) return;
+
+  mode.illegal = either(...mode.illegal);
+}
+
+/**
+ * `match` to match a single expression for readability
+ * @type {CompilerExt}
+ */
+function compileMatch(mode, _parent) {
+  if (!mode.match) return;
+  if (mode.begin || mode.end) throw new Error("begin & end are not supported with match");
+
+  mode.begin = mode.match;
+  delete mode.match;
+}
+
+/**
+ * provides the default 1 relevance to all modes
+ * @type {CompilerExt}
+ */
+function compileRelevance(mode, _parent) {
+  // eslint-disable-next-line no-undefined
+  if (mode.relevance === undefined) mode.relevance = 1;
+}
+
+// allow beforeMatch to act as a "qualifier" for the match
+// the full match begin must be [beforeMatch][begin]
+const beforeMatchExt = (mode, parent) => {
+  if (!mode.beforeMatch) return;
+  // starts conflicts with endsParent which we need to make sure the child
+  // rule is not matched multiple times
+  if (mode.starts) throw new Error("beforeMatch cannot be used with starts");
+
+  const originalMode = Object.assign({}, mode);
+  Object.keys(mode).forEach((key) => { delete mode[key]; });
+
+  mode.keywords = originalMode.keywords;
+  mode.begin = concat(originalMode.beforeMatch, lookahead(originalMode.begin));
+  mode.starts = {
+    relevance: 0,
+    contains: [
+      Object.assign(originalMode, { endsParent: true })
+    ]
+  };
+  mode.relevance = 0;
+
+  delete originalMode.beforeMatch;
+};
+
+// keywords that should have no default relevance value
+const COMMON_KEYWORDS = [
+  'of',
+  'and',
+  'for',
+  'in',
+  'not',
+  'or',
+  'if',
+  'then',
+  'parent', // common variable name
+  'list', // common variable name
+  'value' // common variable name
+];
+
+const DEFAULT_KEYWORD_SCOPE = "keyword";
+
+/**
+ * Given raw keywords from a language definition, compile them.
+ *
+ * @param {string | Record<string,string|string[]> | Array<string>} rawKeywords
+ * @param {boolean} caseInsensitive
+ */
+function compileKeywords(rawKeywords, caseInsensitive, scopeName = DEFAULT_KEYWORD_SCOPE) {
+  /** @type {import("highlight.js/private").KeywordDict} */
+  const compiledKeywords = Object.create(null);
+
+  // input can be a string of keywords, an array of keywords, or a object with
+  // named keys representing scopeName (which can then point to a string or array)
+  if (typeof rawKeywords === 'string') {
+    compileList(scopeName, rawKeywords.split(" "));
+  } else if (Array.isArray(rawKeywords)) {
+    compileList(scopeName, rawKeywords);
+  } else {
+    Object.keys(rawKeywords).forEach(function(scopeName) {
+      // collapse all our objects back into the parent object
+      Object.assign(
+        compiledKeywords,
+        compileKeywords(rawKeywords[scopeName], caseInsensitive, scopeName)
+      );
+    });
+  }
+  return compiledKeywords;
+
+  // ---
+
+  /**
+   * Compiles an individual list of keywords
+   *
+   * Ex: "for if when while|5"
+   *
+   * @param {string} scopeName
+   * @param {Array<string>} keywordList
+   */
+  function compileList(scopeName, keywordList) {
+    if (caseInsensitive) {
+      keywordList = keywordList.map(x => x.toLowerCase());
+    }
+    keywordList.forEach(function(keyword) {
+      const pair = keyword.split('|');
+      compiledKeywords[pair[0]] = [scopeName, scoreForKeyword(pair[0], pair[1])];
+    });
+  }
+}
+
+/**
+ * Returns the proper score for a given keyword
+ *
+ * Also takes into account comment keywords, which will be scored 0 UNLESS
+ * another score has been manually assigned.
+ * @param {string} keyword
+ * @param {string} [providedScore]
+ */
+function scoreForKeyword(keyword, providedScore) {
+  // manual scores always win over common keywords
+  // so you can force a score of 1 if you really insist
+  if (providedScore) {
+    return Number(providedScore);
+  }
+
+  return commonKeyword(keyword) ? 0 : 1;
+}
+
+/**
+ * Determines if a given keyword is common or not
+ *
+ * @param {string} keyword */
+function commonKeyword(keyword) {
+  return COMMON_KEYWORDS.includes(keyword.toLowerCase());
+}
+
+/*
+
+For the reasoning behind this please see:
+https://github.com/highlightjs/highlight.js/issues/2880#issuecomment-747275419
+
+*/
+
+/**
+ * @type {Record<string, boolean>}
+ */
+const seenDeprecations = {};
+
+/**
+ * @param {string} message
+ */
+const error = (message) => {
+  console.error(message);
+};
+
+/**
+ * @param {string} message
+ * @param {any} args
+ */
+const warn = (message, ...args) => {
+  console.log(`WARN: ${message}`, ...args);
+};
+
+/**
+ * @param {string} version
+ * @param {string} message
+ */
+const deprecated = (version, message) => {
+  if (seenDeprecations[`${version}/${message}`]) return;
+
+  console.log(`Deprecated as of ${version}. ${message}`);
+  seenDeprecations[`${version}/${message}`] = true;
+};
+
+/* eslint-disable no-throw-literal */
+
+/**
+@typedef {import('highlight.js').CompiledMode} CompiledMode
+*/
+
+const MultiClassError = new Error();
+
+/**
+ * Renumbers labeled scope names to account for additional inner match
+ * groups that otherwise would break everything.
+ *
+ * Lets say we 3 match scopes:
+ *
+ *   { 1 => ..., 2 => ..., 3 => ... }
+ *
+ * So what we need is a clean match like this:
+ *
+ *   (a)(b)(c) => [ "a", "b", "c" ]
+ *
+ * But this falls apart with inner match groups:
+ *
+ * (a)(((b)))(c) => ["a", "b", "b", "b", "c" ]
+ *
+ * Our scopes are now "out of alignment" and we're repeating `b` 3 times.
+ * What needs to happen is the numbers are remapped:
+ *
+ *   { 1 => ..., 2 => ..., 5 => ... }
+ *
+ * We also need to know that the ONLY groups that should be output
+ * are 1, 2, and 5.  This function handles this behavior.
+ *
+ * @param {CompiledMode} mode
+ * @param {Array<RegExp | string>} regexes
+ * @param {{key: "beginScope"|"endScope"}} opts
+ */
+function remapScopeNames(mode, regexes, { key }) {
+  let offset = 0;
+  const scopeNames = mode[key];
+  /** @type Record<number,boolean> */
+  const emit = {};
+  /** @type Record<number,string> */
+  const positions = {};
+
+  for (let i = 1; i <= regexes.length; i++) {
+    positions[i + offset] = scopeNames[i];
+    emit[i + offset] = true;
+    offset += countMatchGroups(regexes[i - 1]);
+  }
+  // we use _emit to keep track of which match groups are "top-level" to avoid double
+  // output from inside match groups
+  mode[key] = positions;
+  mode[key]._emit = emit;
+  mode[key]._multi = true;
+}
+
+/**
+ * @param {CompiledMode} mode
+ */
+function beginMultiClass(mode) {
+  if (!Array.isArray(mode.begin)) return;
+
+  if (mode.skip || mode.excludeBegin || mode.returnBegin) {
+    error("skip, excludeBegin, returnBegin not compatible with beginScope: {}");
+    throw MultiClassError;
+  }
+
+  if (typeof mode.beginScope !== "object" || mode.beginScope === null) {
+    error("beginScope must be object");
+    throw MultiClassError;
+  }
+
+  remapScopeNames(mode, mode.begin, { key: "beginScope" });
+  mode.begin = _rewriteBackreferences(mode.begin, { joinWith: "" });
+}
+
+/**
+ * @param {CompiledMode} mode
+ */
+function endMultiClass(mode) {
+  if (!Array.isArray(mode.end)) return;
+
+  if (mode.skip || mode.excludeEnd || mode.returnEnd) {
+    error("skip, excludeEnd, returnEnd not compatible with endScope: {}");
+    throw MultiClassError;
+  }
+
+  if (typeof mode.endScope !== "object" || mode.endScope === null) {
+    error("endScope must be object");
+    throw MultiClassError;
+  }
+
+  remapScopeNames(mode, mode.end, { key: "endScope" });
+  mode.end = _rewriteBackreferences(mode.end, { joinWith: "" });
+}
+
+/**
+ * this exists only to allow `scope: {}` to be used beside `match:`
+ * Otherwise `beginScope` would necessary and that would look weird
+
+  {
+    match: [ /def/, /\w+/ ]
+    scope: { 1: "keyword" , 2: "title" }
+  }
+
+ * @param {CompiledMode} mode
+ */
+function scopeSugar(mode) {
+  if (mode.scope && typeof mode.scope === "object" && mode.scope !== null) {
+    mode.beginScope = mode.scope;
+    delete mode.scope;
+  }
+}
+
+/**
+ * @param {CompiledMode} mode
+ */
+function MultiClass(mode) {
+  scopeSugar(mode);
+
+  if (typeof mode.beginScope === "string") {
+    mode.beginScope = { _wrap: mode.beginScope };
+  }
+  if (typeof mode.endScope === "string") {
+    mode.endScope = { _wrap: mode.endScope };
+  }
+
+  beginMultiClass(mode);
+  endMultiClass(mode);
+}
+
+/**
+@typedef {import('highlight.js').Mode} Mode
+@typedef {import('highlight.js').CompiledMode} CompiledMode
+@typedef {import('highlight.js').Language} Language
+@typedef {import('highlight.js').HLJSPlugin} HLJSPlugin
+@typedef {import('highlight.js').CompiledLanguage} CompiledLanguage
+*/
+
+// compilation
+
+/**
+ * Compiles a language definition result
+ *
+ * Given the raw result of a language definition (Language), compiles this so
+ * that it is ready for highlighting code.
+ * @param {Language} language
+ * @returns {CompiledLanguage}
+ */
+function compileLanguage(language) {
+  /**
+   * Builds a regex with the case sensitivity of the current language
+   *
+   * @param {RegExp | string} value
+   * @param {boolean} [global]
+   */
+  function langRe(value, global) {
+    return new RegExp(
+      source(value),
+      'm'
+      + (language.case_insensitive ? 'i' : '')
+      + (language.unicodeRegex ? 'u' : '')
+      + (global ? 'g' : '')
+    );
+  }
+
+  /**
+    Stores multiple regular expressions and allows you to quickly search for
+    them all in a string simultaneously - returning the first match.  It does
+    this by creating a huge (a|b|c) regex - each individual item wrapped with ()
+    and joined by `|` - using match groups to track position.  When a match is
+    found checking which position in the array has content allows us to figure
+    out which of the original regexes / match groups triggered the match.
+
+    The match object itself (the result of `Regex.exec`) is returned but also
+    enhanced by merging in any meta-data that was registered with the regex.
+    This is how we keep track of which mode matched, and what type of rule
+    (`illegal`, `begin`, end, etc).
+  */
+  class MultiRegex {
+    constructor() {
+      this.matchIndexes = {};
+      // @ts-ignore
+      this.regexes = [];
+      this.matchAt = 1;
+      this.position = 0;
+    }
+
+    // @ts-ignore
+    addRule(re, opts) {
+      opts.position = this.position++;
+      // @ts-ignore
+      this.matchIndexes[this.matchAt] = opts;
+      this.regexes.push([opts, re]);
+      this.matchAt += countMatchGroups(re) + 1;
+    }
+
+    compile() {
+      if (this.regexes.length === 0) {
+        // avoids the need to check length every time exec is called
+        // @ts-ignore
+        this.exec = () => null;
+      }
+      const terminators = this.regexes.map(el => el[1]);
+      this.matcherRe = langRe(_rewriteBackreferences(terminators, { joinWith: '|' }), true);
+      this.lastIndex = 0;
+    }
+
+    /** @param {string} s */
+    exec(s) {
+      this.matcherRe.lastIndex = this.lastIndex;
+      const match = this.matcherRe.exec(s);
+      if (!match) { return null; }
+
+      // eslint-disable-next-line no-undefined
+      const i = match.findIndex((el, i) => i > 0 && el !== undefined);
+      // @ts-ignore
+      const matchData = this.matchIndexes[i];
+      // trim off any earlier non-relevant match groups (ie, the other regex
+      // match groups that make up the multi-matcher)
+      match.splice(0, i);
+
+      return Object.assign(match, matchData);
+    }
+  }
+
+  /*
+    Created to solve the key deficiently with MultiRegex - there is no way to
+    test for multiple matches at a single location.  Why would we need to do
+    that?  In the future a more dynamic engine will allow certain matches to be
+    ignored.  An example: if we matched say the 3rd regex in a large group but
+    decided to ignore it - we'd need to started testing again at the 4th
+    regex... but MultiRegex itself gives us no real way to do that.
+
+    So what this class creates MultiRegexs on the fly for whatever search
+    position they are needed.
+
+    NOTE: These additional MultiRegex objects are created dynamically.  For most
+    grammars most of the time we will never actually need anything more than the
+    first MultiRegex - so this shouldn't have too much overhead.
+
+    Say this is our search group, and we match regex3, but wish to ignore it.
+
+      regex1 | regex2 | regex3 | regex4 | regex5    ' ie, startAt = 0
+
+    What we need is a new MultiRegex that only includes the remaining
+    possibilities:
+
+      regex4 | regex5                               ' ie, startAt = 3
+
+    This class wraps all that complexity up in a simple API... `startAt` decides
+    where in the array of expressions to start doing the matching. It
+    auto-increments, so if a match is found at position 2, then startAt will be
+    set to 3.  If the end is reached startAt will return to 0.
+
+    MOST of the time the parser will be setting startAt manually to 0.
+  */
+  class ResumableMultiRegex {
+    constructor() {
+      // @ts-ignore
+      this.rules = [];
+      // @ts-ignore
+      this.multiRegexes = [];
+      this.count = 0;
+
+      this.lastIndex = 0;
+      this.regexIndex = 0;
+    }
+
+    // @ts-ignore
+    getMatcher(index) {
+      if (this.multiRegexes[index]) return this.multiRegexes[index];
+
+      const matcher = new MultiRegex();
+      this.rules.slice(index).forEach(([re, opts]) => matcher.addRule(re, opts));
+      matcher.compile();
+      this.multiRegexes[index] = matcher;
+      return matcher;
+    }
+
+    resumingScanAtSamePosition() {
+      return this.regexIndex !== 0;
+    }
+
+    considerAll() {
+      this.regexIndex = 0;
+    }
+
+    // @ts-ignore
+    addRule(re, opts) {
+      this.rules.push([re, opts]);
+      if (opts.type === "begin") this.count++;
+    }
+
+    /** @param {string} s */
+    exec(s) {
+      const m = this.getMatcher(this.regexIndex);
+      m.lastIndex = this.lastIndex;
+      let result = m.exec(s);
+
+      // The following is because we have no easy way to say "resume scanning at the
+      // existing position but also skip the current rule ONLY". What happens is
+      // all prior rules are also skipped which can result in matching the wrong
+      // thing. Example of matching "booger":
+
+      // our matcher is [string, "booger", number]
+      //
+      // ....booger....
+
+      // if "booger" is ignored then we'd really need a regex to scan from the
+      // SAME position for only: [string, number] but ignoring "booger" (if it
+      // was the first match), a simple resume would scan ahead who knows how
+      // far looking only for "number", ignoring potential string matches (or
+      // future "booger" matches that might be valid.)
+
+      // So what we do: We execute two matchers, one resuming at the same
+      // position, but the second full matcher starting at the position after:
+
+      //     /--- resume first regex match here (for [number])
+      //     |/---- full match here for [string, "booger", number]
+      //     vv
+      // ....booger....
+
+      // Which ever results in a match first is then used. So this 3-4 step
+      // process essentially allows us to say "match at this position, excluding
+      // a prior rule that was ignored".
+      //
+      // 1. Match "booger" first, ignore. Also proves that [string] does non match.
+      // 2. Resume matching for [number]
+      // 3. Match at index + 1 for [string, "booger", number]
+      // 4. If #2 and #3 result in matches, which came first?
+      if (this.resumingScanAtSamePosition()) {
+        if (result && result.index === this.lastIndex) ; else { // use the second matcher result
+          const m2 = this.getMatcher(0);
+          m2.lastIndex = this.lastIndex + 1;
+          result = m2.exec(s);
+        }
+      }
+
+      if (result) {
+        this.regexIndex += result.position + 1;
+        if (this.regexIndex === this.count) {
+          // wrap-around to considering all matches again
+          this.considerAll();
+        }
+      }
+
+      return result;
+    }
+  }
+
+  /**
+   * Given a mode, builds a huge ResumableMultiRegex that can be used to walk
+   * the content and find matches.
+   *
+   * @param {CompiledMode} mode
+   * @returns {ResumableMultiRegex}
+   */
+  function buildModeRegex(mode) {
+    const mm = new ResumableMultiRegex();
+
+    mode.contains.forEach(term => mm.addRule(term.begin, { rule: term, type: "begin" }));
+
+    if (mode.terminatorEnd) {
+      mm.addRule(mode.terminatorEnd, { type: "end" });
+    }
+    if (mode.illegal) {
+      mm.addRule(mode.illegal, { type: "illegal" });
+    }
+
+    return mm;
+  }
+
+  /** skip vs abort vs ignore
+   *
+   * @skip   - The mode is still entered and exited normally (and contains rules apply),
+   *           but all content is held and added to the parent buffer rather than being
+   *           output when the mode ends.  Mostly used with `sublanguage` to build up
+   *           a single large buffer than can be parsed by sublanguage.
+   *
+   *             - The mode begin ands ends normally.
+   *             - Content matched is added to the parent mode buffer.
+   *             - The parser cursor is moved forward normally.
+   *
+   * @abort  - A hack placeholder until we have ignore.  Aborts the mode (as if it
+   *           never matched) but DOES NOT continue to match subsequent `contains`
+   *           modes.  Abort is bad/suboptimal because it can result in modes
+   *           farther down not getting applied because an earlier rule eats the
+   *           content but then aborts.
+   *
+   *             - The mode does not begin.
+   *             - Content matched by `begin` is added to the mode buffer.
+   *             - The parser cursor is moved forward accordingly.
+   *
+   * @ignore - Ignores the mode (as if it never matched) and continues to match any
+   *           subsequent `contains` modes.  Ignore isn't technically possible with
+   *           the current parser implementation.
+   *
+   *             - The mode does not begin.
+   *             - Content matched by `begin` is ignored.
+   *             - The parser cursor is not moved forward.
+   */
+
+  /**
+   * Compiles an individual mode
+   *
+   * This can raise an error if the mode contains certain detectable known logic
+   * issues.
+   * @param {Mode} mode
+   * @param {CompiledMode | null} [parent]
+   * @returns {CompiledMode | never}
+   */
+  function compileMode(mode, parent) {
+    const cmode = /** @type CompiledMode */ (mode);
+    if (mode.isCompiled) return cmode;
+
+    [
+      scopeClassName,
+      // do this early so compiler extensions generally don't have to worry about
+      // the distinction between match/begin
+      compileMatch,
+      MultiClass,
+      beforeMatchExt
+    ].forEach(ext => ext(mode, parent));
+
+    language.compilerExtensions.forEach(ext => ext(mode, parent));
+
+    // __beforeBegin is considered private API, internal use only
+    mode.__beforeBegin = null;
+
+    [
+      beginKeywords,
+      // do this later so compiler extensions that come earlier have access to the
+      // raw array if they wanted to perhaps manipulate it, etc.
+      compileIllegal,
+      // default to 1 relevance if not specified
+      compileRelevance
+    ].forEach(ext => ext(mode, parent));
+
+    mode.isCompiled = true;
+
+    let keywordPattern = null;
+    if (typeof mode.keywords === "object" && mode.keywords.$pattern) {
+      // we need a copy because keywords might be compiled multiple times
+      // so we can't go deleting $pattern from the original on the first
+      // pass
+      mode.keywords = Object.assign({}, mode.keywords);
+      keywordPattern = mode.keywords.$pattern;
+      delete mode.keywords.$pattern;
+    }
+    keywordPattern = keywordPattern || /\w+/;
+
+    if (mode.keywords) {
+      mode.keywords = compileKeywords(mode.keywords, language.case_insensitive);
+    }
+
+    cmode.keywordPatternRe = langRe(keywordPattern, true);
+
+    if (parent) {
+      if (!mode.begin) mode.begin = /\B|\b/;
+      cmode.beginRe = langRe(cmode.begin);
+      if (!mode.end && !mode.endsWithParent) mode.end = /\B|\b/;
+      if (mode.end) cmode.endRe = langRe(cmode.end);
+      cmode.terminatorEnd = source(cmode.end) || '';
+      if (mode.endsWithParent && parent.terminatorEnd) {
+        cmode.terminatorEnd += (mode.end ? '|' : '') + parent.terminatorEnd;
+      }
+    }
+    if (mode.illegal) cmode.illegalRe = langRe(/** @type {RegExp | string} */ (mode.illegal));
+    if (!mode.contains) mode.contains = [];
+
+    mode.contains = [].concat(...mode.contains.map(function(c) {
+      return expandOrCloneMode(c === 'self' ? mode : c);
+    }));
+    mode.contains.forEach(function(c) { compileMode(/** @type Mode */ (c), cmode); });
+
+    if (mode.starts) {
+      compileMode(mode.starts, parent);
+    }
+
+    cmode.matcher = buildModeRegex(cmode);
+    return cmode;
+  }
+
+  if (!language.compilerExtensions) language.compilerExtensions = [];
+
+  // self is not valid at the top-level
+  if (language.contains && language.contains.includes('self')) {
+    throw new Error("ERR: contains `self` is not supported at the top-level of a language.  See documentation.");
+  }
+
+  // we need a null object, which inherit will guarantee
+  language.classNameAliases = inherit$1(language.classNameAliases || {});
+
+  return compileMode(/** @type Mode */ (language));
+}
+
+/**
+ * Determines if a mode has a dependency on it's parent or not
+ *
+ * If a mode does have a parent dependency then often we need to clone it if
+ * it's used in multiple places so that each copy points to the correct parent,
+ * where-as modes without a parent can often safely be re-used at the bottom of
+ * a mode chain.
+ *
+ * @param {Mode | null} mode
+ * @returns {boolean} - is there a dependency on the parent?
+ * */
+function dependencyOnParent(mode) {
+  if (!mode) return false;
+
+  return mode.endsWithParent || dependencyOnParent(mode.starts);
+}
+
+/**
+ * Expands a mode or clones it if necessary
+ *
+ * This is necessary for modes with parental dependenceis (see notes on
+ * `dependencyOnParent`) and for nodes that have `variants` - which must then be
+ * exploded into their own individual modes at compile time.
+ *
+ * @param {Mode} mode
+ * @returns {Mode | Mode[]}
+ * */
+function expandOrCloneMode(mode) {
+  if (mode.variants && !mode.cachedVariants) {
+    mode.cachedVariants = mode.variants.map(function(variant) {
+      return inherit$1(mode, { variants: null }, variant);
+    });
+  }
+
+  // EXPAND
+  // if we have variants then essentially "replace" the mode with the variants
+  // this happens in compileMode, where this function is called from
+  if (mode.cachedVariants) {
+    return mode.cachedVariants;
+  }
+
+  // CLONE
+  // if we have dependencies on parents then we need a unique
+  // instance of ourselves, so we can be reused with many
+  // different parents without issue
+  if (dependencyOnParent(mode)) {
+    return inherit$1(mode, { starts: mode.starts ? inherit$1(mode.starts) : null });
+  }
+
+  if (Object.isFrozen(mode)) {
+    return inherit$1(mode);
+  }
+
+  // no special dependency issues, just return ourselves
+  return mode;
+}
+
+var version = "11.9.0";
+
+class HTMLInjectionError extends Error {
+  constructor(reason, html) {
+    super(reason);
+    this.name = "HTMLInjectionError";
+    this.html = html;
+  }
+}
+
+/*
+Syntax highlighting with language autodetection.
+https://highlightjs.org/
+*/
+
+
+
+/**
+@typedef {import('highlight.js').Mode} Mode
+@typedef {import('highlight.js').CompiledMode} CompiledMode
+@typedef {import('highlight.js').CompiledScope} CompiledScope
+@typedef {import('highlight.js').Language} Language
+@typedef {import('highlight.js').HLJSApi} HLJSApi
+@typedef {import('highlight.js').HLJSPlugin} HLJSPlugin
+@typedef {import('highlight.js').PluginEvent} PluginEvent
+@typedef {import('highlight.js').HLJSOptions} HLJSOptions
+@typedef {import('highlight.js').LanguageFn} LanguageFn
+@typedef {import('highlight.js').HighlightedHTMLElement} HighlightedHTMLElement
+@typedef {import('highlight.js').BeforeHighlightContext} BeforeHighlightContext
+@typedef {import('highlight.js/private').MatchType} MatchType
+@typedef {import('highlight.js/private').KeywordData} KeywordData
+@typedef {import('highlight.js/private').EnhancedMatch} EnhancedMatch
+@typedef {import('highlight.js/private').AnnotatedError} AnnotatedError
+@typedef {import('highlight.js').AutoHighlightResult} AutoHighlightResult
+@typedef {import('highlight.js').HighlightOptions} HighlightOptions
+@typedef {import('highlight.js').HighlightResult} HighlightResult
+*/
+
+
+const escape = escapeHTML;
+const inherit = inherit$1;
+const NO_MATCH = Symbol("nomatch");
+const MAX_KEYWORD_HITS = 7;
+
+/**
+ * @param {any} hljs - object that is extended (legacy)
+ * @returns {HLJSApi}
+ */
+const HLJS = function(hljs) {
+  // Global internal variables used within the highlight.js library.
+  /** @type {Record<string, Language>} */
+  const languages = Object.create(null);
+  /** @type {Record<string, string>} */
+  const aliases = Object.create(null);
+  /** @type {HLJSPlugin[]} */
+  const plugins = [];
+
+  // safe/production mode - swallows more errors, tries to keep running
+  // even if a single syntax or parse hits a fatal error
+  let SAFE_MODE = true;
+  const LANGUAGE_NOT_FOUND = "Could not find the language '{}', did you forget to load/include a language module?";
+  /** @type {Language} */
+  const PLAINTEXT_LANGUAGE = { disableAutodetect: true, name: 'Plain text', contains: [] };
+
+  // Global options used when within external APIs. This is modified when
+  // calling the `hljs.configure` function.
+  /** @type HLJSOptions */
+  let options = {
+    ignoreUnescapedHTML: false,
+    throwUnescapedHTML: false,
+    noHighlightRe: /^(no-?highlight)$/i,
+    languageDetectRe: /\blang(?:uage)?-([\w-]+)\b/i,
+    classPrefix: 'hljs-',
+    cssSelector: 'pre code',
+    languages: null,
+    // beta configuration options, subject to change, welcome to discuss
+    // https://github.com/highlightjs/highlight.js/issues/1086
+    __emitter: TokenTreeEmitter
+  };
+
+  /* Utility functions */
+
+  /**
+   * Tests a language name to see if highlighting should be skipped
+   * @param {string} languageName
+   */
+  function shouldNotHighlight(languageName) {
+    return options.noHighlightRe.test(languageName);
+  }
+
+  /**
+   * @param {HighlightedHTMLElement} block - the HTML element to determine language for
+   */
+  function blockLanguage(block) {
+    let classes = block.className + ' ';
+
+    classes += block.parentNode ? block.parentNode.className : '';
+
+    // language-* takes precedence over non-prefixed class names.
+    const match = options.languageDetectRe.exec(classes);
+    if (match) {
+      const language = getLanguage(match[1]);
+      if (!language) {
+        warn(LANGUAGE_NOT_FOUND.replace("{}", match[1]));
+        warn("Falling back to no-highlight mode for this block.", block);
+      }
+      return language ? match[1] : 'no-highlight';
+    }
+
+    return classes
+      .split(/\s+/)
+      .find((_class) => shouldNotHighlight(_class) || getLanguage(_class));
+  }
+
+  /**
+   * Core highlighting function.
+   *
+   * OLD API
+   * highlight(lang, code, ignoreIllegals, continuation)
+   *
+   * NEW API
+   * highlight(code, {lang, ignoreIllegals})
+   *
+   * @param {string} codeOrLanguageName - the language to use for highlighting
+   * @param {string | HighlightOptions} optionsOrCode - the code to highlight
+   * @param {boolean} [ignoreIllegals] - whether to ignore illegal matches, default is to bail
+   *
+   * @returns {HighlightResult} Result - an object that represents the result
+   * @property {string} language - the language name
+   * @property {number} relevance - the relevance score
+   * @property {string} value - the highlighted HTML code
+   * @property {string} code - the original raw code
+   * @property {CompiledMode} top - top of the current mode stack
+   * @property {boolean} illegal - indicates whether any illegal matches were found
+  */
+  function highlight(codeOrLanguageName, optionsOrCode, ignoreIllegals) {
+    let code = "";
+    let languageName = "";
+    if (typeof optionsOrCode === "object") {
+      code = codeOrLanguageName;
+      ignoreIllegals = optionsOrCode.ignoreIllegals;
+      languageName = optionsOrCode.language;
+    } else {
+      // old API
+      deprecated("10.7.0", "highlight(lang, code, ...args) has been deprecated.");
+      deprecated("10.7.0", "Please use highlight(code, options) instead.\nhttps://github.com/highlightjs/highlight.js/issues/2277");
+      languageName = codeOrLanguageName;
+      code = optionsOrCode;
+    }
+
+    // https://github.com/highlightjs/highlight.js/issues/3149
+    // eslint-disable-next-line no-undefined
+    if (ignoreIllegals === undefined) { ignoreIllegals = true; }
+
+    /** @type {BeforeHighlightContext} */
+    const context = {
+      code,
+      language: languageName
+    };
+    // the plugin can change the desired language or the code to be highlighted
+    // just be changing the object it was passed
+    fire("before:highlight", context);
+
+    // a before plugin can usurp the result completely by providing it's own
+    // in which case we don't even need to call highlight
+    const result = context.result
+      ? context.result
+      : _highlight(context.language, context.code, ignoreIllegals);
+
+    result.code = context.code;
+    // the plugin can change anything in result to suite it
+    fire("after:highlight", result);
+
+    return result;
+  }
+
+  /**
+   * private highlight that's used internally and does not fire callbacks
+   *
+   * @param {string} languageName - the language to use for highlighting
+   * @param {string} codeToHighlight - the code to highlight
+   * @param {boolean?} [ignoreIllegals] - whether to ignore illegal matches, default is to bail
+   * @param {CompiledMode?} [continuation] - current continuation mode, if any
+   * @returns {HighlightResult} - result of the highlight operation
+  */
+  function _highlight(languageName, codeToHighlight, ignoreIllegals, continuation) {
+    const keywordHits = Object.create(null);
+
+    /**
+     * Return keyword data if a match is a keyword
+     * @param {CompiledMode} mode - current mode
+     * @param {string} matchText - the textual match
+     * @returns {KeywordData | false}
+     */
+    function keywordData(mode, matchText) {
+      return mode.keywords[matchText];
+    }
+
+    function processKeywords() {
+      if (!top.keywords) {
+        emitter.addText(modeBuffer);
+        return;
+      }
+
+      let lastIndex = 0;
+      top.keywordPatternRe.lastIndex = 0;
+      let match = top.keywordPatternRe.exec(modeBuffer);
+      let buf = "";
+
+      while (match) {
+        buf += modeBuffer.substring(lastIndex, match.index);
+        const word = language.case_insensitive ? match[0].toLowerCase() : match[0];
+        const data = keywordData(top, word);
+        if (data) {
+          const [kind, keywordRelevance] = data;
+          emitter.addText(buf);
+          buf = "";
+
+          keywordHits[word] = (keywordHits[word] || 0) + 1;
+          if (keywordHits[word] <= MAX_KEYWORD_HITS) relevance += keywordRelevance;
+          if (kind.startsWith("_")) {
+            // _ implied for relevance only, do not highlight
+            // by applying a class name
+            buf += match[0];
+          } else {
+            const cssClass = language.classNameAliases[kind] || kind;
+            emitKeyword(match[0], cssClass);
+          }
+        } else {
+          buf += match[0];
+        }
+        lastIndex = top.keywordPatternRe.lastIndex;
+        match = top.keywordPatternRe.exec(modeBuffer);
+      }
+      buf += modeBuffer.substring(lastIndex);
+      emitter.addText(buf);
+    }
+
+    function processSubLanguage() {
+      if (modeBuffer === "") return;
+      /** @type HighlightResult */
+      let result = null;
+
+      if (typeof top.subLanguage === 'string') {
+        if (!languages[top.subLanguage]) {
+          emitter.addText(modeBuffer);
+          return;
+        }
+        result = _highlight(top.subLanguage, modeBuffer, true, continuations[top.subLanguage]);
+        continuations[top.subLanguage] = /** @type {CompiledMode} */ (result._top);
+      } else {
+        result = highlightAuto(modeBuffer, top.subLanguage.length ? top.subLanguage : null);
+      }
+
+      // Counting embedded language score towards the host language may be disabled
+      // with zeroing the containing mode relevance. Use case in point is Markdown that
+      // allows XML everywhere and makes every XML snippet to have a much larger Markdown
+      // score.
+      if (top.relevance > 0) {
+        relevance += result.relevance;
+      }
+      emitter.__addSublanguage(result._emitter, result.language);
+    }
+
+    function processBuffer() {
+      if (top.subLanguage != null) {
+        processSubLanguage();
+      } else {
+        processKeywords();
+      }
+      modeBuffer = '';
+    }
+
+    /**
+     * @param {string} text
+     * @param {string} scope
+     */
+    function emitKeyword(keyword, scope) {
+      if (keyword === "") return;
+
+      emitter.startScope(scope);
+      emitter.addText(keyword);
+      emitter.endScope();
+    }
+
+    /**
+     * @param {CompiledScope} scope
+     * @param {RegExpMatchArray} match
+     */
+    function emitMultiClass(scope, match) {
+      let i = 1;
+      const max = match.length - 1;
+      while (i <= max) {
+        if (!scope._emit[i]) { i++; continue; }
+        const klass = language.classNameAliases[scope[i]] || scope[i];
+        const text = match[i];
+        if (klass) {
+          emitKeyword(text, klass);
+        } else {
+          modeBuffer = text;
+          processKeywords();
+          modeBuffer = "";
+        }
+        i++;
+      }
+    }
+
+    /**
+     * @param {CompiledMode} mode - new mode to start
+     * @param {RegExpMatchArray} match
+     */
+    function startNewMode(mode, match) {
+      if (mode.scope && typeof mode.scope === "string") {
+        emitter.openNode(language.classNameAliases[mode.scope] || mode.scope);
+      }
+      if (mode.beginScope) {
+        // beginScope just wraps the begin match itself in a scope
+        if (mode.beginScope._wrap) {
+          emitKeyword(modeBuffer, language.classNameAliases[mode.beginScope._wrap] || mode.beginScope._wrap);
+          modeBuffer = "";
+        } else if (mode.beginScope._multi) {
+          // at this point modeBuffer should just be the match
+          emitMultiClass(mode.beginScope, match);
+          modeBuffer = "";
+        }
+      }
+
+      top = Object.create(mode, { parent: { value: top } });
+      return top;
+    }
+
+    /**
+     * @param {CompiledMode } mode - the mode to potentially end
+     * @param {RegExpMatchArray} match - the latest match
+     * @param {string} matchPlusRemainder - match plus remainder of content
+     * @returns {CompiledMode | void} - the next mode, or if void continue on in current mode
+     */
+    function endOfMode(mode, match, matchPlusRemainder) {
+      let matched = startsWith(mode.endRe, matchPlusRemainder);
+
+      if (matched) {
+        if (mode["on:end"]) {
+          const resp = new Response(mode);
+          mode["on:end"](match, resp);
+          if (resp.isMatchIgnored) matched = false;
+        }
+
+        if (matched) {
+          while (mode.endsParent && mode.parent) {
+            mode = mode.parent;
+          }
+          return mode;
+        }
+      }
+      // even if on:end fires an `ignore` it's still possible
+      // that we might trigger the end node because of a parent mode
+      if (mode.endsWithParent) {
+        return endOfMode(mode.parent, match, matchPlusRemainder);
+      }
+    }
+
+    /**
+     * Handle matching but then ignoring a sequence of text
+     *
+     * @param {string} lexeme - string containing full match text
+     */
+    function doIgnore(lexeme) {
+      if (top.matcher.regexIndex === 0) {
+        // no more regexes to potentially match here, so we move the cursor forward one
+        // space
+        modeBuffer += lexeme[0];
+        return 1;
+      } else {
+        // no need to move the cursor, we still have additional regexes to try and
+        // match at this very spot
+        resumeScanAtSamePosition = true;
+        return 0;
+      }
+    }
+
+    /**
+     * Handle the start of a new potential mode match
+     *
+     * @param {EnhancedMatch} match - the current match
+     * @returns {number} how far to advance the parse cursor
+     */
+    function doBeginMatch(match) {
+      const lexeme = match[0];
+      const newMode = match.rule;
+
+      const resp = new Response(newMode);
+      // first internal before callbacks, then the public ones
+      const beforeCallbacks = [newMode.__beforeBegin, newMode["on:begin"]];
+      for (const cb of beforeCallbacks) {
+        if (!cb) continue;
+        cb(match, resp);
+        if (resp.isMatchIgnored) return doIgnore(lexeme);
+      }
+
+      if (newMode.skip) {
+        modeBuffer += lexeme;
+      } else {
+        if (newMode.excludeBegin) {
+          modeBuffer += lexeme;
+        }
+        processBuffer();
+        if (!newMode.returnBegin && !newMode.excludeBegin) {
+          modeBuffer = lexeme;
+        }
+      }
+      startNewMode(newMode, match);
+      return newMode.returnBegin ? 0 : lexeme.length;
+    }
+
+    /**
+     * Handle the potential end of mode
+     *
+     * @param {RegExpMatchArray} match - the current match
+     */
+    function doEndMatch(match) {
+      const lexeme = match[0];
+      const matchPlusRemainder = codeToHighlight.substring(match.index);
+
+      const endMode = endOfMode(top, match, matchPlusRemainder);
+      if (!endMode) { return NO_MATCH; }
+
+      const origin = top;
+      if (top.endScope && top.endScope._wrap) {
+        processBuffer();
+        emitKeyword(lexeme, top.endScope._wrap);
+      } else if (top.endScope && top.endScope._multi) {
+        processBuffer();
+        emitMultiClass(top.endScope, match);
+      } else if (origin.skip) {
+        modeBuffer += lexeme;
+      } else {
+        if (!(origin.returnEnd || origin.excludeEnd)) {
+          modeBuffer += lexeme;
+        }
+        processBuffer();
+        if (origin.excludeEnd) {
+          modeBuffer = lexeme;
+        }
+      }
+      do {
+        if (top.scope) {
+          emitter.closeNode();
+        }
+        if (!top.skip && !top.subLanguage) {
+          relevance += top.relevance;
+        }
+        top = top.parent;
+      } while (top !== endMode.parent);
+      if (endMode.starts) {
+        startNewMode(endMode.starts, match);
+      }
+      return origin.returnEnd ? 0 : lexeme.length;
+    }
+
+    function processContinuations() {
+      const list = [];
+      for (let current = top; current !== language; current = current.parent) {
+        if (current.scope) {
+          list.unshift(current.scope);
+        }
+      }
+      list.forEach(item => emitter.openNode(item));
+    }
+
+    /** @type {{type?: MatchType, index?: number, rule?: Mode}}} */
+    let lastMatch = {};
+
+    /**
+     *  Process an individual match
+     *
+     * @param {string} textBeforeMatch - text preceding the match (since the last match)
+     * @param {EnhancedMatch} [match] - the match itself
+     */
+    function processLexeme(textBeforeMatch, match) {
+      const lexeme = match && match[0];
+
+      // add non-matched text to the current mode buffer
+      modeBuffer += textBeforeMatch;
+
+      if (lexeme == null) {
+        processBuffer();
+        return 0;
+      }
+
+      // we've found a 0 width match and we're stuck, so we need to advance
+      // this happens when we have badly behaved rules that have optional matchers to the degree that
+      // sometimes they can end up matching nothing at all
+      // Ref: https://github.com/highlightjs/highlight.js/issues/2140
+      if (lastMatch.type === "begin" && match.type === "end" && lastMatch.index === match.index && lexeme === "") {
+        // spit the "skipped" character that our regex choked on back into the output sequence
+        modeBuffer += codeToHighlight.slice(match.index, match.index + 1);
+        if (!SAFE_MODE) {
+          /** @type {AnnotatedError} */
+          const err = new Error(`0 width match regex (${languageName})`);
+          err.languageName = languageName;
+          err.badRule = lastMatch.rule;
+          throw err;
+        }
+        return 1;
+      }
+      lastMatch = match;
+
+      if (match.type === "begin") {
+        return doBeginMatch(match);
+      } else if (match.type === "illegal" && !ignoreIllegals) {
+        // illegal match, we do not continue processing
+        /** @type {AnnotatedError} */
+        const err = new Error('Illegal lexeme "' + lexeme + '" for mode "' + (top.scope || '<unnamed>') + '"');
+        err.mode = top;
+        throw err;
+      } else if (match.type === "end") {
+        const processed = doEndMatch(match);
+        if (processed !== NO_MATCH) {
+          return processed;
+        }
+      }
+
+      // edge case for when illegal matches $ (end of line) which is technically
+      // a 0 width match but not a begin/end match so it's not caught by the
+      // first handler (when ignoreIllegals is true)
+      if (match.type === "illegal" && lexeme === "") {
+        // advance so we aren't stuck in an infinite loop
+        return 1;
+      }
+
+      // infinite loops are BAD, this is a last ditch catch all. if we have a
+      // decent number of iterations yet our index (cursor position in our
+      // parsing) still 3x behind our index then something is very wrong
+      // so we bail
+      if (iterations > 100000 && iterations > match.index * 3) {
+        const err = new Error('potential infinite loop, way more iterations than matches');
+        throw err;
+      }
+
+      /*
+      Why might be find ourselves here?  An potential end match that was
+      triggered but could not be completed.  IE, `doEndMatch` returned NO_MATCH.
+      (this could be because a callback requests the match be ignored, etc)
+
+      This causes no real harm other than stopping a few times too many.
+      */
+
+      modeBuffer += lexeme;
+      return lexeme.length;
+    }
+
+    const language = getLanguage(languageName);
+    if (!language) {
+      error(LANGUAGE_NOT_FOUND.replace("{}", languageName));
+      throw new Error('Unknown language: "' + languageName + '"');
+    }
+
+    const md = compileLanguage(language);
+    let result = '';
+    /** @type {CompiledMode} */
+    let top = continuation || md;
+    /** @type Record<string,CompiledMode> */
+    const continuations = {}; // keep continuations for sub-languages
+    const emitter = new options.__emitter(options);
+    processContinuations();
+    let modeBuffer = '';
+    let relevance = 0;
+    let index = 0;
+    let iterations = 0;
+    let resumeScanAtSamePosition = false;
+
+    try {
+      if (!language.__emitTokens) {
+        top.matcher.considerAll();
+
+        for (;;) {
+          iterations++;
+          if (resumeScanAtSamePosition) {
+            // only regexes not matched previously will now be
+            // considered for a potential match
+            resumeScanAtSamePosition = false;
+          } else {
+            top.matcher.considerAll();
+          }
+          top.matcher.lastIndex = index;
+
+          const match = top.matcher.exec(codeToHighlight);
+          // console.log("match", match[0], match.rule && match.rule.begin)
+
+          if (!match) break;
+
+          const beforeMatch = codeToHighlight.substring(index, match.index);
+          const processedCount = processLexeme(beforeMatch, match);
+          index = match.index + processedCount;
+        }
+        processLexeme(codeToHighlight.substring(index));
+      } else {
+        language.__emitTokens(codeToHighlight, emitter);
+      }
+
+      emitter.finalize();
+      result = emitter.toHTML();
+
+      return {
+        language: languageName,
+        value: result,
+        relevance,
+        illegal: false,
+        _emitter: emitter,
+        _top: top
+      };
+    } catch (err) {
+      if (err.message && err.message.includes('Illegal')) {
+        return {
+          language: languageName,
+          value: escape(codeToHighlight),
+          illegal: true,
+          relevance: 0,
+          _illegalBy: {
+            message: err.message,
+            index,
+            context: codeToHighlight.slice(index - 100, index + 100),
+            mode: err.mode,
+            resultSoFar: result
+          },
+          _emitter: emitter
+        };
+      } else if (SAFE_MODE) {
+        return {
+          language: languageName,
+          value: escape(codeToHighlight),
+          illegal: false,
+          relevance: 0,
+          errorRaised: err,
+          _emitter: emitter,
+          _top: top
+        };
+      } else {
+        throw err;
+      }
+    }
+  }
+
+  /**
+   * returns a valid highlight result, without actually doing any actual work,
+   * auto highlight starts with this and it's possible for small snippets that
+   * auto-detection may not find a better match
+   * @param {string} code
+   * @returns {HighlightResult}
+   */
+  function justTextHighlightResult(code) {
+    const result = {
+      value: escape(code),
+      illegal: false,
+      relevance: 0,
+      _top: PLAINTEXT_LANGUAGE,
+      _emitter: new options.__emitter(options)
+    };
+    result._emitter.addText(code);
+    return result;
+  }
+
+  /**
+  Highlighting with language detection. Accepts a string with the code to
+  highlight. Returns an object with the following properties:
+
+  - language (detected language)
+  - relevance (int)
+  - value (an HTML string with highlighting markup)
+  - secondBest (object with the same structure for second-best heuristically
+    detected language, may be absent)
+
+    @param {string} code
+    @param {Array<string>} [languageSubset]
+    @returns {AutoHighlightResult}
+  */
+  function highlightAuto(code, languageSubset) {
+    languageSubset = languageSubset || options.languages || Object.keys(languages);
+    const plaintext = justTextHighlightResult(code);
+
+    const results = languageSubset.filter(getLanguage).filter(autoDetection).map(name =>
+      _highlight(name, code, false)
+    );
+    results.unshift(plaintext); // plaintext is always an option
+
+    const sorted = results.sort((a, b) => {
+      // sort base on relevance
+      if (a.relevance !== b.relevance) return b.relevance - a.relevance;
+
+      // always award the tie to the base language
+      // ie if C++ and Arduino are tied, it's more likely to be C++
+      if (a.language && b.language) {
+        if (getLanguage(a.language).supersetOf === b.language) {
+          return 1;
+        } else if (getLanguage(b.language).supersetOf === a.language) {
+          return -1;
+        }
+      }
+
+      // otherwise say they are equal, which has the effect of sorting on
+      // relevance while preserving the original ordering - which is how ties
+      // have historically been settled, ie the language that comes first always
+      // wins in the case of a tie
+      return 0;
+    });
+
+    const [best, secondBest] = sorted;
+
+    /** @type {AutoHighlightResult} */
+    const result = best;
+    result.secondBest = secondBest;
+
+    return result;
+  }
+
+  /**
+   * Builds new class name for block given the language name
+   *
+   * @param {HTMLElement} element
+   * @param {string} [currentLang]
+   * @param {string} [resultLang]
+   */
+  function updateClassName(element, currentLang, resultLang) {
+    const language = (currentLang && aliases[currentLang]) || resultLang;
+
+    element.classList.add("hljs");
+    element.classList.add(`language-${language}`);
+  }
+
+  /**
+   * Applies highlighting to a DOM node containing code.
+   *
+   * @param {HighlightedHTMLElement} element - the HTML element to highlight
+  */
+  function highlightElement(element) {
+    /** @type HTMLElement */
+    let node = null;
+    const language = blockLanguage(element);
+
+    if (shouldNotHighlight(language)) return;
+
+    fire("before:highlightElement",
+      { el: element, language });
+
+    if (element.dataset.highlighted) {
+      console.log("Element previously highlighted. To highlight again, first unset `dataset.highlighted`.", element);
+      return;
+    }
+
+    // we should be all text, no child nodes (unescaped HTML) - this is possibly
+    // an HTML injection attack - it's likely too late if this is already in
+    // production (the code has likely already done its damage by the time
+    // we're seeing it)... but we yell loudly about this so that hopefully it's
+    // more likely to be caught in development before making it to production
+    if (element.children.length > 0) {
+      if (!options.ignoreUnescapedHTML) {
+        console.warn("One of your code blocks includes unescaped HTML. This is a potentially serious security risk.");
+        console.warn("https://github.com/highlightjs/highlight.js/wiki/security");
+        console.warn("The element with unescaped HTML:");
+        console.warn(element);
+      }
+      if (options.throwUnescapedHTML) {
+        const err = new HTMLInjectionError(
+          "One of your code blocks includes unescaped HTML.",
+          element.innerHTML
+        );
+        throw err;
+      }
+    }
+
+    node = element;
+    const text = node.textContent;
+    const result = language ? highlight(text, { language, ignoreIllegals: true }) : highlightAuto(text);
+
+    element.innerHTML = result.value;
+    element.dataset.highlighted = "yes";
+    updateClassName(element, language, result.language);
+    element.result = {
+      language: result.language,
+      // TODO: remove with version 11.0
+      re: result.relevance,
+      relevance: result.relevance
+    };
+    if (result.secondBest) {
+      element.secondBest = {
+        language: result.secondBest.language,
+        relevance: result.secondBest.relevance
+      };
+    }
+
+    fire("after:highlightElement", { el: element, result, text });
+  }
+
+  /**
+   * Updates highlight.js global options with the passed options
+   *
+   * @param {Partial<HLJSOptions>} userOptions
+   */
+  function configure(userOptions) {
+    options = inherit(options, userOptions);
+  }
+
+  // TODO: remove v12, deprecated
+  const initHighlighting = () => {
+    highlightAll();
+    deprecated("10.6.0", "initHighlighting() deprecated.  Use highlightAll() now.");
+  };
+
+  // TODO: remove v12, deprecated
+  function initHighlightingOnLoad() {
+    highlightAll();
+    deprecated("10.6.0", "initHighlightingOnLoad() deprecated.  Use highlightAll() now.");
+  }
+
+  let wantsHighlight = false;
+
+  /**
+   * auto-highlights all pre>code elements on the page
+   */
+  function highlightAll() {
+    // if we are called too early in the loading process
+    if (document.readyState === "loading") {
+      wantsHighlight = true;
+      return;
+    }
+
+    const blocks = document.querySelectorAll(options.cssSelector);
+    blocks.forEach(highlightElement);
+  }
+
+  function boot() {
+    // if a highlight was requested before DOM was loaded, do now
+    if (wantsHighlight) highlightAll();
+  }
+
+  // make sure we are in the browser environment
+  if (typeof window !== 'undefined' && window.addEventListener) {
+    window.addEventListener('DOMContentLoaded', boot, false);
+  }
+
+  /**
+   * Register a language grammar module
+   *
+   * @param {string} languageName
+   * @param {LanguageFn} languageDefinition
+   */
+  function registerLanguage(languageName, languageDefinition) {
+    let lang = null;
+    try {
+      lang = languageDefinition(hljs);
+    } catch (error$1) {
+      error("Language definition for '{}' could not be registered.".replace("{}", languageName));
+      // hard or soft error
+      if (!SAFE_MODE) { throw error$1; } else { error(error$1); }
+      // languages that have serious errors are replaced with essentially a
+      // "plaintext" stand-in so that the code blocks will still get normal
+      // css classes applied to them - and one bad language won't break the
+      // entire highlighter
+      lang = PLAINTEXT_LANGUAGE;
+    }
+    // give it a temporary name if it doesn't have one in the meta-data
+    if (!lang.name) lang.name = languageName;
+    languages[languageName] = lang;
+    lang.rawDefinition = languageDefinition.bind(null, hljs);
+
+    if (lang.aliases) {
+      registerAliases(lang.aliases, { languageName });
+    }
+  }
+
+  /**
+   * Remove a language grammar module
+   *
+   * @param {string} languageName
+   */
+  function unregisterLanguage(languageName) {
+    delete languages[languageName];
+    for (const alias of Object.keys(aliases)) {
+      if (aliases[alias] === languageName) {
+        delete aliases[alias];
+      }
+    }
+  }
+
+  /**
+   * @returns {string[]} List of language internal names
+   */
+  function listLanguages() {
+    return Object.keys(languages);
+  }
+
+  /**
+   * @param {string} name - name of the language to retrieve
+   * @returns {Language | undefined}
+   */
+  function getLanguage(name) {
+    name = (name || '').toLowerCase();
+    return languages[name] || languages[aliases[name]];
+  }
+
+  /**
+   *
+   * @param {string|string[]} aliasList - single alias or list of aliases
+   * @param {{languageName: string}} opts
+   */
+  function registerAliases(aliasList, { languageName }) {
+    if (typeof aliasList === 'string') {
+      aliasList = [aliasList];
+    }
+    aliasList.forEach(alias => { aliases[alias.toLowerCase()] = languageName; });
+  }
+
+  /**
+   * Determines if a given language has auto-detection enabled
+   * @param {string} name - name of the language
+   */
+  function autoDetection(name) {
+    const lang = getLanguage(name);
+    return lang && !lang.disableAutodetect;
+  }
+
+  /**
+   * Upgrades the old highlightBlock plugins to the new
+   * highlightElement API
+   * @param {HLJSPlugin} plugin
+   */
+  function upgradePluginAPI(plugin) {
+    // TODO: remove with v12
+    if (plugin["before:highlightBlock"] && !plugin["before:highlightElement"]) {
+      plugin["before:highlightElement"] = (data) => {
+        plugin["before:highlightBlock"](
+          Object.assign({ block: data.el }, data)
+        );
+      };
+    }
+    if (plugin["after:highlightBlock"] && !plugin["after:highlightElement"]) {
+      plugin["after:highlightElement"] = (data) => {
+        plugin["after:highlightBlock"](
+          Object.assign({ block: data.el }, data)
+        );
+      };
+    }
+  }
+
+  /**
+   * @param {HLJSPlugin} plugin
+   */
+  function addPlugin(plugin) {
+    upgradePluginAPI(plugin);
+    plugins.push(plugin);
+  }
+
+  /**
+   * @param {HLJSPlugin} plugin
+   */
+  function removePlugin(plugin) {
+    const index = plugins.indexOf(plugin);
+    if (index !== -1) {
+      plugins.splice(index, 1);
+    }
+  }
+
+  /**
+   *
+   * @param {PluginEvent} event
+   * @param {any} args
+   */
+  function fire(event, args) {
+    const cb = event;
+    plugins.forEach(function(plugin) {
+      if (plugin[cb]) {
+        plugin[cb](args);
+      }
+    });
+  }
+
+  /**
+   * DEPRECATED
+   * @param {HighlightedHTMLElement} el
+   */
+  function deprecateHighlightBlock(el) {
+    deprecated("10.7.0", "highlightBlock will be removed entirely in v12.0");
+    deprecated("10.7.0", "Please use highlightElement now.");
+
+    return highlightElement(el);
+  }
+
+  /* Interface definition */
+  Object.assign(hljs, {
+    highlight,
+    highlightAuto,
+    highlightAll,
+    highlightElement,
+    // TODO: Remove with v12 API
+    highlightBlock: deprecateHighlightBlock,
+    configure,
+    initHighlighting,
+    initHighlightingOnLoad,
+    registerLanguage,
+    unregisterLanguage,
+    listLanguages,
+    getLanguage,
+    registerAliases,
+    autoDetection,
+    inherit,
+    addPlugin,
+    removePlugin
+  });
+
+  hljs.debugMode = function() { SAFE_MODE = false; };
+  hljs.safeMode = function() { SAFE_MODE = true; };
+  hljs.versionString = version;
+
+  hljs.regex = {
+    concat: concat,
+    lookahead: lookahead,
+    either: either,
+    optional: optional,
+    anyNumberOfTimes: anyNumberOfTimes
+  };
+
+  for (const key in MODES) {
+    // @ts-ignore
+    if (typeof MODES[key] === "object") {
+      // @ts-ignore
+      deepFreeze(MODES[key]);
+    }
+  }
+
+  // merge all the modes/regexes into our main object
+  Object.assign(hljs, MODES);
+
+  return hljs;
+};
+
+// Other names for the variable may break build script
+const highlight = HLJS({});
+
+// returns a new instance of the highlighter to be used for extensions
+// check https://github.com/wooorm/lowlight/issues/47
+highlight.newInstance = () => HLJS({});
+
+var core = highlight;
+highlight.HighlightJS = highlight;
+highlight.default = highlight;
+
+var HighlightJS = /*@__PURE__*/getDefaultExportFromCjs(core);
+
+/*
+Language: YAML
+Description: Yet Another Markdown Language
+Author: Stefan Wienert <stwienert@gmail.com>
+Contributors: Carl Baxter <carl@cbax.tech>
+Requires: ruby.js
+Website: https://yaml.org
+Category: common, config
+*/
+function yaml(hljs) {
+  const LITERALS = 'true false yes no null';
+
+  // YAML spec allows non-reserved URI characters in tags.
+  const URI_CHARACTERS = '[\\w#;/?:@&=+$,.~*\'()[\\]]+';
+
+  // Define keys as starting with a word character
+  // ...containing word chars, spaces, colons, forward-slashes, hyphens and periods
+  // ...and ending with a colon followed immediately by a space, tab or newline.
+  // The YAML spec allows for much more than this, but this covers most use-cases.
+  const KEY = {
+    className: 'attr',
+    variants: [
+      { begin: '\\w[\\w :\\/.-]*:(?=[ \t]|$)' },
+      { // double quoted keys
+        begin: '"\\w[\\w :\\/.-]*":(?=[ \t]|$)' },
+      { // single quoted keys
+        begin: '\'\\w[\\w :\\/.-]*\':(?=[ \t]|$)' }
+    ]
+  };
+
+  const TEMPLATE_VARIABLES = {
+    className: 'template-variable',
+    variants: [
+      { // jinja templates Ansible
+        begin: /\{\{/,
+        end: /\}\}/
+      },
+      { // Ruby i18n
+        begin: /%\{/,
+        end: /\}/
+      }
+    ]
+  };
+  const STRING = {
+    className: 'string',
+    relevance: 0,
+    variants: [
+      {
+        begin: /'/,
+        end: /'/
+      },
+      {
+        begin: /"/,
+        end: /"/
+      },
+      { begin: /\S+/ }
+    ],
+    contains: [
+      hljs.BACKSLASH_ESCAPE,
+      TEMPLATE_VARIABLES
+    ]
+  };
+
+  // Strings inside of value containers (objects) can't contain braces,
+  // brackets, or commas
+  const CONTAINER_STRING = hljs.inherit(STRING, { variants: [
+    {
+      begin: /'/,
+      end: /'/
+    },
+    {
+      begin: /"/,
+      end: /"/
+    },
+    { begin: /[^\s,{}[\]]+/ }
+  ] });
+
+  const DATE_RE = '[0-9]{4}(-[0-9][0-9]){0,2}';
+  const TIME_RE = '([Tt \\t][0-9][0-9]?(:[0-9][0-9]){2})?';
+  const FRACTION_RE = '(\\.[0-9]*)?';
+  const ZONE_RE = '([ \\t])*(Z|[-+][0-9][0-9]?(:[0-9][0-9])?)?';
+  const TIMESTAMP = {
+    className: 'number',
+    begin: '\\b' + DATE_RE + TIME_RE + FRACTION_RE + ZONE_RE + '\\b'
+  };
+
+  const VALUE_CONTAINER = {
+    end: ',',
+    endsWithParent: true,
+    excludeEnd: true,
+    keywords: LITERALS,
+    relevance: 0
+  };
+  const OBJECT = {
+    begin: /\{/,
+    end: /\}/,
+    contains: [ VALUE_CONTAINER ],
+    illegal: '\\n',
+    relevance: 0
+  };
+  const ARRAY = {
+    begin: '\\[',
+    end: '\\]',
+    contains: [ VALUE_CONTAINER ],
+    illegal: '\\n',
+    relevance: 0
+  };
+
+  const MODES = [
+    KEY,
+    {
+      className: 'meta',
+      begin: '^---\\s*$',
+      relevance: 10
+    },
+    { // multi line string
+      // Blocks start with a | or > followed by a newline
+      //
+      // Indentation of subsequent lines must be the same to
+      // be considered part of the block
+      className: 'string',
+      begin: '[\\|>]([1-9]?[+-])?[ ]*\\n( +)[^ ][^\\n]*\\n(\\2[^\\n]+\\n?)*'
+    },
+    { // Ruby/Rails erb
+      begin: '<%[%=-]?',
+      end: '[%-]?%>',
+      subLanguage: 'ruby',
+      excludeBegin: true,
+      excludeEnd: true,
+      relevance: 0
+    },
+    { // named tags
+      className: 'type',
+      begin: '!\\w+!' + URI_CHARACTERS
+    },
+    // https://yaml.org/spec/1.2/spec.html#id2784064
+    { // verbatim tags
+      className: 'type',
+      begin: '!<' + URI_CHARACTERS + ">"
+    },
+    { // primary tags
+      className: 'type',
+      begin: '!' + URI_CHARACTERS
+    },
+    { // secondary tags
+      className: 'type',
+      begin: '!!' + URI_CHARACTERS
+    },
+    { // fragment id &ref
+      className: 'meta',
+      begin: '&' + hljs.UNDERSCORE_IDENT_RE + '$'
+    },
+    { // fragment reference *ref
+      className: 'meta',
+      begin: '\\*' + hljs.UNDERSCORE_IDENT_RE + '$'
+    },
+    { // array listing
+      className: 'bullet',
+      // TODO: remove |$ hack when we have proper look-ahead support
+      begin: '-(?=[ ]|$)',
+      relevance: 0
+    },
+    hljs.HASH_COMMENT_MODE,
+    {
+      beginKeywords: LITERALS,
+      keywords: { literal: LITERALS }
+    },
+    TIMESTAMP,
+    // numbers are any valid C-style number that
+    // sit isolated from other words
+    {
+      className: 'number',
+      begin: hljs.C_NUMBER_RE + '\\b',
+      relevance: 0
+    },
+    OBJECT,
+    ARRAY,
+    STRING
+  ];
+
+  const VALUE_MODES = [ ...MODES ];
+  VALUE_MODES.pop();
+  VALUE_MODES.push(CONTAINER_STRING);
+  VALUE_CONTAINER.contains = VALUE_MODES;
+
+  return {
+    name: 'YAML',
+    case_insensitive: true,
+    aliases: [ 'yml' ],
+    contains: MODES
+  };
+}
+
 /* src\Components\Editor\CodeEditor.svelte generated by Svelte v3.59.2 */
+
+const { Error: Error_1$6, console: console_1$5 } = globals;
 const file$m = "src\\Components\\Editor\\CodeEditor.svelte";
 
-// (184:6) {#if $projectExpanded}
-function create_if_block$g(ctx) {
+// (321:8) {#if $projectExplorer}
+function create_if_block_1$7(ctx) {
 	let div;
 	let filenavigator;
 	let t;
@@ -13020,13 +21417,14 @@ function create_if_block$g(ctx) {
 
 	filenavigator = new FileNavigator_1({
 			props: {
-				codeEditor: /*codeEditor*/ ctx[0],
-				fileManager: /*fileManager*/ ctx[4],
-				textareaValue: /*textareaValue*/ ctx[5]
+				codeEditor: /*codeEditor*/ ctx[2],
+				fileManager: /*fileManager*/ ctx[5],
+				textareaValue: /*textareaValue*/ ctx[6]
 			},
 			$$inline: true
 		});
 
+	filenavigator.$on("fileInteraction", /*preserveBreaksAndHighlight*/ ctx[8]);
 	dashboard = new Dashboard({ $$inline: true });
 
 	const block = {
@@ -13036,8 +21434,8 @@ function create_if_block$g(ctx) {
 			t = space();
 			create_component(dashboard.$$.fragment);
 			attr_dev(div, "id", "navigator-dashboard");
-			attr_dev(div, "class", "svelte-e5k62l");
-			add_location(div, file$m, 184, 8, 6221);
+			attr_dev(div, "class", "svelte-1hp81e");
+			add_location(div, file$m, 321, 10, 10268);
 		},
 		m: function mount(target, anchor) {
 			insert_dev(target, div, anchor);
@@ -13048,7 +21446,7 @@ function create_if_block$g(ctx) {
 		},
 		p: function update(ctx, dirty) {
 			const filenavigator_changes = {};
-			if (dirty & /*codeEditor*/ 1) filenavigator_changes.codeEditor = /*codeEditor*/ ctx[0];
+			if (dirty & /*codeEditor*/ 4) filenavigator_changes.codeEditor = /*codeEditor*/ ctx[2];
 			filenavigator.$set(filenavigator_changes);
 		},
 		i: function intro(local) {
@@ -13071,9 +21469,48 @@ function create_if_block$g(ctx) {
 
 	dispatch_dev("SvelteRegisterBlock", {
 		block,
-		id: create_if_block$g.name,
+		id: create_if_block_1$7.name,
 		type: "if",
-		source: "(184:6) {#if $projectExpanded}",
+		source: "(321:8) {#if $projectExplorer}",
+		ctx
+	});
+
+	return block;
+}
+
+// (332:8) {#if $projectAssistant}
+function create_if_block$h(ctx) {
+	let assistant;
+	let current;
+	assistant = new Assistant({ $$inline: true });
+
+	const block = {
+		c: function create() {
+			create_component(assistant.$$.fragment);
+		},
+		m: function mount(target, anchor) {
+			mount_component(assistant, target, anchor);
+			current = true;
+		},
+		i: function intro(local) {
+			if (current) return;
+			transition_in(assistant.$$.fragment, local);
+			current = true;
+		},
+		o: function outro(local) {
+			transition_out(assistant.$$.fragment, local);
+			current = false;
+		},
+		d: function destroy(detaching) {
+			destroy_component(assistant, detaching);
+		}
+	};
+
+	dispatch_dev("SvelteRegisterBlock", {
+		block,
+		id: create_if_block$h.name,
+		type: "if",
+		source: "(332:8) {#if $projectAssistant}",
 		ctx
 	});
 
@@ -13081,34 +21518,42 @@ function create_if_block$g(ctx) {
 }
 
 function create_fragment$n(ctx) {
+	let div7;
 	let div6;
-	let div5;
 	let generaltoolbar;
 	let t0;
-	let div4;
+	let div5;
 	let navcontroller;
 	let t1;
-	let t2;
-	let div3;
-	let div2;
-	let linenumbers;
-	let t3;
-	let div1;
-	let textarea_1;
-	let t4;
 	let div0;
+	let t2;
+	let t3;
+	let div4;
+	let div3;
+	let linenumbers;
+	let t4;
+	let div2;
+	let code;
+	let code_placeholder_value;
+	let t5;
+	let div1;
+	let t6_value = /*$_*/ ctx[4]("editor.editorField.dropFileHere") + "";
 	let t6;
+	let t7;
 	let problems;
 	let current;
 	let mounted;
 	let dispose;
 	generaltoolbar = new GeneralToolbar({ $$inline: true });
-	generaltoolbar.$on("saveLocal", /*handleSaveLocal*/ ctx[7]);
+	generaltoolbar.$on("saveLocal", /*handleSaveLocal*/ ctx[9]);
+	generaltoolbar.$on("expand", /*handleExpand*/ ctx[10]);
+	generaltoolbar.$on("assistant", /*handleAssistant*/ ctx[11]);
 	navcontroller = new NavigatorController({ $$inline: true });
-	let if_block = /*$projectExpanded*/ ctx[2] && create_if_block$g(ctx);
+	let if_block0 = /*$projectExplorer*/ ctx[1] && create_if_block_1$7(ctx);
+	let if_block1 = /*$projectAssistant*/ ctx[0] && create_if_block$h(ctx);
 
 	linenumbers = new LineNumbers({
-			props: { textareaValue: /*textareaValue*/ ctx[5] },
+			props: { textareaValue: /*textareaValue*/ ctx[6] },
 			$$inline: true
 		});
 
@@ -13116,122 +21561,151 @@ function create_fragment$n(ctx) {
 
 	const block = {
 		c: function create() {
+			div7 = element("div");
 			div6 = element("div");
-			div5 = element("div");
 			create_component(generaltoolbar.$$.fragment);
 			t0 = space();
-			div4 = element("div");
+			div5 = element("div");
 			create_component(navcontroller.$$.fragment);
 			t1 = space();
-			if (if_block) if_block.c();
-			t2 = space();
-			div3 = element("div");
-			div2 = element("div");
-			create_component(linenumbers.$$.fragment);
-			t3 = space();
-			div1 = element("div");
-			textarea_1 = element("textarea");
-			t4 = space();
 			div0 = element("div");
-			div0.textContent = "Drop your file here...";
-			t6 = space();
+			if (if_block0) if_block0.c();
+			t2 = space();
+			if (if_block1) if_block1.c();
+			t3 = space();
+			div4 = element("div");
+			div3 = element("div");
+			create_component(linenumbers.$$.fragment);
+			t4 = space();
+			div2 = element("div");
+			code = element("code");
+			t5 = space();
+			div1 = element("div");
+			t6 = text(t6_value);
+			t7 = space();
 			create_component(problems.$$.fragment);
-			attr_dev(textarea_1, "id", "editor-field");
-			attr_dev(textarea_1, "cols", "75");
-			attr_dev(textarea_1, "rows", "30");
-			attr_dev(textarea_1, "placeholder", "Start typing here...");
-			attr_dev(textarea_1, "spellcheck", "false");
-			set_style(textarea_1, "overflow", "hidden");
-			set_style(textarea_1, "height", "auto");
-			attr_dev(textarea_1, "class", "svelte-e5k62l");
-			add_location(textarea_1, file$m, 193, 12, 6538);
-			attr_dev(div0, "id", "overlay");
-			attr_dev(div0, "class", "hidden svelte-e5k62l");
-			add_location(div0, file$m, 204, 12, 6915);
-			attr_dev(div1, "class", "textarea-container svelte-e5k62l");
-			add_location(div1, file$m, 192, 10, 6493);
-			attr_dev(div2, "id", "editor-wrapper");
-			attr_dev(div2, "class", "svelte-e5k62l");
-			add_location(div2, file$m, 190, 8, 6415);
-			attr_dev(div3, "class", "flex-column2 svelte-e5k62l");
-			add_location(div3, file$m, 189, 6, 6380);
-			attr_dev(div4, "class", "flex-row svelte-e5k62l");
-			add_location(div4, file$m, 181, 4, 6137);
-			attr_dev(div5, "id", "editor");
-			attr_dev(div5, "class", "svelte-e5k62l");
-			add_location(div5, file$m, 179, 2, 6061);
-			attr_dev(div6, "class", "main-component svelte-e5k62l");
-			add_location(div6, file$m, 178, 0, 6030);
+			attr_dev(div0, "id", "controller-column");
+			attr_dev(div0, "class", "svelte-1hp81e");
+			add_location(div0, file$m, 319, 6, 10196);
+			attr_dev(code, "class", "language-yaml svelte-1hp81e");
+			attr_dev(code, "id", "editor-field");
+			attr_dev(code, "cols", "75");
+			attr_dev(code, "rows", "30");
+			attr_dev(code, "placeholder", code_placeholder_value = /*$_*/ ctx[4]("editor.editorField.startTypingHere"));
+			attr_dev(code, "spellcheck", "false");
+			set_style(code, "overflow", "hidden");
+			set_style(code, "height", "auto");
+			add_location(code, file$m, 340, 12, 10878);
+			attr_dev(div1, "id", "overlay");
+			attr_dev(div1, "class", "hidden svelte-1hp81e");
+			add_location(div1, file$m, 351, 12, 11280);
+			attr_dev(div2, "class", "textarea-container svelte-1hp81e");
+			add_location(div2, file$m, 339, 10, 10832);
+			attr_dev(div3, "id", "editor-wrapper");
+			attr_dev(div3, "class", "svelte-1hp81e");
+			add_location(div3, file$m, 336, 8, 10684);
+			attr_dev(div4, "class", "flex-column2 svelte-1hp81e");
+			add_location(div4, file$m, 335, 6, 10648);
+			attr_dev(div5, "class", "flex-row svelte-1hp81e");
+			add_location(div5, file$m, 317, 4, 10141);
+			attr_dev(div6, "id", "editor");
+			attr_dev(div6, "class", "svelte-1hp81e");
+			add_location(div6, file$m, 311, 2, 9981);
+			attr_dev(div7, "class", "main-component svelte-1hp81e");
+			add_location(div7, file$m, 310, 0, 9949);
 		},
 		l: function claim(nodes) {
-			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+			throw new Error_1$6("options.hydrate only works if the component was compiled with the `hydratable: true` option");
 		},
 		m: function mount(target, anchor) {
-			insert_dev(target, div6, anchor);
+			insert_dev(target, div7, anchor);
+			append_dev(div7, div6);
+			mount_component(generaltoolbar, div6, null);
+			append_dev(div6, t0);
 			append_dev(div6, div5);
-			mount_component(generaltoolbar, div5, null);
-			append_dev(div5, t0);
+			mount_component(navcontroller, div5, null);
+			append_dev(div5, t1);
+			append_dev(div5, div0);
+			if (if_block0) if_block0.m(div0, null);
+			append_dev(div0, t2);
+			if (if_block1) if_block1.m(div0, null);
+			append_dev(div5, t3);
 			append_dev(div5, div4);
-			mount_component(navcontroller, div4, null);
-			append_dev(div4, t1);
-			if (if_block) if_block.m(div4, null);
-			append_dev(div4, t2);
 			append_dev(div4, div3);
+			mount_component(linenumbers, div3, null);
+			append_dev(div3, t4);
 			append_dev(div3, div2);
-			mount_component(linenumbers, div2, null);
-			append_dev(div2, t3);
+			append_dev(div2, code);
+			/*code_binding*/ ctx[13](code);
+			append_dev(div2, t5);
 			append_dev(div2, div1);
-			append_dev(div1, textarea_1);
-			set_input_value(textarea_1, /*$textareaValue*/ ctx[3]);
-			/*textarea_1_binding*/ ctx[9](textarea_1);
-			append_dev(div1, t4);
-			append_dev(div1, div0);
-			append_dev(div3, t6);
-			mount_component(problems, div3, null);
+			append_dev(div1, t6);
+			append_dev(div4, t7);
+			mount_component(problems, div4, null);
 			current = true;
 
 			if (!mounted) {
-				dispose = [
-					listen_dev(textarea_1, "input", /*textarea_1_input_handler*/ ctx[8]),
-					listen_dev(textarea_1, "input", /*handleInput*/ ctx[6], false, false, false, false)
-				];
-
+				dispose = listen_dev(code, "input", /*handleTextareaStyle*/ ctx[7], false, false, false, false);
 				mounted = true;
 			}
 		},
 		p: function update(ctx, [dirty]) {
-			if (/*$projectExpanded*/ ctx[2]) {
-				if (if_block) {
-					if_block.p(ctx, dirty);
+			if (/*$projectExplorer*/ ctx[1]) {
+				if (if_block0) {
+					if_block0.p(ctx, dirty);
 
-					if (dirty & /*$projectExpanded*/ 4) {
-						transition_in(if_block, 1);
+					if (dirty & /*$projectExplorer*/ 2) {
+						transition_in(if_block0, 1);
 					}
 				} else {
-					if_block = create_if_block$g(ctx);
-					if_block.c();
-					transition_in(if_block, 1);
-					if_block.m(div4, t2);
+					if_block0 = create_if_block_1$7(ctx);
+					if_block0.c();
+					transition_in(if_block0, 1);
+					if_block0.m(div0, t2);
 				}
-			} else if (if_block) {
+			} else if (if_block0) {
 				group_outros();
 
-				transition_out(if_block, 1, 1, () => {
-					if_block = null;
+				transition_out(if_block0, 1, 1, () => {
+					if_block0 = null;
 				});
 
 				check_outros();
 			}
 
-			if (dirty & /*$textareaValue*/ 8) {
-				set_input_value(textarea_1, /*$textareaValue*/ ctx[3]);
+			if (/*$projectAssistant*/ ctx[0]) {
+				if (if_block1) {
+					if (dirty & /*$projectAssistant*/ 1) {
+						transition_in(if_block1, 1);
+					}
+				} else {
+					if_block1 = create_if_block$h(ctx);
+					if_block1.c();
+					transition_in(if_block1, 1);
+					if_block1.m(div0, null);
+				}
+			} else if (if_block1) {
+				group_outros();
+
+				transition_out(if_block1, 1, 1, () => {
+					if_block1 = null;
+				});
+
+				check_outros();
 			}
+
+			if (!current || dirty & /*$_*/ 16 && code_placeholder_value !== (code_placeholder_value = /*$_*/ ctx[4]("editor.editorField.startTypingHere"))) {
+				attr_dev(code, "placeholder", code_placeholder_value);
+			}
+
+			if ((!current || dirty & /*$_*/ 16) && t6_value !== (t6_value = /*$_*/ ctx[4]("editor.editorField.dropFileHere") + "")) set_data_dev(t6, t6_value);
 		},
 		i: function intro(local) {
 			if (current) return;
 			transition_in(generaltoolbar.$$.fragment, local);
 			transition_in(navcontroller.$$.fragment, local);
-			transition_in(if_block);
+			transition_in(if_block0);
+			transition_in(if_block1);
 			transition_in(linenumbers.$$.fragment, local);
 			transition_in(problems.$$.fragment, local);
 			current = true;
@@ -13239,21 +21713,23 @@ function create_fragment$n(ctx) {
 		o: function outro(local) {
 			transition_out(generaltoolbar.$$.fragment, local);
 			transition_out(navcontroller.$$.fragment, local);
-			transition_out(if_block);
+			transition_out(if_block0);
+			transition_out(if_block1);
 			transition_out(linenumbers.$$.fragment, local);
 			transition_out(problems.$$.fragment, local);
 			current = false;
 		},
 		d: function destroy(detaching) {
-			if (detaching) detach_dev(div6);
+			if (detaching) detach_dev(div7);
 			destroy_component(generaltoolbar);
 			destroy_component(navcontroller);
-			if (if_block) if_block.d();
+			if (if_block0) if_block0.d();
+			if (if_block1) if_block1.d();
 			destroy_component(linenumbers);
-			/*textarea_1_binding*/ ctx[9](null);
+			/*code_binding*/ ctx[13](null);
 			destroy_component(problems);
 			mounted = false;
-			run_all(dispose);
+			dispose();
 		}
 	};
 
@@ -13268,129 +21744,266 @@ function create_fragment$n(ctx) {
 	return block;
 }
 
+const backendUrl$8 = "http://localhost:8080";
+
+//Draggable containers for the sidebar
+function setWidths(target, newWidth) {
+	const flexColumn = document.querySelector(".flex-column2");
+	const totalWidth = target.parentNode.offsetWidth;
+	target.style.width = `${newWidth}px`;
+	flexColumn.style.width = `${totalWidth - newWidth}px`;
+}
+
+function setPointerEvents(value) {
+	const editorWrapper = document.querySelector("#editor-wrapper");
+
+	if (editorWrapper) {
+		editorWrapper.style.pointerEvents = value;
+	}
+}
+
 function instance$n($$self, $$props, $$invalidate) {
-	let $projectExpanded;
+	let $projectAssistant;
+	let $projectExplorer;
 	let $textareaValue;
-	validate_store(projectExpanded, 'projectExpanded');
-	component_subscribe($$self, projectExpanded, $$value => $$invalidate(2, $projectExpanded = $$value));
+	let $_;
+	validate_store(projectAssistant, 'projectAssistant');
+	component_subscribe($$self, projectAssistant, $$value => $$invalidate(0, $projectAssistant = $$value));
+	validate_store(projectExplorer, 'projectExplorer');
+	component_subscribe($$self, projectExplorer, $$value => $$invalidate(1, $projectExplorer = $$value));
+	validate_store($format, '_');
+	component_subscribe($$self, $format, $$value => $$invalidate(4, $_ = $$value));
 	let { $$slots: slots = {}, $$scope } = $$props;
 	validate_slots('CodeEditor', slots, []);
 	let fileManager = new FileManager();
 	let codeEditor;
 	let textareaValue = writable("");
 	validate_store(textareaValue, 'textareaValue');
-	component_subscribe($$self, textareaValue, value => $$invalidate(3, $textareaValue = value));
+	component_subscribe($$self, textareaValue, value => $$invalidate(17, $textareaValue = value));
 	let textarea;
 	let defaultWidth;
-	let editorWrapperHeight;
+	let editorElement;
+	let controllerColumn;
+	let editorField;
 
-	editorWrapperHeightStore.subscribe(value => {
-		editorWrapperHeight = value;
-	});
-
-	let projectExpandedValue;
-
-	projectExpanded.subscribe(value => {
-		projectExpandedValue = value;
-	});
-
-	const handleInput = () => {
-		$$invalidate(1, textarea.style.height = "auto", textarea);
-		$$invalidate(1, textarea.style.height = textarea.scrollHeight + "px", textarea);
+	const handleTextareaStyle = () => {
+		$$invalidate(3, textarea.style.height = "auto", textarea);
+		$$invalidate(3, textarea.style.height = textarea.scrollHeight + "px", textarea);
 	};
 
+	//Setting the width of the textarea to the longest line
 	const adjustTextareaWidth = () => {
-		const lines = textarea.value.split("\n");
+		const lines = textarea.innerText.split("\n");
 		let longestLine = lines[0];
 
 		// If textarea is empty, reset to original width
-		if (textarea.value === "") {
-			$$invalidate(1, textarea.style.width = `${defaultWidth}px`, textarea);
+		if (textarea.innerText === "") {
+			$$invalidate(3, textarea.style.width = `${defaultWidth}px`, textarea);
 			return;
 		}
 
-		// Find the line with the most characters
 		for (let line of lines) {
 			if (line.length > longestLine.length) {
 				longestLine = line;
 			}
 		}
 
-		// Calculate the width of the longest line
-		const newWidth = longestLine.length * 9; // 9px per character
+		const newWidth = longestLine.length * 9;
 
-		// Set the width of the textarea to match the width of the longest line
-		// only if the new width exceeds the default width
 		if (newWidth > defaultWidth) {
-			$$invalidate(1, textarea.style.width = `${newWidth}px`, textarea);
-
-			//saves the width into local storage
+			$$invalidate(3, textarea.style.width = `${newWidth}px`, textarea);
 			localStorage.setItem("textareaWidth", textarea.scrollWidth);
 		} else {
-			$$invalidate(1, textarea.style.width = `${defaultWidth}px`, textarea);
+			$$invalidate(3, textarea.style.width = `${defaultWidth}px`, textarea);
 		}
 	};
 
+	function setCaretPosition(index) {
+		const setPoint = (node, index) => {
+			const range = document.createRange();
+			const sel = window.getSelection();
+			range.setStart(node, index);
+			range.collapse(true);
+			sel.removeAllRanges();
+			sel.addRange(range);
+		};
+
+		const walker = document.createTreeWalker(editorField, NodeFilter.SHOW_TEXT, null, false);
+		let current = walker.nextNode();
+		let length = 0;
+
+		while (current) {
+			if (length + current.textContent.length >= index) {
+				setPoint(current, index - length);
+				break;
+			}
+
+			length += current.textContent.length;
+			current = walker.nextNode();
+		}
+	}
+
+	function getCaretOffset() {
+		const selection = window.getSelection();
+		const range = selection.getRangeAt(0);
+
+		// clone to avoid modifying users selection
+		const preCaretRange = range.cloneRange();
+
+		// in case editorField is not set do nothing
+		try {
+			preCaretRange.selectNodeContents(editorField);
+		} catch(error) {
+			return;
+		}
+
+		preCaretRange.setEnd(range.endContainer, range.endOffset);
+		return preCaretRange.toString().length;
+	}
+
+	function highlightSyntaxOnUpdate() {
+		let caretOffset = getCaretOffset();
+		highlightSyntax();
+		setCaretPosition(caretOffset);
+	}
+
+	function highlightSyntax() {
+		document.querySelector("code.language-yaml").removeAttribute("data-highlighted");
+		const codeElements = document.querySelectorAll("code.language-yaml");
+
+		codeElements.forEach(element => {
+			let highlightedHtml = HighlightJS.highlight(element.textContent, { language: "yaml" }).value;
+			element.innerHTML = highlightedHtml;
+		});
+	}
+
+	// clears empty content to apply placeholder using css
+	function clearEmptyContent() {
+		if (editorField.textContent.trim() === "") {
+			editorField.innerContent = "";
+		}
+	}
+
+	function preserveBreaksAndHighlight() {
+		editorField.innerHTML = editorField.innerHTML.replace(/<br>/g, "\n");
+		highlightSyntax();
+	}
+
 	onMount(() => {
-		$$invalidate(0, codeEditor = new CodeEditor("editor", "editor-field", "line-numbers", "overlay", fileManager));
-		textareaValue.set(codeEditor.textarea.value);
+		HighlightJS.registerLanguage("yaml", yaml);
+		editorField = document.getElementById("editor-field");
+		editorField.contentEditable = true; // only set on mount for security reasons
+		$$invalidate(2, codeEditor = new CodeEditor("editor", "editor-field", "line-numbers", "overlay", fileManager));
+		textareaValue.set(codeEditor.textarea.innerText);
+		textareaStore.set(codeEditor.textarea.innerText);
+		preserveBreaksAndHighlight();
+
+		// clear empty content to apply placeholder using css
+		clearEmptyContent();
+
+		// Set the default height of the editor wrapper
 		const editorWrapperElement = document.querySelector("#editor-wrapper");
+
 		editorWrapperHeightStore.set(editorWrapperElement.offsetHeight);
+		editorElement = document.querySelector(".main-component");
+		$$invalidate(12, controllerColumn = document.querySelector("#controller-column"));
+
+		// Set the default width of the textarea
 		defaultWidth = textarea.offsetWidth;
-		adjustTextareaWidth(); // Adjust the width on mount
+
+		adjustTextareaWidth();
+
+		// adjust style on mount
+		handleTextareaStyle();
+
+		// Check the syntax on mount
+		codeEditor.checkYamlSyntax(codeEditor.textarea.innerText);
 
 		textarea.addEventListener("input", () => {
+			clearEmptyContent();
 			adjustTextareaWidth();
-			handleInput();
-			codeEditor.checkYamlSyntax(codeEditor.textarea.value);
+			handleTextareaStyle();
+			highlightSyntaxOnUpdate();
+			textareaValue.set(textarea.innerText);
+			codeEditor.checkYamlSyntax(textarea.innerText);
+		});
+
+		textarea.addEventListener("focus", () => {
+			clearEmptyContent();
 		});
 
 		// Handles both tab and enter functionalities
 		textarea.addEventListener("keydown", event => {
-			if (event.key === "Tab") {
-				event.preventDefault();
-				const { selectionStart, selectionEnd } = textarea;
-				const value = textarea.value;
-				$$invalidate(1, textarea.value = value.substring(0, selectionStart) + "  " + value.substring(selectionEnd), textarea);
-				$$invalidate(1, textarea.selectionStart = $$invalidate(1, textarea.selectionEnd = selectionStart + 2, textarea), textarea);
-			} else // } else if (event.key === "Enter") {
+			if (event.key === "Tab") ; else // const { selectionStart, selectionEnd } = textarea;
+			// const value = textarea.innerText;
+			// textarea.innerText =
+			//   value.substring(0, selectionStart) +
+			//   "  " +
+			//   value.substring(selectionEnd);
+			// textarea.selectionStart = textarea.selectionEnd = selectionStart + 2;
+			// } else if (event.key === "Enter") {
 			//   event.preventDefault();
 			//   const { selectionStart, selectionEnd } = textarea;
-			//   const value = textarea.value;
+			//   const value = textarea.innerText;
 			//   const lineStart = value.lastIndexOf("\n", selectionStart - 1) + 1;
 			//   let spaceLength = value.substring(lineStart).search(/\S/);
 			//   spaceLength = spaceLength === -1 ? 0 : spaceLength;
 			//   const spaces = " ".repeat(spaceLength);
-			//   textarea.value = value.substring(0, selectionEnd + 2) + "\n" + spaces;
-			//   textareaValue.set(codeEditor.textarea.value);
-			if (event.ctrlKey && event.key === "/") ; // TODO: Add comment functionality with user fake cursor and selection,
+			//   textarea.innerText = value.substring(0, selectionEnd + 2) + "\n" + spaces;
+			//   textareaValue.set(codeEditor.textarea.innerText);
+			if (event.ctrlKey && event.key === "/") ; // event.preventDefault();
+			// TODO: Add comment functionality with user fake cursor and selection,
 			// also multiple lines should work
 		});
-
-		// Adjust the height on mount
-		handleInput();
-
-		codeEditor.checkYamlSyntax(codeEditor.textarea.value);
 	});
 
 	// function handleFormat() {
-	//   yamlChecker.yamlCode = textarea.value;
-	//   textarea.value = yamlChecker.formatYAML();
+	//   yamlChecker.yamlCode = textarea.innerText;
+	//   textarea.innerText = yamlChecker.formatYAML();
 	// }
 	function handleSaveLocal() {
-		var file = new File([textarea.value], fileManager.getCurrentFile(), { type: "text;charset=utf-8" });
-
-		// Create a link to download the file
+		var file = new File([textarea.innerText], fileManager.getCurrentFile(), { type: "text;charset=utf-8" });
 		const anchor = document.createElement("a");
-
 		anchor.setAttribute("href", window.URL.createObjectURL(file));
 		anchor.setAttribute("download", fileManager.getCurrentFile());
 		anchor.click();
 		URL.revokeObjectURL(anchor.href);
 	}
 
-	//interact js for resizing the navigator-dashboard
-	interact("#navigator-dashboard").resizable({
+	function handleExpand() {
+		if (!document.fullscreenElement) {
+			editorElement.requestFullscreen();
+		} else {
+			document.exitFullscreen();
+		}
+	}
+
+	//AI control
+	async function handleAssistant() {
+		await fetch(backendUrl$8 + "/ai/fix", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				Accept: "application/json"
+			},
+			credentials: "include",
+			body: `{"data": "${$textareaValue}"}`
+		}).then(response => {
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+
+			return response.text();
+		}).then(data => {
+			console.log(data);
+			textareaValue.set(data);
+		}).catch(error => {
+			console.error("Error:", error);
+		});
+	}
+
+	interact("#controller-column").resizable({
+		margin: 20,
 		edges: {
 			top: false,
 			left: false,
@@ -13403,46 +22016,26 @@ function instance$n($$self, $$props, $$invalidate) {
 				max: { width: 600, height: Infinity }
 			})
 		]
-	}).on("resizemove", function (event) {
-		var target = event.target;
-		var flexColumn = document.querySelector(".flex-column2");
-		var newWidth = event.rect.width;
-		var totalWidth = target.parentNode.offsetWidth;
-		target.style.width = newWidth + "px";
-		flexColumn.style.width = totalWidth - newWidth + "px";
-	}).on("resizestart", function (event) {
-		var target = event.target;
-		target.style.borderRight = "2px solid blue";
-		var editorWrapper = document.querySelector("#editor-wrapper");
-
-		if (editorWrapper) {
-			editorWrapper.style.pointerEvents = "none";
-		}
-	}).on("resizeend", function (event) {
-		var target = event.target;
-		target.style.borderRight = "";
-		var editorWrapper = document.querySelector("#editor-wrapper");
-
-		if (editorWrapper) {
-			editorWrapper.style.pointerEvents = "auto";
-		}
+	}).on("resizemove", event => {
+		setWidths(event.target, event.rect.width);
+	}).on("resizestart", event => {
+		event.target.style.borderRight = "2px solid blue";
+		setPointerEvents("none");
+	}).on("resizeend", event => {
+		event.target.style.borderRight = "";
+		setPointerEvents("auto");
 	});
 
 	const writable_props = [];
 
 	Object.keys($$props).forEach(key => {
-		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<CodeEditor> was created with unknown prop '${key}'`);
+		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console_1$5.warn(`<CodeEditor> was created with unknown prop '${key}'`);
 	});
 
-	function textarea_1_input_handler() {
-		$textareaValue = this.value;
-		textareaValue.set($textareaValue);
-	}
-
-	function textarea_1_binding($$value) {
+	function code_binding($$value) {
 		binding_callbacks[$$value ? 'unshift' : 'push'](() => {
 			textarea = $$value;
-			$$invalidate(1, textarea);
+			$$invalidate(3, textarea);
 		});
 	}
 
@@ -13457,49 +22050,84 @@ function instance$n($$self, $$props, $$invalidate) {
 		FileManager,
 		GeneralToolbar,
 		NavController: NavigatorController,
-		projectExpanded,
+		Assistant,
+		projectExplorer,
+		projectAssistant,
 		editorWrapperHeightStore,
+		textareaStore,
 		_: $format,
 		interact,
+		hljs: HighlightJS,
+		yaml,
 		fileManager,
 		codeEditor,
 		textareaValue,
 		textarea,
 		defaultWidth,
-		editorWrapperHeight,
-		projectExpandedValue,
-		handleInput,
+		editorElement,
+		controllerColumn,
+		editorField,
+		backendUrl: backendUrl$8,
+		handleTextareaStyle,
 		adjustTextareaWidth,
+		setCaretPosition,
+		getCaretOffset,
+		highlightSyntaxOnUpdate,
+		highlightSyntax,
+		clearEmptyContent,
+		preserveBreaksAndHighlight,
 		handleSaveLocal,
-		$projectExpanded,
-		$textareaValue
+		handleExpand,
+		handleAssistant,
+		setWidths,
+		setPointerEvents,
+		$projectAssistant,
+		$projectExplorer,
+		$textareaValue,
+		$_
 	});
 
 	$$self.$inject_state = $$props => {
-		if ('fileManager' in $$props) $$invalidate(4, fileManager = $$props.fileManager);
-		if ('codeEditor' in $$props) $$invalidate(0, codeEditor = $$props.codeEditor);
-		if ('textareaValue' in $$props) $$invalidate(5, textareaValue = $$props.textareaValue);
-		if ('textarea' in $$props) $$invalidate(1, textarea = $$props.textarea);
+		if ('fileManager' in $$props) $$invalidate(5, fileManager = $$props.fileManager);
+		if ('codeEditor' in $$props) $$invalidate(2, codeEditor = $$props.codeEditor);
+		if ('textareaValue' in $$props) $$invalidate(6, textareaValue = $$props.textareaValue);
+		if ('textarea' in $$props) $$invalidate(3, textarea = $$props.textarea);
 		if ('defaultWidth' in $$props) defaultWidth = $$props.defaultWidth;
-		if ('editorWrapperHeight' in $$props) editorWrapperHeight = $$props.editorWrapperHeight;
-		if ('projectExpandedValue' in $$props) projectExpandedValue = $$props.projectExpandedValue;
+		if ('editorElement' in $$props) editorElement = $$props.editorElement;
+		if ('controllerColumn' in $$props) $$invalidate(12, controllerColumn = $$props.controllerColumn);
+		if ('editorField' in $$props) editorField = $$props.editorField;
 	};
 
 	if ($$props && "$$inject" in $$props) {
 		$$self.$inject_state($$props.$$inject);
 	}
 
+	$$self.$$.update = () => {
+		if ($$self.$$.dirty & /*controllerColumn, $projectExplorer, $projectAssistant*/ 4099) {
+			//Sidebar toggle control
+			{
+				if (controllerColumn) {
+					$$invalidate(12, controllerColumn.style.display = $projectExplorer || $projectAssistant ? "flex" : "none", controllerColumn);
+				}
+			}
+		}
+	};
+
 	return [
+		$projectAssistant,
+		$projectExplorer,
 		codeEditor,
 		textarea,
-		$projectExpanded,
-		$textareaValue,
+		$_,
 		fileManager,
 		textareaValue,
-		handleInput,
+		handleTextareaStyle,
+		preserveBreaksAndHighlight,
 		handleSaveLocal,
-		textarea_1_input_handler,
-		textarea_1_binding
+		handleExpand,
+		handleAssistant,
+		controllerColumn,
+		code_binding
 	];
 }
 
@@ -13711,9 +22339,9 @@ class LanguageBox extends SvelteComponentDev {
 	}
 }
 
-var img$i = "data:image/svg+xml,%3c%3fxml version='1.0' encoding='utf-8'%3f%3e%3csvg version='1.1' id='Layer_1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' x='0px' y='0px' viewBox='0 0 55.2 38.4' style='enable-background:new 0 0 55.2 38.4' xml:space='preserve'%3e%3cstyle type='text/css'%3e%3c!%5bCDATA%5b .st0%7bfill:%23C1272D%3b%7d .st1%7bfill:%23FDB913%3b%7d .st2%7bfill:%23006A44%3b%7d%5d%5d%3e%3c/style%3e%3cg%3e%3cpath class='st0' d='M3.03%2c0h49.13c1.67%2c0%2c3.03%2c1.36%2c3.03%2c3.03v32.33c0%2c1.67-1.37%2c3.03-3.03%2c3.03H3.03C1.37%2c38.4%2c0%2c37.04%2c0%2c35.37 V3.03C0%2c1.36%2c1.37%2c0%2c3.03%2c0L3.03%2c0z'/%3e%3cpath class='st2' d='M55.2%2c26.04H0V3.03C0%2c1.36%2c1.37%2c0%2c3.03%2c0h49.13c1.67%2c0%2c3.03%2c1.36%2c3.03%2c3.03V26.04L55.2%2c26.04z'/%3e%3cpath class='st1' d='M55.2%2c12.36H0V3.03C0%2c1.36%2c1.37%2c0%2c3.03%2c0h49.13c1.67%2c0%2c3.03%2c1.36%2c3.03%2c3.03V12.36L55.2%2c12.36z'/%3e%3c/g%3e%3c/svg%3e";
+var img$j = "data:image/svg+xml,%3c%3fxml version='1.0' encoding='utf-8'%3f%3e%3csvg version='1.1' id='Layer_1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' x='0px' y='0px' viewBox='0 0 55.2 38.4' style='enable-background:new 0 0 55.2 38.4' xml:space='preserve'%3e%3cstyle type='text/css'%3e%3c!%5bCDATA%5b .st0%7bfill:%23C1272D%3b%7d .st1%7bfill:%23FDB913%3b%7d .st2%7bfill:%23006A44%3b%7d%5d%5d%3e%3c/style%3e%3cg%3e%3cpath class='st0' d='M3.03%2c0h49.13c1.67%2c0%2c3.03%2c1.36%2c3.03%2c3.03v32.33c0%2c1.67-1.37%2c3.03-3.03%2c3.03H3.03C1.37%2c38.4%2c0%2c37.04%2c0%2c35.37 V3.03C0%2c1.36%2c1.37%2c0%2c3.03%2c0L3.03%2c0z'/%3e%3cpath class='st2' d='M55.2%2c26.04H0V3.03C0%2c1.36%2c1.37%2c0%2c3.03%2c0h49.13c1.67%2c0%2c3.03%2c1.36%2c3.03%2c3.03V26.04L55.2%2c26.04z'/%3e%3cpath class='st1' d='M55.2%2c12.36H0V3.03C0%2c1.36%2c1.37%2c0%2c3.03%2c0h49.13c1.67%2c0%2c3.03%2c1.36%2c3.03%2c3.03V12.36L55.2%2c12.36z'/%3e%3c/g%3e%3c/svg%3e";
 
-var img$h = "data:image/svg+xml,%3c%3fxml version='1.0' encoding='utf-8'%3f%3e%3csvg version='1.1' id='Layer_1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' x='0px' y='0px' viewBox='0 0 55.2 38.4' style='enable-background:new 0 0 55.2 38.4' xml:space='preserve'%3e%3cstyle type='text/css'%3e.st0%7bfill:%23FEFEFE%3b%7d .st1%7bfill:%23C8102E%3b%7d .st2%7bfill:%23012169%3b%7d%3c/style%3e%3cg%3e%3cpath class='st0' d='M2.87%2c38.4h49.46c1.59-0.09%2c2.87-1.42%2c2.87-3.03V3.03c0-1.66-1.35-3.02-3.01-3.03H3.01 C1.35%2c0.01%2c0%2c1.37%2c0%2c3.03v32.33C0%2c36.98%2c1.28%2c38.31%2c2.87%2c38.4L2.87%2c38.4z'/%3e%3cpolygon class='st1' points='23.74%2c23.03 23.74%2c38.4 31.42%2c38.4 31.42%2c23.03 55.2%2c23.03 55.2%2c15.35 31.42%2c15.35 31.42%2c0 23.74%2c0 23.74%2c15.35 0%2c15.35 0%2c23.03 23.74%2c23.03'/%3e%3cpath class='st2' d='M33.98%2c12.43V0h18.23c1.26%2c0.02%2c2.34%2c0.81%2c2.78%2c1.92L33.98%2c12.43L33.98%2c12.43z'/%3e%3cpath class='st2' d='M33.98%2c25.97V38.4h18.35c1.21-0.07%2c2.23-0.85%2c2.66-1.92L33.98%2c25.97L33.98%2c25.97z'/%3e%3cpath class='st2' d='M21.18%2c25.97V38.4H2.87c-1.21-0.07-2.24-0.85-2.66-1.94L21.18%2c25.97L21.18%2c25.97z'/%3e%3cpath class='st2' d='M21.18%2c12.43V0H2.99C1.73%2c0.02%2c0.64%2c0.82%2c0.21%2c1.94L21.18%2c12.43L21.18%2c12.43z'/%3e%3cpolygon class='st2' points='0%2c12.8 7.65%2c12.8 0%2c8.97 0%2c12.8'/%3e%3cpolygon class='st2' points='55.2%2c12.8 47.51%2c12.8 55.2%2c8.95 55.2%2c12.8'/%3e%3cpolygon class='st2' points='55.2%2c25.6 47.51%2c25.6 55.2%2c29.45 55.2%2c25.6'/%3e%3cpolygon class='st2' points='0%2c25.6 7.65%2c25.6 0%2c29.43 0%2c25.6'/%3e%3cpolygon class='st1' points='55.2%2c3.25 36.15%2c12.8 40.41%2c12.8 55.2%2c5.4 55.2%2c3.25'/%3e%3cpolygon class='st1' points='19.01%2c25.6 14.75%2c25.6 0%2c32.98 0%2c35.13 19.05%2c25.6 19.01%2c25.6'/%3e%3cpolygon class='st1' points='10.52%2c12.81 14.78%2c12.81 0%2c5.41 0%2c7.55 10.52%2c12.81'/%3e%3cpolygon class='st1' points='44.63%2c25.59 40.37%2c25.59 55.2%2c33.02 55.2%2c30.88 44.63%2c25.59'/%3e%3c/g%3e%3c/svg%3e";
+var img$i = "data:image/svg+xml,%3c%3fxml version='1.0' encoding='utf-8'%3f%3e%3csvg version='1.1' id='Layer_1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' x='0px' y='0px' viewBox='0 0 55.2 38.4' style='enable-background:new 0 0 55.2 38.4' xml:space='preserve'%3e%3cstyle type='text/css'%3e.st0%7bfill:%23FEFEFE%3b%7d .st1%7bfill:%23C8102E%3b%7d .st2%7bfill:%23012169%3b%7d%3c/style%3e%3cg%3e%3cpath class='st0' d='M2.87%2c38.4h49.46c1.59-0.09%2c2.87-1.42%2c2.87-3.03V3.03c0-1.66-1.35-3.02-3.01-3.03H3.01 C1.35%2c0.01%2c0%2c1.37%2c0%2c3.03v32.33C0%2c36.98%2c1.28%2c38.31%2c2.87%2c38.4L2.87%2c38.4z'/%3e%3cpolygon class='st1' points='23.74%2c23.03 23.74%2c38.4 31.42%2c38.4 31.42%2c23.03 55.2%2c23.03 55.2%2c15.35 31.42%2c15.35 31.42%2c0 23.74%2c0 23.74%2c15.35 0%2c15.35 0%2c23.03 23.74%2c23.03'/%3e%3cpath class='st2' d='M33.98%2c12.43V0h18.23c1.26%2c0.02%2c2.34%2c0.81%2c2.78%2c1.92L33.98%2c12.43L33.98%2c12.43z'/%3e%3cpath class='st2' d='M33.98%2c25.97V38.4h18.35c1.21-0.07%2c2.23-0.85%2c2.66-1.92L33.98%2c25.97L33.98%2c25.97z'/%3e%3cpath class='st2' d='M21.18%2c25.97V38.4H2.87c-1.21-0.07-2.24-0.85-2.66-1.94L21.18%2c25.97L21.18%2c25.97z'/%3e%3cpath class='st2' d='M21.18%2c12.43V0H2.99C1.73%2c0.02%2c0.64%2c0.82%2c0.21%2c1.94L21.18%2c12.43L21.18%2c12.43z'/%3e%3cpolygon class='st2' points='0%2c12.8 7.65%2c12.8 0%2c8.97 0%2c12.8'/%3e%3cpolygon class='st2' points='55.2%2c12.8 47.51%2c12.8 55.2%2c8.95 55.2%2c12.8'/%3e%3cpolygon class='st2' points='55.2%2c25.6 47.51%2c25.6 55.2%2c29.45 55.2%2c25.6'/%3e%3cpolygon class='st2' points='0%2c25.6 7.65%2c25.6 0%2c29.43 0%2c25.6'/%3e%3cpolygon class='st1' points='55.2%2c3.25 36.15%2c12.8 40.41%2c12.8 55.2%2c5.4 55.2%2c3.25'/%3e%3cpolygon class='st1' points='19.01%2c25.6 14.75%2c25.6 0%2c32.98 0%2c35.13 19.05%2c25.6 19.01%2c25.6'/%3e%3cpolygon class='st1' points='10.52%2c12.81 14.78%2c12.81 0%2c5.41 0%2c7.55 10.52%2c12.81'/%3e%3cpolygon class='st1' points='44.63%2c25.59 40.37%2c25.59 55.2%2c33.02 55.2%2c30.88 44.63%2c25.59'/%3e%3c/g%3e%3c/svg%3e";
 
 // uses fetch to load locale files on demand
 async function loadLocale(localeName) {
@@ -13753,7 +22381,7 @@ function create_if_block_1$6(ctx) {
 
 	languagebox = new LanguageBox({
 			props: {
-				flagIcon: img$i,
+				flagIcon: img$j,
 				languageName: /*$_*/ ctx[1]('footer.LT'),
 				onClick: /*func*/ ctx[4]
 			},
@@ -13799,13 +22427,13 @@ function create_if_block_1$6(ctx) {
 }
 
 // (32:4) {#if $locale !== 'en'}
-function create_if_block$f(ctx) {
+function create_if_block$g(ctx) {
 	let languagebox;
 	let current;
 
 	languagebox = new LanguageBox({
 			props: {
-				flagIcon: img$h,
+				flagIcon: img$i,
 				languageName: /*$_*/ ctx[1]('footer.EN'),
 				onClick: /*func_1*/ ctx[5]
 			},
@@ -13841,7 +22469,7 @@ function create_if_block$f(ctx) {
 
 	dispatch_dev("SvelteRegisterBlock", {
 		block,
-		id: create_if_block$f.name,
+		id: create_if_block$g.name,
 		type: "if",
 		source: "(32:4) {#if $locale !== 'en'}",
 		ctx
@@ -13859,7 +22487,7 @@ function create_fragment$l(ctx) {
 	let t2;
 	let current;
 	let if_block0 = /*$locale*/ ctx[0] !== 'lt' && create_if_block_1$6(ctx);
-	let if_block1 = /*$locale*/ ctx[0] !== 'en' && create_if_block$f(ctx);
+	let if_block1 = /*$locale*/ ctx[0] !== 'en' && create_if_block$g(ctx);
 
 	const block = {
 		c: function create() {
@@ -13874,13 +22502,13 @@ function create_fragment$l(ctx) {
 			if (if_block1) if_block1.c();
 			attr_dev(p, "id", "copyright");
 			attr_dev(p, "class", "svelte-4qkejc");
-			add_location(p, file$k, 25, 4, 736);
+			add_location(p, file$k, 25, 4, 761);
 			attr_dev(div0, "class", "footer-container svelte-4qkejc");
-			add_location(div0, file$k, 24, 2, 701);
+			add_location(div0, file$k, 24, 2, 725);
 			attr_dev(div1, "class", "language-container svelte-4qkejc");
-			add_location(div1, file$k, 27, 2, 783);
+			add_location(div1, file$k, 27, 2, 810);
 			attr_dev(footer, "class", "svelte-4qkejc");
-			add_location(footer, file$k, 23, 0, 690);
+			add_location(footer, file$k, 23, 0, 713);
 		},
 		l: function claim(nodes) {
 			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -13928,7 +22556,7 @@ function create_fragment$l(ctx) {
 						transition_in(if_block1, 1);
 					}
 				} else {
-					if_block1 = create_if_block$f(ctx);
+					if_block1 = create_if_block$g(ctx);
 					if_block1.c();
 					transition_in(if_block1, 1);
 					if_block1.m(div1, null);
@@ -14008,8 +22636,8 @@ function instance$l($$self, $$props, $$invalidate) {
 	$$self.$capture_state = () => ({
 		onMount,
 		LanguageBox,
-		LtFlag: img$i,
-		EnFlag: img$h,
+		LtFlag: img$j,
+		EnFlag: img$i,
 		_: $format,
 		locale: $locale,
 		changeLocale,
@@ -14048,82 +22676,38 @@ class Footer extends SvelteComponentDev {
 
 const file$j = "src\\Components\\LayoutManager.svelte";
 
-function create_fragment$k(ctx) {
-	let div2;
-	let div0;
-	let switch_instance0;
-	let t0;
-	let main;
-	let t1;
-	let div1;
-	let switch_instance1;
+// (23:2) {#if showFooter}
+function create_if_block$f(ctx) {
+	let div;
+	let switch_instance;
 	let current;
-	var switch_value = /*header*/ ctx[0];
+	var switch_value = /*footer*/ ctx[1];
 
 	function switch_props(ctx) {
 		return { $$inline: true };
 	}
 
 	if (switch_value) {
-		switch_instance0 = construct_svelte_component_dev(switch_value, switch_props());
-	}
-
-	const default_slot_template = /*#slots*/ ctx[3].default;
-	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[2], null);
-	var switch_value_1 = /*footer*/ ctx[1];
-
-	function switch_props_1(ctx) {
-		return { $$inline: true };
-	}
-
-	if (switch_value_1) {
-		switch_instance1 = construct_svelte_component_dev(switch_value_1, switch_props_1());
+		switch_instance = construct_svelte_component_dev(switch_value, switch_props());
 	}
 
 	const block = {
 		c: function create() {
-			div2 = element("div");
-			div0 = element("div");
-			if (switch_instance0) create_component(switch_instance0.$$.fragment);
-			t0 = space();
-			main = element("main");
-			if (default_slot) default_slot.c();
-			t1 = space();
-			div1 = element("div");
-			if (switch_instance1) create_component(switch_instance1.$$.fragment);
-			attr_dev(div0, "class", "header svelte-9zu8yo");
-			add_location(div0, file$j, 6, 2, 100);
-			attr_dev(main, "class", "svelte-9zu8yo");
-			add_location(main, file$j, 7, 2, 164);
-			attr_dev(div1, "class", "footer");
-			add_location(div1, file$j, 10, 2, 199);
-			attr_dev(div2, "class", "content-wrapper svelte-9zu8yo");
-			add_location(div2, file$j, 5, 0, 67);
-		},
-		l: function claim(nodes) {
-			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+			div = element("div");
+			if (switch_instance) create_component(switch_instance.$$.fragment);
+			attr_dev(div, "class", "footer");
+			add_location(div, file$j, 23, 4, 557);
 		},
 		m: function mount(target, anchor) {
-			insert_dev(target, div2, anchor);
-			append_dev(div2, div0);
-			if (switch_instance0) mount_component(switch_instance0, div0, null);
-			append_dev(div2, t0);
-			append_dev(div2, main);
-
-			if (default_slot) {
-				default_slot.m(main, null);
-			}
-
-			append_dev(div2, t1);
-			append_dev(div2, div1);
-			if (switch_instance1) mount_component(switch_instance1, div1, null);
+			insert_dev(target, div, anchor);
+			if (switch_instance) mount_component(switch_instance, div, null);
 			current = true;
 		},
-		p: function update(ctx, [dirty]) {
-			if (dirty & /*header*/ 1 && switch_value !== (switch_value = /*header*/ ctx[0])) {
-				if (switch_instance0) {
+		p: function update(ctx, dirty) {
+			if (dirty & /*footer*/ 2 && switch_value !== (switch_value = /*footer*/ ctx[1])) {
+				if (switch_instance) {
 					group_outros();
-					const old_component = switch_instance0;
+					const old_component = switch_instance;
 
 					transition_out(old_component.$$.fragment, 1, 0, () => {
 						destroy_component(old_component, 1);
@@ -14133,34 +22717,104 @@ function create_fragment$k(ctx) {
 				}
 
 				if (switch_value) {
-					switch_instance0 = construct_svelte_component_dev(switch_value, switch_props());
-					create_component(switch_instance0.$$.fragment);
-					transition_in(switch_instance0.$$.fragment, 1);
-					mount_component(switch_instance0, div0, null);
+					switch_instance = construct_svelte_component_dev(switch_value, switch_props());
+					create_component(switch_instance.$$.fragment);
+					transition_in(switch_instance.$$.fragment, 1);
+					mount_component(switch_instance, div, null);
 				} else {
-					switch_instance0 = null;
+					switch_instance = null;
 				}
 			}
+		},
+		i: function intro(local) {
+			if (current) return;
+			if (switch_instance) transition_in(switch_instance.$$.fragment, local);
+			current = true;
+		},
+		o: function outro(local) {
+			if (switch_instance) transition_out(switch_instance.$$.fragment, local);
+			current = false;
+		},
+		d: function destroy(detaching) {
+			if (detaching) detach_dev(div);
+			if (switch_instance) destroy_component(switch_instance);
+		}
+	};
+
+	dispatch_dev("SvelteRegisterBlock", {
+		block,
+		id: create_if_block$f.name,
+		type: "if",
+		source: "(23:2) {#if showFooter}",
+		ctx
+	});
+
+	return block;
+}
+
+function create_fragment$k(ctx) {
+	let div1;
+	let div0;
+	let switch_instance;
+	let t0;
+	let main;
+	let t1;
+	let div1_class_value;
+	let current;
+	var switch_value = /*header*/ ctx[0];
+
+	function switch_props(ctx) {
+		return { $$inline: true };
+	}
+
+	if (switch_value) {
+		switch_instance = construct_svelte_component_dev(switch_value, switch_props());
+	}
+
+	const default_slot_template = /*#slots*/ ctx[5].default;
+	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[4], null);
+	let if_block = /*showFooter*/ ctx[2] && create_if_block$f(ctx);
+
+	const block = {
+		c: function create() {
+			div1 = element("div");
+			div0 = element("div");
+			if (switch_instance) create_component(switch_instance.$$.fragment);
+			t0 = space();
+			main = element("main");
+			if (default_slot) default_slot.c();
+			t1 = space();
+			if (if_block) if_block.c();
+			attr_dev(div0, "class", "header svelte-19ft94r");
+			add_location(div0, file$j, 18, 2, 436);
+			attr_dev(main, "class", "svelte-19ft94r");
+			add_location(main, file$j, 19, 2, 500);
+			attr_dev(div1, "class", div1_class_value = "" + (null_to_empty(/*pageClass*/ ctx[3] + " content-wrapper") + " svelte-19ft94r"));
+			add_location(div1, file$j, 17, 0, 388);
+		},
+		l: function claim(nodes) {
+			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+		},
+		m: function mount(target, anchor) {
+			insert_dev(target, div1, anchor);
+			append_dev(div1, div0);
+			if (switch_instance) mount_component(switch_instance, div0, null);
+			append_dev(div1, t0);
+			append_dev(div1, main);
 
 			if (default_slot) {
-				if (default_slot.p && (!current || dirty & /*$$scope*/ 4)) {
-					update_slot_base(
-						default_slot,
-						default_slot_template,
-						ctx,
-						/*$$scope*/ ctx[2],
-						!current
-						? get_all_dirty_from_scope(/*$$scope*/ ctx[2])
-						: get_slot_changes(default_slot_template, /*$$scope*/ ctx[2], dirty, null),
-						null
-					);
-				}
+				default_slot.m(main, null);
 			}
 
-			if (dirty & /*footer*/ 2 && switch_value_1 !== (switch_value_1 = /*footer*/ ctx[1])) {
-				if (switch_instance1) {
+			append_dev(div1, t1);
+			if (if_block) if_block.m(div1, null);
+			current = true;
+		},
+		p: function update(ctx, [dirty]) {
+			if (dirty & /*header*/ 1 && switch_value !== (switch_value = /*header*/ ctx[0])) {
+				if (switch_instance) {
 					group_outros();
-					const old_component = switch_instance1;
+					const old_component = switch_instance;
 
 					transition_out(old_component.$$.fragment, 1, 0, () => {
 						destroy_component(old_component, 1);
@@ -14169,34 +22823,76 @@ function create_fragment$k(ctx) {
 					check_outros();
 				}
 
-				if (switch_value_1) {
-					switch_instance1 = construct_svelte_component_dev(switch_value_1, switch_props_1());
-					create_component(switch_instance1.$$.fragment);
-					transition_in(switch_instance1.$$.fragment, 1);
-					mount_component(switch_instance1, div1, null);
+				if (switch_value) {
+					switch_instance = construct_svelte_component_dev(switch_value, switch_props());
+					create_component(switch_instance.$$.fragment);
+					transition_in(switch_instance.$$.fragment, 1);
+					mount_component(switch_instance, div0, null);
 				} else {
-					switch_instance1 = null;
+					switch_instance = null;
 				}
+			}
+
+			if (default_slot) {
+				if (default_slot.p && (!current || dirty & /*$$scope*/ 16)) {
+					update_slot_base(
+						default_slot,
+						default_slot_template,
+						ctx,
+						/*$$scope*/ ctx[4],
+						!current
+						? get_all_dirty_from_scope(/*$$scope*/ ctx[4])
+						: get_slot_changes(default_slot_template, /*$$scope*/ ctx[4], dirty, null),
+						null
+					);
+				}
+			}
+
+			if (/*showFooter*/ ctx[2]) {
+				if (if_block) {
+					if_block.p(ctx, dirty);
+
+					if (dirty & /*showFooter*/ 4) {
+						transition_in(if_block, 1);
+					}
+				} else {
+					if_block = create_if_block$f(ctx);
+					if_block.c();
+					transition_in(if_block, 1);
+					if_block.m(div1, null);
+				}
+			} else if (if_block) {
+				group_outros();
+
+				transition_out(if_block, 1, 1, () => {
+					if_block = null;
+				});
+
+				check_outros();
+			}
+
+			if (!current || dirty & /*pageClass*/ 8 && div1_class_value !== (div1_class_value = "" + (null_to_empty(/*pageClass*/ ctx[3] + " content-wrapper") + " svelte-19ft94r"))) {
+				attr_dev(div1, "class", div1_class_value);
 			}
 		},
 		i: function intro(local) {
 			if (current) return;
-			if (switch_instance0) transition_in(switch_instance0.$$.fragment, local);
+			if (switch_instance) transition_in(switch_instance.$$.fragment, local);
 			transition_in(default_slot, local);
-			if (switch_instance1) transition_in(switch_instance1.$$.fragment, local);
+			transition_in(if_block);
 			current = true;
 		},
 		o: function outro(local) {
-			if (switch_instance0) transition_out(switch_instance0.$$.fragment, local);
+			if (switch_instance) transition_out(switch_instance.$$.fragment, local);
 			transition_out(default_slot, local);
-			if (switch_instance1) transition_out(switch_instance1.$$.fragment, local);
+			transition_out(if_block);
 			current = false;
 		},
 		d: function destroy(detaching) {
-			if (detaching) detach_dev(div2);
-			if (switch_instance0) destroy_component(switch_instance0);
+			if (detaching) detach_dev(div1);
+			if (switch_instance) destroy_component(switch_instance);
 			if (default_slot) default_slot.d(detaching);
-			if (switch_instance1) destroy_component(switch_instance1);
+			if (if_block) if_block.d();
 		}
 	};
 
@@ -14216,6 +22912,8 @@ function instance$k($$self, $$props, $$invalidate) {
 	validate_slots('LayoutManager', slots, ['default']);
 	let { header } = $$props;
 	let { footer } = $$props;
+	let showFooter = true;
+	let pageClass = "";
 
 	$$self.$$.on_mount.push(function () {
 		if (header === undefined && !('header' in $$props || $$self.$$.bound[$$self.$$.props['header']])) {
@@ -14236,21 +22934,33 @@ function instance$k($$self, $$props, $$invalidate) {
 	$$self.$$set = $$props => {
 		if ('header' in $$props) $$invalidate(0, header = $$props.header);
 		if ('footer' in $$props) $$invalidate(1, footer = $$props.footer);
-		if ('$$scope' in $$props) $$invalidate(2, $$scope = $$props.$$scope);
+		if ('$$scope' in $$props) $$invalidate(4, $$scope = $$props.$$scope);
 	};
 
-	$$self.$capture_state = () => ({ header, footer });
+	$$self.$capture_state = () => ({ header, footer, showFooter, pageClass });
 
 	$$self.$inject_state = $$props => {
 		if ('header' in $$props) $$invalidate(0, header = $$props.header);
 		if ('footer' in $$props) $$invalidate(1, footer = $$props.footer);
+		if ('showFooter' in $$props) $$invalidate(2, showFooter = $$props.showFooter);
+		if ('pageClass' in $$props) $$invalidate(3, pageClass = $$props.pageClass);
 	};
 
 	if ($$props && "$$inject" in $$props) {
 		$$self.$inject_state($$props.$$inject);
 	}
 
-	return [header, footer, $$scope, slots];
+	{
+		const currentHref = window.location.href;
+		$$invalidate(2, showFooter = !(/\/editor|\/project\/[^/]+|\/$/).test(currentHref));
+		$$invalidate(3, pageClass = (/\/editor/).test(currentHref) ? "editor" : "other");
+
+		if ((/\/$/).test(currentHref)) {
+			$$invalidate(3, pageClass = "home");
+		}
+	}
+
+	return [header, footer, showFooter, pageClass, $$scope, slots];
 }
 
 class LayoutManager extends SvelteComponentDev {
@@ -14283,9 +22993,9 @@ class LayoutManager extends SvelteComponentDev {
 	}
 }
 
-var img$g = "data:image/svg+xml,%3c%3fxml version='1.0' %3f%3e%3c!DOCTYPE svg PUBLIC '-//W3C//DTD SVG 1.1//EN' 'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'%3e%3csvg height='512px' id='Layer_1' style='enable-background:new 0 0 512 512%3b' version='1.1' viewBox='0 0 512 512' width='512px' xml:space='preserve' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'%3e%3cstyle type='text/css'%3e%3c!%5bCDATA%5b .st0%7bfill-rule:evenodd%3bclip-rule:evenodd%3b%7d%5d%5d%3e%3c/style%3e%3cg%3e%3cpath class='st0' d='M256%2c32C132.3%2c32%2c32%2c134.8%2c32%2c261.7c0%2c101.5%2c64.2%2c187.5%2c153.2%2c217.9c11.2%2c2.1%2c15.3-5%2c15.3-11.1 c0-5.5-0.2-19.9-0.3-39.1c-62.3%2c13.9-75.5-30.8-75.5-30.8c-10.2-26.5-24.9-33.6-24.9-33.6c-20.3-14.3%2c1.5-14%2c1.5-14 c22.5%2c1.6%2c34.3%2c23.7%2c34.3%2c23.7c20%2c35.1%2c52.4%2c25%2c65.2%2c19.1c2-14.8%2c7.8-25%2c14.2-30.7c-49.7-5.8-102-25.5-102-113.5 c0-25.1%2c8.7-45.6%2c23-61.6c-2.3-5.8-10-29.2%2c2.2-60.8c0%2c0%2c18.8-6.2%2c61.6%2c23.5c17.9-5.1%2c37-7.6%2c56.1-7.7c19%2c0.1%2c38.2%2c2.6%2c56.1%2c7.7 c42.8-29.7%2c61.5-23.5%2c61.5-23.5c12.2%2c31.6%2c4.5%2c55%2c2.2%2c60.8c14.3%2c16.1%2c23%2c36.6%2c23%2c61.6c0%2c88.2-52.4%2c107.6-102.3%2c113.3 c8%2c7.1%2c15.2%2c21.1%2c15.2%2c42.5c0%2c30.7-0.3%2c55.5-0.3%2c63c0%2c6.1%2c4%2c13.3%2c15.4%2c11C415.9%2c449.1%2c480%2c363.1%2c480%2c261.7 C480%2c134.8%2c379.7%2c32%2c256%2c32z'/%3e%3c/g%3e%3c/svg%3e";
+var img$h = "data:image/svg+xml,%3c%3fxml version='1.0' %3f%3e%3c!DOCTYPE svg PUBLIC '-//W3C//DTD SVG 1.1//EN' 'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'%3e%3csvg height='512px' id='Layer_1' style='enable-background:new 0 0 512 512%3b' version='1.1' viewBox='0 0 512 512' width='512px' xml:space='preserve' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'%3e%3cstyle type='text/css'%3e%3c!%5bCDATA%5b .st0%7bfill-rule:evenodd%3bclip-rule:evenodd%3b%7d%5d%5d%3e%3c/style%3e%3cg%3e%3cpath class='st0' d='M256%2c32C132.3%2c32%2c32%2c134.8%2c32%2c261.7c0%2c101.5%2c64.2%2c187.5%2c153.2%2c217.9c11.2%2c2.1%2c15.3-5%2c15.3-11.1 c0-5.5-0.2-19.9-0.3-39.1c-62.3%2c13.9-75.5-30.8-75.5-30.8c-10.2-26.5-24.9-33.6-24.9-33.6c-20.3-14.3%2c1.5-14%2c1.5-14 c22.5%2c1.6%2c34.3%2c23.7%2c34.3%2c23.7c20%2c35.1%2c52.4%2c25%2c65.2%2c19.1c2-14.8%2c7.8-25%2c14.2-30.7c-49.7-5.8-102-25.5-102-113.5 c0-25.1%2c8.7-45.6%2c23-61.6c-2.3-5.8-10-29.2%2c2.2-60.8c0%2c0%2c18.8-6.2%2c61.6%2c23.5c17.9-5.1%2c37-7.6%2c56.1-7.7c19%2c0.1%2c38.2%2c2.6%2c56.1%2c7.7 c42.8-29.7%2c61.5-23.5%2c61.5-23.5c12.2%2c31.6%2c4.5%2c55%2c2.2%2c60.8c14.3%2c16.1%2c23%2c36.6%2c23%2c61.6c0%2c88.2-52.4%2c107.6-102.3%2c113.3 c8%2c7.1%2c15.2%2c21.1%2c15.2%2c42.5c0%2c30.7-0.3%2c55.5-0.3%2c63c0%2c6.1%2c4%2c13.3%2c15.4%2c11C415.9%2c449.1%2c480%2c363.1%2c480%2c261.7 C480%2c134.8%2c379.7%2c32%2c256%2c32z'/%3e%3c/g%3e%3c/svg%3e";
 
-var img$f = "data:image/svg+xml,%3c%3fxml version='1.0' %3f%3e%3csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3e%3cg%3e%3cpath d='M0 0h24v24H0z' fill='none'/%3e%3cpath d='M5.868 2.75L8 10h8l2.132-7.25a.4.4 0 0 1 .765-.01l3.495 10.924a.5.5 0 0 1-.173.55L12 22 1.78 14.214a.5.5 0 0 1-.172-.55L5.103 2.74a.4.4 0 0 1 .765.009z'/%3e%3c/g%3e%3c/svg%3e";
+var img$g = "data:image/svg+xml,%3c%3fxml version='1.0' %3f%3e%3csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3e%3cg%3e%3cpath d='M0 0h24v24H0z' fill='none'/%3e%3cpath d='M5.868 2.75L8 10h8l2.132-7.25a.4.4 0 0 1 .765-.01l3.495 10.924a.5.5 0 0 1-.173.55L12 22 1.78 14.214a.5.5 0 0 1-.172-.55L5.103 2.74a.4.4 0 0 1 .765.009z'/%3e%3c/g%3e%3c/svg%3e";
 
 /* src\Components\Login.svelte generated by Svelte v3.59.2 */
 
@@ -14303,7 +23013,7 @@ function create_if_block_3$4(ctx) {
 			h3 = element("h3");
 			t = text(t_value);
 			attr_dev(h3, "class", "error svelte-14pm9rp");
-			add_location(h3, file$i, 55, 6, 1512);
+			add_location(h3, file$i, 55, 6, 1567);
 		},
 		m: function mount(target, anchor) {
 			insert_dev(target, h3, anchor);
@@ -14344,9 +23054,9 @@ function create_if_block$e(ctx) {
 			t = space();
 			if (if_block1) if_block1.c();
 			attr_dev(div0, "class", "oauth-options svelte-14pm9rp");
-			add_location(div0, file$i, 59, 8, 1678);
+			add_location(div0, file$i, 59, 8, 1737);
 			attr_dev(div1, "class", "oauth-logins svelte-14pm9rp");
-			add_location(div1, file$i, 58, 6, 1643);
+			add_location(div1, file$i, 58, 6, 1701);
 		},
 		m: function mount(target, anchor) {
 			insert_dev(target, div1, anchor);
@@ -14413,13 +23123,13 @@ function create_if_block_2$4(ctx) {
 			a = element("a");
 			img = element("img");
 			t = text(t_value);
-			if (!src_url_equal(img.src, img_src_value = img$g)) attr_dev(img, "src", img_src_value);
+			if (!src_url_equal(img.src, img_src_value = img$h)) attr_dev(img, "src", img_src_value);
 			attr_dev(img, "alt", "github logo");
 			attr_dev(img, "class", "svelte-14pm9rp");
-			add_location(img, file$i, 62, 14, 1819);
+			add_location(img, file$i, 62, 14, 1881);
 			attr_dev(a, "href", backendUrl$7 + "/oauth2/authorization/github");
 			attr_dev(a, "class", "svelte-14pm9rp");
-			add_location(a, file$i, 61, 12, 1750);
+			add_location(a, file$i, 61, 12, 1811);
 		},
 		m: function mount(target, anchor) {
 			insert_dev(target, a, anchor);
@@ -14459,12 +23169,12 @@ function create_if_block_1$5(ctx) {
 			img = element("img");
 			t = text(t_value);
 			attr_dev(img, "class", "gitlab svelte-14pm9rp");
-			if (!src_url_equal(img.src, img_src_value = img$f)) attr_dev(img, "src", img_src_value);
+			if (!src_url_equal(img.src, img_src_value = img$g)) attr_dev(img, "src", img_src_value);
 			attr_dev(img, "alt", "gitlab logo");
-			add_location(img, file$i, 69, 14, 2069);
+			add_location(img, file$i, 69, 14, 2138);
 			attr_dev(a, "href", backendUrl$7 + "/oauth2/authorization/gitlab");
 			attr_dev(a, "class", "svelte-14pm9rp");
-			add_location(a, file$i, 68, 12, 2000);
+			add_location(a, file$i, 68, 12, 2068);
 		},
 		m: function mount(target, anchor) {
 			insert_dev(target, a, anchor);
@@ -14539,37 +23249,37 @@ function create_fragment$j(ctx) {
 			t7 = space();
 			a = element("a");
 			t8 = text(t8_value);
-			add_location(h1, file$i, 52, 2, 1432);
+			add_location(h1, file$i, 52, 2, 1484);
 			attr_dev(input0, "type", "email");
 			attr_dev(input0, "id", "username");
 			attr_dev(input0, "name", "username");
 			attr_dev(input0, "placeholder", input0_placeholder_value = /*$_*/ ctx[4]("login.email"));
 			attr_dev(input0, "class", "svelte-14pm9rp");
-			add_location(input0, file$i, 79, 8, 2358);
+			add_location(input0, file$i, 79, 8, 2437);
 			attr_dev(input1, "type", "password");
 			attr_dev(input1, "id", "password");
 			attr_dev(input1, "name", "password");
 			attr_dev(input1, "placeholder", input1_placeholder_value = /*$_*/ ctx[4]("login.password"));
 			attr_dev(input1, "class", "svelte-14pm9rp");
-			add_location(input1, file$i, 85, 8, 2499);
+			add_location(input1, file$i, 85, 8, 2584);
 			attr_dev(button, "class", "button--blue");
 			attr_dev(button, "type", "submit");
-			add_location(button, file$i, 92, 10, 2687);
+			add_location(button, file$i, 92, 10, 2779);
 			attr_dev(div0, "class", "button-container svelte-14pm9rp");
-			add_location(div0, file$i, 91, 8, 2646);
+			add_location(div0, file$i, 91, 8, 2737);
 			attr_dev(form, "action", backendUrl$7 + "/login");
 			attr_dev(form, "method", "post");
 			attr_dev(form, "class", "svelte-14pm9rp");
-			add_location(form, file$i, 78, 6, 2298);
+			add_location(form, file$i, 78, 6, 2376);
 			attr_dev(a, "href", "/register");
 			attr_dev(a, "class", "svelte-14pm9rp");
-			add_location(a, file$i, 96, 6, 2805);
+			add_location(a, file$i, 96, 6, 2901);
 			attr_dev(div1, "class", "password-login svelte-14pm9rp");
-			add_location(div1, file$i, 77, 4, 2263);
+			add_location(div1, file$i, 77, 4, 2340);
 			attr_dev(div2, "class", "login-component");
-			add_location(div2, file$i, 53, 2, 1453);
+			add_location(div2, file$i, 53, 2, 1506);
 			attr_dev(div3, "class", "main-component svelte-14pm9rp");
-			add_location(div3, file$i, 51, 0, 1401);
+			add_location(div3, file$i, 51, 0, 1452);
 		},
 		l: function claim(nodes) {
 			throw new Error_1$5("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -14714,8 +23424,8 @@ function instance$j($$self, $$props, $$invalidate) {
 	$$self.$capture_state = () => ({
 		onMount,
 		_: $format,
-		GitHubIcon: img$g,
-		GitLabIcon: img$f,
+		GitHubIcon: img$h,
+		GitLabIcon: img$g,
 		backendUrl: backendUrl$7,
 		showGithubOAuth,
 		showGitlabOAuth,
@@ -14754,7 +23464,7 @@ class Login extends SvelteComponentDev {
 	}
 }
 
-var img$e = "data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' data-name='Layer 1' width='860.13137' height='571.14799' viewBox='0 0 860.13137 571.14799' xmlns:xlink='http://www.w3.org/1999/xlink'%3e%3cpath d='M605.66974%2c324.95306c-7.66934-12.68446-16.7572-26.22768-30.98954-30.36953-16.482-4.7965-33.4132%2c4.73193-47.77473%2c14.13453a1392.15692%2c1392.15692%2c0%2c0%2c0-123.89338%2c91.28311l.04331.49238q46.22556-3.1878%2c92.451-6.37554c22.26532-1.53546%2c45.29557-3.2827%2c64.97195-13.8156%2c7.46652-3.99683%2c14.74475-9.33579%2c23.20555-9.70782%2c10.51175-.46217%2c19.67733%2c6.87923%2c26.8802%2c14.54931%2c42.60731%2c45.371%2c54.937%2c114.75409%2c102.73817%2c154.61591A1516.99453%2c1516.99453%2c0%2c0%2c0%2c605.66974%2c324.95306Z' transform='translate(-169.93432 -164.42601)' fill='%23f2f2f2'/%3e%3cpath d='M867.57068%2c709.78146c-4.71167-5.94958-6.6369-7.343-11.28457-13.34761q-56.7644-73.41638-106.70791-151.79237-33.92354-53.23-64.48275-108.50439-14.54864-26.2781-28.29961-52.96872-10.67044-20.6952-20.8646-41.63793c-1.94358-3.98782-3.8321-7.99393-5.71122-12.00922-4.42788-9.44232-8.77341-18.93047-13.43943-28.24449-5.31686-10.61572-11.789-21.74485-21.55259-28.877a29.40493%2c29.40493%2c0%2c0%2c0-15.31855-5.89458c-7.948-.51336-15.28184%2c2.76855-22.17568%2c6.35295-50.43859%2c26.301-97.65922%2c59.27589-140.3696%2c96.79771A730.77816%2c730.77816%2c0%2c0%2c0%2c303.32241%2c496.24719c-1.008%2c1.43927-3.39164.06417-2.37419-1.38422q6.00933-8.49818%2c12.25681-16.81288A734.817%2c734.817%2c0%2c0%2c1%2c500.80465%2c303.06436q18.24824-11.82581%2c37.18269-22.54245c6.36206-3.60275%2c12.75188-7.15967%2c19.25136-10.49653%2c6.37146-3.27274%2c13.13683-6.21547%2c20.41563-6.32547%2c24.7701-.385%2c37.59539%2c27.66695%2c46.40506%2c46.54248q4.15283%2c8.9106%2c8.40636%2c17.76626%2c16.0748%2c33.62106%2c33.38729%2c66.628%2c10.68453%2c20.379%2c21.83683%2c40.51955%2c34.7071%2c62.71816%2c73.77854%2c122.897c34.5059%2c53.1429%2c68.73651%2c100.08874%2c108.04585%2c149.78472C870.59617%2c709.21309%2c868.662%2c711.17491%2c867.57068%2c709.78146Z' transform='translate(-169.93432 -164.42601)' fill='%23e4e4e4'/%3e%3cpath d='M414.91613%2c355.804c-1.43911-1.60428-2.86927-3.20856-4.31777-4.81284-11.42244-12.63259-23.6788-25.11847-39.3644-32.36067a57.11025%2c57.11025%2c0%2c0%2c0-23.92679-5.54622c-8.56213.02753-16.93178%2c2.27348-24.84306%2c5.41792-3.74034%2c1.49427-7.39831%2c3.1902-11.00078%2c4.99614-4.11634%2c2.07182-8.15927%2c4.28118-12.1834%2c6.50883q-11.33112%2c6.27044-22.36816%2c13.09089-21.9606%2c13.57221-42.54566%2c29.21623-10.67111%2c8.11311-20.90174%2c16.75788-9.51557%2c8.03054-18.64618%2c16.492c-1.30169%2c1.20091-3.24527-.74255-1.94358-1.94347%2c1.60428-1.49428%2c3.22691-2.97938%2c4.84955-4.44613q6.87547-6.21546%2c13.9712-12.19257%2c12.93921-10.91827%2c26.54851-20.99312%2c21.16293-15.67614%2c43.78288-29.22541%2c11.30361-6.76545%2c22.91829-12.96259c2.33794-1.24675%2c4.70318-2.466%2c7.09572-3.6211a113.11578%2c113.11578%2c0%2c0%2c1%2c16.86777-6.86632%2c60.0063%2c60.0063%2c0%2c0%2c1%2c25.476-2.50265%2c66.32706%2c66.32706%2c0%2c0%2c1%2c23.50512%2c8.1314c15.40091%2c8.60812%2c27.34573%2c21.919%2c38.97%2c34.90915C418.03337%2c355.17141%2c416.09875%2c357.12405%2c414.91613%2c355.804Z' transform='translate(-169.93432 -164.42601)' fill='%23e4e4e4'/%3e%3cpath d='M730.47659%2c486.71092l36.90462-13.498%2c18.32327-6.70183c5.96758-2.18267%2c11.92082-4.66747%2c18.08988-6.23036a28.53871%2c28.53871%2c0%2c0%2c1%2c16.37356.20862%2c37.73753%2c37.73753%2c0%2c0%2c1%2c12.771%2c7.91666%2c103.63965%2c103.63965%2c0%2c0%2c1%2c10.47487%2c11.18643c3.98932%2c4.79426%2c7.91971%2c9.63877%2c11.86772%2c14.46706q24.44136%2c29.89094%2c48.56307%2c60.04134%2c24.12117%2c30.14991%2c47.91981%2c60.556%2c23.85681%2c30.48041%2c47.38548%2c61.21573%2c2.88229%2c3.76518%2c5.75966%2c7.53415c1.0598%2c1.38809%2c3.44949.01962%2c2.37472-1.38808Q983.582%2c650.9742%2c959.54931%2c620.184q-24.09177-30.86383-48.51647-61.46586-24.42421-30.60141-49.17853-60.93743-6.16706-7.55761-12.35445-15.09858c-3.47953-4.24073-6.91983-8.52718-10.73628-12.47427-7.00539-7.24516-15.75772-13.64794-26.23437-13.82166-6.15972-.10214-12.121%2c1.85248-17.844%2c3.92287-6.16968%2c2.232-12.32455%2c4.50571-18.48633%2c6.75941l-37.16269%2c13.59243-9.29067%2c3.3981c-1.64875.603-.93651%2c3.2619.73111%2c2.652Z' transform='translate(-169.93432 -164.42601)' fill='%23e4e4e4'/%3e%3cpath d='M366.37741%2c334.52609c-18.75411-9.63866-42.77137-7.75087-60.00508%2c4.29119a855.84708%2c855.84708%2c0%2c0%2c1%2c97.37056%2c22.72581C390.4603%2c353.75916%2c380.07013%2c341.5635%2c366.37741%2c334.52609Z' transform='translate(-169.93432 -164.42601)' fill='%23f2f2f2'/%3e%3cpath d='M306.18775%2c338.7841l-3.61042%2c2.93462c1.22123-1.02713%2c2.4908-1.99013%2c3.795-2.90144C306.31073%2c338.80665%2c306.24935%2c338.79473%2c306.18775%2c338.7841Z' transform='translate(-169.93432 -164.42601)' fill='%23f2f2f2'/%3e%3cpath d='M831.54929%2c486.84576c-3.6328-4.42207-7.56046-9.05222-12.99421-10.84836l-5.07308.20008A575.436%2c575.436%2c0%2c0%2c0%2c966.74929%2c651.418Q899.14929%2c569.13192%2c831.54929%2c486.84576Z' transform='translate(-169.93432 -164.42601)' fill='%23f2f2f2'/%3e%3cpath d='M516.08388%2c450.36652A37.4811%2c37.4811%2c0%2c0%2c0%2c531.015%2c471.32518c2.82017%2c1.92011%2c6.15681%2c3.76209%2c7.12158%2c7.03463a8.37858%2c8.37858%2c0%2c0%2c1-.87362%2c6.1499%2c24.88351%2c24.88351%2c0%2c0%2c1-3.86126%2c5.04137l-.13667.512c-6.99843-4.14731-13.65641-9.3934-17.52227-16.55115s-4.40553-16.53895.34116-23.14544' transform='translate(-169.93432 -164.42601)' fill='%23f2f2f2'/%3e%3cpath d='M749.08388%2c653.36652A37.4811%2c37.4811%2c0%2c0%2c0%2c764.015%2c674.32518c2.82017%2c1.92011%2c6.15681%2c3.76209%2c7.12158%2c7.03463a8.37858%2c8.37858%2c0%2c0%2c1-.87362%2c6.1499%2c24.88351%2c24.88351%2c0%2c0%2c1-3.86126%2c5.04137l-.13667.512c-6.99843-4.14731-13.65641-9.3934-17.52227-16.55115s-4.40553-16.53895.34116-23.14544' transform='translate(-169.93432 -164.42601)' fill='%23f2f2f2'/%3e%3cpath d='M284.08388%2c639.36652A37.4811%2c37.4811%2c0%2c0%2c0%2c299.015%2c660.32518c2.82017%2c1.92011%2c6.15681%2c3.76209%2c7.12158%2c7.03463a8.37858%2c8.37858%2c0%2c0%2c1-.87362%2c6.1499%2c24.88351%2c24.88351%2c0%2c0%2c1-3.86126%2c5.04137l-.13667.512c-6.99843-4.14731-13.65641-9.3934-17.52227-16.55115s-4.40553-16.53895.34116-23.14544' transform='translate(-169.93432 -164.42601)' fill='%23f2f2f2'/%3e%3ccircle cx='649.24878' cy='51' r='51' fill='%233bd461'/%3e%3cpath d='M911.21851%2c176.29639c-24.7168-3.34094-52.93512%2c10.01868-59.34131%2c34.12353a21.59653%2c21.59653%2c0%2c0%2c0-41.09351%2c2.10871l2.82972%2c2.02667a372.27461%2c372.27461%2c0%2c0%2c0%2c160.65881-.72638C957.07935%2c195.76%2c935.93537%2c179.63727%2c911.21851%2c176.29639Z' transform='translate(-169.93432 -164.42601)' fill='%23f0f0f0'/%3e%3cpath d='M805.21851%2c244.29639c-24.7168-3.34094-52.93512%2c10.01868-59.34131%2c34.12353a21.59653%2c21.59653%2c0%2c0%2c0-41.09351%2c2.10871l2.82972%2c2.02667a372.27461%2c372.27461%2c0%2c0%2c0%2c160.65881-.72638C851.07935%2c263.76%2c829.93537%2c247.63727%2c805.21851%2c244.29639Z' transform='translate(-169.93432 -164.42601)' fill='%23f0f0f0'/%3e%3cpath d='M1020.94552%2c257.15423a.98189.98189%2c0%2c0%2c1-.30176-.04688C756.237%2c173.48919%2c523.19942%2c184.42376%2c374.26388%2c208.32122c-20.26856%2c3.251-40.59131%2c7.00586-60.40381%2c11.16113-5.05811%2c1.05957-10.30567%2c2.19532-15.59668%2c3.37793-6.31885%2c1.40723-12.55371%2c2.85645-18.53223%2c4.30567q-3.873.917-7.59472%2c1.84863c-3.75831.92773-7.57178%2c1.89453-11.65967%2c2.957-4.56787%2c1.17774-9.209%2c2.41309-13.79737%2c3.67188a.44239.44239%2c0%2c0%2c1-.05127.01465l.00049.001c-5.18261%2c1.415-10.33789%2c2.8711-15.32324%2c4.3252-2.69824.77929-5.30371%2c1.54785-7.79932%2c2.30664-.2788.07715-.52587.15136-.77636.22754l-.53614.16308c-.31054.09473-.61718.1875-.92382.27539l-.01953.00586.00048.001-.81152.252c-.96777.293-1.91211.5791-2.84082.86426-24.54492%2c7.56641-38.03809%2c12.94922-38.17139%2c13.00195a1%2c1%2c0%2c1%2c1-.74414-1.85644c.13428-.05274%2c13.69336-5.46289%2c38.32764-13.05762.93213-.28613%2c1.87891-.57226%2c2.84961-.86621l.7539-.23438c.02588-.00976.05176-.01757.07813-.02539.30518-.08691.60986-.17968.91943-.27343l.53711-.16309c.26758-.08105.53125-.16113.80127-.23535%2c2.47852-.75391%2c5.09278-1.52441%2c7.79785-2.30664%2c4.98731-1.45508%2c10.14746-2.91113%2c15.334-4.32813.01611-.00586.03271-.00976.04883-.01464v-.001c4.60449-1.2627%2c9.26269-2.50293%2c13.84521-3.68457%2c4.09424-1.06348%2c7.915-2.03223%2c11.67969-2.96192q3.73755-.93017%2c7.60937-1.85253c5.98536-1.45118%2c12.23291-2.90235%2c18.563-4.3125%2c5.29932-1.1836%2c10.55567-2.32227%2c15.62207-3.38282%2c19.84326-4.16211%2c40.19776-7.92285%2c60.49707-11.17871C523.09591%2c182.415%2c756.46749%2c171.46282%2c1021.2463%2c255.2011a.99974.99974%2c0%2c0%2c1-.30078%2c1.95313Z' transform='translate(-169.93432 -164.42601)' fill='%23ccc'/%3e%3cpath d='M432.92309%2c584.266a6.72948%2c6.72948%2c0%2c0%2c0-1.7-2.67%2c6.42983%2c6.42983%2c0%2c0%2c0-.92-.71c-2.61-1.74-6.51-2.13-8.99%2c0a5.81012%2c5.81012%2c0%2c0%2c0-.69.71q-1.11%2c1.365-2.28%2c2.67c-1.28%2c1.46-2.59%2c2.87-3.96%2c4.24-.39.38-.78.77-1.18%2c1.15-.23.23-.46.45-.69.67-.88.84-1.78%2c1.65-2.69%2c2.45-.48.43-.96.85-1.45%2c1.26-.73.61-1.46%2c1.22-2.2%2c1.81-.07.05-.14.1-.21.16-.02.01-.03.03-.05.04-.01%2c0-.02%2c0-.03.02a.17861.17861%2c0%2c0%2c0-.07.05c-.22.15-.37.25-.48.34.04-.01995.08-.05.12-.07-.18.14-.37.28-.55.42-1.75%2c1.29-3.54%2c2.53-5.37%2c3.69a99.21022%2c99.21022%2c0%2c0%2c1-14.22%2c7.55c-.33.13-.67.27-1.01.4a85.96993%2c85.96993%2c0%2c0%2c1-40.85%2c6.02q-2.13008-.165-4.26-.45c-1.64-.24-3.27-.53-4.89-.86a97.93186%2c97.93186%2c0%2c0%2c1-18.02-5.44%2c118.65185%2c118.65185%2c0%2c0%2c1-20.66-12.12c-1-.71-2.01-1.42-3.02-2.11%2c1.15-2.82%2c2.28-5.64%2c3.38-8.48.55-1.37%2c1.08-2.74%2c1.6-4.12%2c4.09-10.63%2c7.93-21.36%2c11.61-32.13q5.58-16.365%2c10.53-32.92.51-1.68.99-3.36%2c2.595-8.745%2c4.98-17.53c.15-.56994.31-1.12994.45-1.7q.68994-2.52%2c1.35-5.04c1-3.79-1.26-8.32-5.24-9.23a7.63441%2c7.63441%2c0%2c0%2c0-9.22%2c5.24c-.43%2c1.62-.86%2c3.23-1.3%2c4.85q-3.165%2c11.74494-6.66%2c23.41-.51%2c1.68-1.02%2c3.36-7.71%2c25.41-16.93%2c50.31-1.11%2c3.015-2.25%2c6.01c-.37.98-.74%2c1.96-1.12%2c2.94-.73%2c1.93-1.48%2c3.86-2.23%2c5.79-.43006%2c1.13-.87006%2c2.26-1.31%2c3.38-.29.71-.57%2c1.42-.85%2c2.12a41.80941%2c41.80941%2c0%2c0%2c0-8.81-2.12l-.48-.06a27.397%2c27.397%2c0%2c0%2c0-7.01.06%2c23.91419%2c23.91419%2c0%2c0%2c0-17.24%2c10.66c-4.77%2c7.51-4.71%2c18.25%2c1.98%2c24.63%2c6.89%2c6.57%2c17.32%2c6.52%2c25.43%2c2.41a28.35124%2c28.35124%2c0%2c0%2c0%2c10.52-9.86%2c50.56939%2c50.56939%2c0%2c0%2c0%2c2.74-4.65c.21.14.42.28.63.43.8.56%2c1.6%2c1.13%2c2.39%2c1.69a111.73777%2c111.73777%2c0%2c0%2c0%2c14.51%2c8.91%2c108.35887%2c108.35887%2c0%2c0%2c0%2c34.62%2c10.47c.27.03.53.07.8.1%2c1.33.17%2c2.67.3%2c4.01.41a103.78229%2c103.78229%2c0%2c0%2c0%2c55.58-11.36q2.175-1.125%2c4.31-2.36%2c3.315-1.92%2c6.48-4.08c1.15-.78%2c2.27-1.57%2c3.38-2.4a101.04244%2c101.04244%2c0%2c0%2c0%2c13.51-11.95q2.35491-2.475%2c4.51-5.11005a8.0612%2c8.0612%2c0%2c0%2c0%2c2.2-5.3A7.5644%2c7.5644%2c0%2c0%2c0%2c432.92309%2c584.266Zm-165.59%2c23.82c.21-.15.42-.31.62-.47C267.89312%2c607.766%2c267.60308%2c607.936%2c267.33312%2c608.086Zm3.21-3.23c-.23.26-.44.52-.67.78a23.36609%2c23.36609%2c0%2c0%2c1-2.25%2c2.2c-.11.1-.23.2-.35.29a.00976.00976%2c0%2c0%2c0-.01.01%2c3.80417%2c3.80417%2c0%2c0%2c0-.42005.22q-.645.39-1.31994.72a17.00459%2c17.00459%2c0%2c0%2c1-2.71.75%2c16.79925%2c16.79925%2c0%2c0%2c1-2.13.02h-.02a14.82252%2c14.82252%2c0%2c0%2c1-1.45-.4c-.24-.12-.47-.25994-.7-.4-.09-.08-.17005-.16-.22-.21a2.44015%2c2.44015%2c0%2c0%2c1-.26995-.29.0098.0098%2c0%2c0%2c0-.01-.01c-.11005-.2-.23005-.4-.34-.6a.031.031%2c0%2c0%2c1-.01-.02c-.08-.25-.15-.51-.21-.77a12.51066%2c12.51066%2c0%2c0%2c1%2c.01-1.37%2c13.4675%2c13.4675%2c0%2c0%2c1%2c.54-1.88%2c11.06776%2c11.06776%2c0%2c0%2c1%2c.69-1.26c.02-.04.12-.2.23-.38.01-.01.01-.01.01-.02.15-.17.3-.35.46-.51.27-.3.56-.56.85-.83a18.02212%2c18.02212%2c0%2c0%2c1%2c1.75-1.01%2c19.48061%2c19.48061%2c0%2c0%2c1%2c2.93-.79%2c24.98945%2c24.98945%2c0%2c0%2c1%2c4.41.04%2c30.30134%2c30.30134%2c0%2c0%2c1%2c4.1%2c1.01%2c36.94452%2c36.94452%2c0%2c0%2c1-2.77%2c4.54C270.6231%2c604.746%2c270.58312%2c604.806%2c270.54308%2c604.856Zm-11.12-3.29a2.18029%2c2.18029%2c0%2c0%2c1-.31.38995A1.40868%2c1.40868%2c0%2c0%2c1%2c259.42309%2c601.566Z' transform='translate(-169.93432 -164.42601)' fill='%233f3d56'/%3e%3cpath d='M402.86309%2c482.136q-.13494%2c4.71-.27%2c9.42-.285%2c10.455-.59%2c20.92-.315%2c11.775-.66%2c23.54-.165%2c6.07507-.34%2c12.15-.465%2c16.365-.92%2c32.72c-.03%2c1.13-.07%2c2.25-.1%2c3.38q-.225%2c8.11506-.45%2c16.23-.255%2c8.805-.5%2c17.61-.18%2c6.59994-.37%2c13.21-1.34994%2c47.895-2.7%2c95.79a7.64844%2c7.64844%2c0%2c0%2c1-7.5%2c7.5%2c7.56114%2c7.56114%2c0%2c0%2c1-7.5-7.5q.75-26.94%2c1.52-53.88.675-24.36%2c1.37-48.72.225-8.025.45-16.06.345-12.09.68-24.18c.03-1.13.07-2.25.1-3.38.02-.99.05-1.97.08-2.96q.66-23.475%2c1.32-46.96.27-9.24.52-18.49.3-10.545.6-21.08c.09-3.09.17005-6.17.26-9.26a7.64844%2c7.64844%2c0%2c0%2c1%2c7.5-7.5A7.56116%2c7.56116%2c0%2c0%2c1%2c402.86309%2c482.136Z' transform='translate(-169.93432 -164.42601)' fill='%233f3d56'/%3e%3cpath d='M814.29118%2c484.2172a893.23753%2c893.23753%2c0%2c0%2c1-28.16112%2c87.94127c-3.007%2c7.94641-6.08319%2c15.877-9.3715%2c23.71185l.75606-1.7916a54.58274%2c54.58274%2c0%2c0%2c1-5.58953%2c10.61184q-.22935.32119-.46685.63642%2c1.16559-1.49043.4428-.589c-.25405.30065-.5049.60219-.7676.89546a23.66436%2c23.66436%2c0%2c0%2c1-2.2489%2c2.20318q-.30139.25767-.61188.5043l.93783-.729c-.10884.25668-.87275.59747-1.11067.74287a18.25362%2c18.25362%2c0%2c0%2c1-2.40479%2c1.21853l1.7916-.75606a19.0859%2c19.0859%2c0%2c0%2c1-4.23122%2c1.16069l1.9938-.26791a17.02055%2c17.02055%2c0%2c0%2c1-4.29785.046l1.99379.2679a14.0022%2c14.0022%2c0%2c0%2c1-3.40493-.917l1.79159.75606a12.01175%2c12.01175%2c0%2c0%2c1-1.67882-.89614c-.27135-.17688-1.10526-.80852-.01487.02461%2c1.13336.86595.14562.07434-.08763-.15584-.19427-.19171-.36962-.4-.55974-.595-.88208-.90454.99637%2c1.55662.39689.49858a18.18179%2c18.18179%2c0%2c0%2c1-.87827-1.63672l.75606%2c1.7916a11.92493%2c11.92493%2c0%2c0%2c1-.728-2.65143l.26791%2c1.9938a13.65147%2c13.65147%2c0%2c0%2c1-.00316-3.40491l-.2679%2c1.9938a15.96371%2c15.96371%2c0%2c0%2c1%2c.99486-3.68011l-.75606%2c1.7916a16.72914%2c16.72914%2c0%2c0%2c1%2c1.17794-2.29848%2c6.72934%2c6.72934%2c0%2c0%2c1%2c.72851-1.0714c.04915.01594-1.26865%2c1.51278-.56937.757.1829-.19767.354-.40592.539-.602.29617-.31382.61354-.60082.92561-.89791%2c1.04458-.99442-1.46188.966-.25652.17907a19.0489%2c19.0489%2c0%2c0%2c1%2c2.74925-1.49923l-1.79159.75606a20.31136%2c20.31136%2c0%2c0%2c1%2c4.99523-1.33984l-1.9938.2679a25.62828%2c25.62828%2c0%2c0%2c1%2c6.46062.07647l-1.9938-.2679a33.21056%2c33.21056%2c0%2c0%2c1%2c7.89178%2c2.2199l-1.7916-.75606c5.38965%2c2.31383%2c10.16308%2c5.74926%2c14.928%2c9.118a111.94962%2c111.94962%2c0%2c0%2c0%2c14.50615%2c8.9065%2c108.38849%2c108.38849%2c0%2c0%2c0%2c34.62226%2c10.47371%2c103.93268%2c103.93268%2c0%2c0%2c0%2c92.58557-36.75192%2c8.07773%2c8.07773%2c0%2c0%2c0%2c2.1967-5.3033%2c7.63232%2c7.63232%2c0%2c0%2c0-2.1967-5.3033c-2.75154-2.52586-7.94926-3.239-10.6066%2c0a95.63575%2c95.63575%2c0%2c0%2c1-8.10664%2c8.72692q-2.01736%2c1.914-4.14232%2c3.70983-1.21364%2c1.02588-2.46086%2c2.01121c-.3934.31081-1.61863%2c1.13807.26309-.19744-.43135.30614-.845.64036-1.27058.95478a99.26881%2c99.26881%2c0%2c0%2c1-20.33215%2c11.56478l1.79159-.75606a96.8364%2c96.8364%2c0%2c0%2c1-24.17119%2c6.62249l1.99379-.2679a97.64308%2c97.64308%2c0%2c0%2c1-25.75362-.03807l1.99379.2679a99.79982%2c99.79982%2c0%2c0%2c1-24.857-6.77027l1.7916.75607a116.02515%2c116.02515%2c0%2c0%2c1-21.7364-12.59112%2c86.87725%2c86.87725%2c0%2c0%2c0-11.113-6.99417%2c42.8238%2c42.8238%2c0%2c0%2c0-14.43784-4.38851c-9.43884-1.11076-19.0571%2c2.56562-24.24624%2c10.72035-4.77557%2c7.50482-4.71394%2c18.24362%2c1.97369%2c24.62519%2c6.8877%2c6.5725%2c17.31846%2c6.51693%2c25.43556%2c2.40567%2c7.81741-3.95946%2c12.51288-12.18539%2c15.815-19.94186%2c7.43109-17.45514%2c14.01023-35.31364%2c20.1399-53.263q9.09651-26.63712%2c16.49855-53.81332.91661-3.36581%2c1.80683-6.73869c1.001-3.78869-1.26094-8.32-5.23829-9.22589a7.63317%2c7.63317%2c0%2c0%2c0-9.22589%2c5.23829Z' transform='translate(-169.93432 -164.42601)' fill='%233f3d56'/%3e%3cpath d='M889.12382%2c482.13557l-2.69954%2c95.79311-2.68548%2c95.29418-1.5185%2c53.88362a7.56465%2c7.56465%2c0%2c0%2c0%2c7.5%2c7.5%2c7.64923%2c7.64923%2c0%2c0%2c0%2c7.5-7.5l2.69955-95.79311%2c2.68548-95.29418%2c1.51849-53.88362a7.56465%2c7.56465%2c0%2c0%2c0-7.5-7.5%2c7.64923%2c7.64923%2c0%2c0%2c0-7.5%2c7.5Z' transform='translate(-169.93432 -164.42601)' fill='%233f3d56'/%3e%3cpath d='M629.52566%2c700.36106h2.32885V594.31942h54.32863v-2.32291H631.85451V547.25214H673.8102q-.92256-1.17339-1.89893-2.31694H631.85451V515.38231c-.7703-.32846-1.54659-.64493-2.32885-.9435V544.9352h-45.652V507.07c-.78227.03583-1.55258.08959-2.3289.15527v37.71h-36.4201V516.68409c-.78227.34636-1.55258.71061-2.31694%2c1.0928V544.9352h-30.6158v2.31694h30.6158v44.74437h-30.6158v2.32291h30.6158V700.36106h2.31694V594.31942a36.41283%2c36.41283%2c0%2c0%2c1%2c36.4201%2c36.42007v69.62157h2.3289V594.31942h45.652Zm-84.401-108.36455V547.25214h36.4201v44.74437Zm38.749%2c0V547.25214h.91362a44.74135%2c44.74135%2c0%2c0%2c1%2c44.73842%2c44.74437Z' transform='translate(-169.93432 -164.42601)' opacity='0.2'/%3e%3cpath d='M615.30309%2c668.566a63.05854%2c63.05854%2c0%2c0%2c1-20.05%2c33.7c-.74.64-1.48%2c1.26-2.25%2c1.87q-2.805.25506-5.57.52c-1.53.14-3.04.29-4.54.43l-.27.03-.19-1.64-.76-6.64a37.623%2c37.623%2c0%2c0%2c1-3.3-32.44c2.64-7.12%2c7.42-13.41%2c12.12-19.65%2c6.49-8.62%2c12.8-17.14%2c13.03-27.65a60.54415%2c60.54415%2c0%2c0%2c1%2c7.9%2c13.33%2c16.432%2c16.432%2c0%2c0%2c0-5.12%2c3.76995c-.41.45-.82%2c1.08-.54%2c1.62006.24.46.84.57%2c1.36.62994%2c1.25.13%2c2.51.26%2c3.76.39%2c1%2c.11%2c2%2c.21%2c3%2c.32a63.99025%2c63.99025%2c0%2c0%2c1%2c2.45%2c12.18A61.18851%2c61.18851%2c0%2c0%2c1%2c615.30309%2c668.566Z' transform='translate(-169.93432 -164.42601)' fill='%233f3d56'/%3e%3cpath d='M648.50311%2c642.356c-5.9%2c4.29-9.35%2c10.46-12.03%2c17.26a16.62776%2c16.62776%2c0%2c0%2c0-7.17%2c4.58c-.41.45-.82%2c1.08-.54%2c1.62006.24.46.84.57%2c1.36.62994%2c1.25.13%2c2.51.26%2c3.76.39-2.68%2c8.04-5.14%2c16.36-9.88%2c23.15a36.98942%2c36.98942%2c0%2c0%2c1-12.03%2c10.91%2c38.49166%2c38.49166%2c0%2c0%2c1-4.02%2c1.99q-7.62.585-14.95%2c1.25-2.805.25506-5.57.52c-1.53.14-3.04.29-4.54.43q-.015-.825%2c0-1.65a63.30382%2c63.30382%2c0%2c0%2c1%2c15.25-39.86c.45-.52.91-1.03%2c1.38-1.54a61.7925%2c61.7925%2c0%2c0%2c1%2c16.81-12.7A62.65425%2c62.65425%2c0%2c0%2c1%2c648.50311%2c642.356Z' transform='translate(-169.93432 -164.42601)' fill='%233bd461'/%3e%3cpath d='M589.16308%2c699.526l-1.15%2c3.4-.58%2c1.73c-1.53.14-3.04.29-4.54.43l-.27.03c-1.66.17-3.31.34-4.96.51-.43-.5-.86-1.01-1.28-1.53a62.03045%2c62.03045%2c0%2c0%2c1%2c8.07-87.11c-1.32%2c6.91.22%2c13.53%2c2.75%2c20.1-.27.11-.53.22-.78.34a16.432%2c16.432%2c0%2c0%2c0-5.12%2c3.76995c-.41.45-.82%2c1.08-.54%2c1.62006.24.46.84.57%2c1.36.62994%2c1.25.13%2c2.51.26%2c3.76.39%2c1%2c.11%2c2%2c.21%2c3%2c.32q.705.075%2c1.41.15c.07.15.13.29.2.44%2c2.85%2c6.18%2c5.92%2c12.39%2c7.65%2c18.83a43.66591%2c43.66591%2c0%2c0%2c1%2c1.02%2c4.91A37.604%2c37.604%2c0%2c0%2c1%2c589.16308%2c699.526Z' transform='translate(-169.93432 -164.42601)' fill='%233bd461'/%3e%3cpath d='M689.82123%2c554.48655c-8.60876-16.79219-21.94605-30.92088-37.63219-41.30357a114.2374%2c114.2374%2c0%2c0%2c0-52.5626-18.37992q-3.69043-.33535-7.399-.39281c-2.92141-.04371-46.866%2c12.63176-61.58712%2c22.98214a114.29462%2c114.29462%2c0%2c0%2c0-35.333%2c39.527%2c102.49972%2c102.49972%2c0%2c0%2c0-12.12557%2c51.6334%2c113.56387%2c113.56387%2c0%2c0%2c0%2c14.70268%2c51.47577%2c110.47507%2c110.47507%2c0%2c0%2c0%2c36.44425%2c38.74592C549.66655%2c708.561%2c565.07375%2c734.51%2c583.1831%2c735.426c18.24576.923%2c39.05418-23.55495%2c55.6951-30.98707a104.42533%2c104.42533%2c0%2c0%2c0%2c41.72554-34.005%2c110.24964%2c110.24964%2c0%2c0%2c0%2c19.599-48.94777c2.57368-18.08313%2c1.37415-36.73271-4.80123-54.01627a111.85969%2c111.85969%2c0%2c0%2c0-5.58024-12.9833c-1.77961-3.50519-6.996-4.7959-10.26142-2.69063a7.67979%2c7.67979%2c0%2c0%2c0-2.69064%2c10.26142q1.56766%2c3.08773%2c2.91536%2c6.27758l-.75606-1.7916a101.15088%2c101.15088%2c0%2c0%2c1%2c6.87641%2c25.53816l-.26791-1.99379a109.2286%2c109.2286%2c0%2c0%2c1-.06613%2c28.68252l.26791-1.9938a109.73379%2c109.73379%2c0%2c0%2c1-7.55462%2c27.67419l.75606-1.79159a104.212%2c104.212%2c0%2c0%2c1-6.67151%2c13.09835q-1.92308%2c3.18563-4.08062%2c6.22159c-.63172.8881-1.28287%2c1.761-1.939%2c2.63114-.85625%2c1.13555%2c1.16691-1.48321.28228-.36941-.15068.18972-.30049.3801-.45182.5693q-.68121.85165-1.3818%2c1.68765a93.61337%2c93.61337%2c0%2c0%2c1-10.17647%2c10.38359q-1.36615%2c1.19232-2.77786%2c2.33115c-.46871.37832-.932.77269-1.42079%2c1.12472.01861-.0134%2c1.57956-1.19945.65556-.511-.2905.21644-.57851.43619-.86961.65184q-2.90994%2c2.1558-5.97433%2c4.092a103.48509%2c103.48509%2c0%2c0%2c1-14.75565%2c7.7131l1.7916-.75606a109.21493%2c109.21493%2c0%2c0%2c1-27.59663%2c7.55154l1.9938-.26791a108.15361%2c108.15361%2c0%2c0%2c1-28.58907.0506l1.99379.2679a99.835%2c99.835%2c0%2c0%2c1-25.09531-6.78448l1.79159.75607a93.64314%2c93.64314%2c0%2c0%2c1-13.41605-6.99094q-3.17437-2-6.18358-4.24743c-.2862-.21359-.56992-.43038-.855-.64549-.9155-.69088.65765.50965.67021.51787a19.16864%2c19.16864%2c0%2c0%2c1-1.535-1.22469q-1.45353-1.18358-2.86136-2.4218a101.98931%2c101.98931%2c0%2c0%2c1-10.49319-10.70945q-1.21308-1.43379-2.37407-2.91054c-.33524-.4263-.9465-1.29026.40424.5289-.17775-.23939-.36206-.47414-.54159-.71223q-.64657-.85751-1.27568-1.72793-2.203-3.048-4.18787-6.24586a109.29037%2c109.29037%2c0%2c0%2c1-7.8054-15.10831l.75606%2c1.7916a106.58753%2c106.58753%2c0%2c0%2c1-7.34039-26.837l.26791%2c1.9938a97.86589%2c97.86589%2c0%2c0%2c1-.04843-25.63587l-.2679%2c1.9938A94.673%2c94.673%2c0%2c0%2c1%2c505.27587%2c570.55l-.75606%2c1.7916a101.55725%2c101.55725%2c0%2c0%2c1%2c7.19519-13.85624q2.0655-3.32328%2c4.37767-6.4847.52528-.71832%2c1.06244-1.42786c.324-.4279%2c1.215-1.49333-.30537.38842.14906-.18449.29252-.37428.43942-.56041q1.26882-1.60756%2c2.59959-3.1649A107.40164%2c107.40164%2c0%2c0%2c1%2c530.772%2c536.21508q1.47408-1.29171%2c2.99464-2.52906.6909-.56218%2c1.39108-1.11284c.18664-.14673.37574-.29073.56152-.43858-1.99743%2c1.58953-.555.43261-.10157.09288q3.13393-2.34833%2c6.43534-4.46134a103.64393%2c103.64393%2c0%2c0%2c1%2c15.38655-8.10791l-1.7916.75606c7.76008-3.25839%2c42.14086-10.9492%2c48.394-10.10973l-1.99379-.26791A106.22471%2c106.22471%2c0%2c0%2c1%2c628.768%2c517.419l-1.7916-.75606a110.31334%2c110.31334%2c0%2c0%2c1%2c12.6002%2c6.32922q3.04344%2c1.78405%2c5.96742%2c3.76252%2c1.38351.93658%2c2.73809%2c1.915.677.48917%2c1.34626.98885c.24789.185.49386.37253.74135.558%2c1.03924.779-1.43148-1.1281-.34209-.26655a110.84261%2c110.84261%2c0%2c0%2c1%2c10.36783%2c9.2532q2.401%2c2.445%2c4.63686%2c5.04515%2c1.14659%2c1.33419%2c2.24643%2c2.70757c.36436.45495%2c1.60506%2c2.101.08448.08457.37165.49285.74744.98239%2c1.11436%2c1.47884a97.97718%2c97.97718%2c0%2c0%2c1%2c8.39161%2c13.53807c1.79317%2c3.49775%2c6.98675%2c4.80186%2c10.26142%2c2.69064A7.67666%2c7.67666%2c0%2c0%2c0%2c689.82123%2c554.48655Z' transform='translate(-169.93432 -164.42601)' fill='%233f3d56'/%3e%3cpath d='M602.43116%2c676.88167a3.77983%2c3.77983%2c0%2c0%2c1-2.73939-6.55137c.09531-.37882.16368-.65085.259-1.02968q-.05115-.12366-.1029-.24717c-3.47987-8.29769-25.685%2c14.83336-26.645%2c22.63179a30.029%2c30.029%2c0%2c0%2c0%2c.52714%2c10.32752A120.39223%2c120.39223%2c0%2c0%2c1%2c562.77838%2c652.01a116.20247%2c116.20247%2c0%2c0%2c1%2c.72078-12.96332q.59712-5.293%2c1.65679-10.51055a121.78667%2c121.78667%2c0%2c0%2c1%2c24.1515-51.61646c6.87378.38364%2c12.898-.66348%2c13.47967-13.98532.10346-2.36972%2c1.86113-4.42156%2c2.24841-6.756-.65621.08607-1.32321.13985-1.97941.18285-.20444.0107-.41958.02149-.624.03228l-.07709.00346a3.745%2c3.745%2c0%2c0%2c1-3.07566-6.10115q.425-.52305.85054-1.04557c.43036-.53793.87143-1.06507%2c1.30171-1.60292a1.865%2c1.865%2c0%2c0%2c0%2c.13986-.16144c.49494-.61322.98971-1.21564%2c1.48465-1.82885a10.82911%2c10.82911%2c0%2c0%2c0-3.55014-3.43169c-4.95941-2.90463-11.80146-.89293-15.38389%2c3.59313-3.59313%2c4.486-4.27083%2c10.77947-3.023%2c16.3843a43.39764%2c43.39764%2c0%2c0%2c0%2c6.003%2c13.3828c-.269.34429-.54872.67779-.81765%2c1.02209a122.57366%2c122.57366%2c0%2c0%2c0-12.79359%2c20.2681c1.0163-7.93863-11.41159-36.60795-16.21776-42.68052-5.773-7.29409-17.61108-4.11077-18.62815%2c5.13562q-.01476.13428-.02884.26849%2c1.07082.60411%2c2.0964%2c1.28237a5.12707%2c5.12707%2c0%2c0%2c1-2.06713%2c9.33031l-.10452.01613c-9.55573%2c13.64367%2c21.07745%2c49.1547%2c28.74518%2c41.18139a125.11045%2c125.11045%2c0%2c0%2c0-6.73449%2c31.69282%2c118.66429%2c118.66429%2c0%2c0%2c0%2c.08607%2c19.15986l-.03231-.22593C558.90163%2c648.154%2c529.674%2c627.51374%2c521.139%2c629.233c-4.91675.99041-9.75952.76525-9.01293%2c5.72484q.01788.11874.03635.2375a34.4418%2c34.4418%2c0%2c0%2c1%2c3.862%2c1.86105q1.07082.60423%2c2.09639%2c1.28237a5.12712%2c5.12712%2c0%2c0%2c1-2.06712%2c9.33039l-.10464.01606c-.07528.01079-.13987.02157-.21507.03237-4.34967%2c14.96631%2c27.90735%2c39.12%2c47.5177%2c31.43461h.01081a125.07484%2c125.07484%2c0%2c0%2c0%2c8.402%2c24.52806H601.679c.10765-.3335.20443-.67779.3013-1.01129a34.102%2c34.102%2c0%2c0%2c1-8.30521-.49477c2.22693-2.73257%2c4.45377-5.48664%2c6.6807-8.21913a1.86122%2c1.86122%2c0%2c0%2c0%2c.13986-.16135c1.12956-1.39849%2c2.26992-2.78627%2c3.39948-4.18476l.00061-.00173a49.95232%2c49.95232%2c0%2c0%2c0-1.46367-12.72495Zm-34.37066-67.613.0158-.02133-.0158.04282Zm-6.64832%2c59.93237-.25822-.58084c.01079-.41957.01079-.83914%2c0-1.26942%2c0-.11845-.0215-.23672-.0215-.35508.09678.74228.18285%2c1.48464.29042%2c2.22692Z' transform='translate(-169.93432 -164.42601)' fill='%233f3d56'/%3e%3ccircle cx='95.24878' cy='439' r='11' fill='%233f3d56'/%3e%3ccircle cx='227.24878' cy='559' r='11' fill='%233f3d56'/%3e%3ccircle cx='728.24878' cy='559' r='11' fill='%233f3d56'/%3e%3ccircle cx='755.24878' cy='419' r='11' fill='%233f3d56'/%3e%3ccircle cx='723.24878' cy='317' r='11' fill='%233f3d56'/%3e%3cpath d='M434.1831%2c583.426a10.949%2c10.949%2c0%2c1%2c1-.21-2.16A10.9921%2c10.9921%2c0%2c0%2c1%2c434.1831%2c583.426Z' transform='translate(-169.93432 -164.42601)' fill='%233f3d56'/%3e%3ccircle cx='484.24878' cy='349' r='11' fill='%233f3d56'/%3e%3cpath d='M545.1831%2c513.426a10.949%2c10.949%2c0%2c1%2c1-.21-2.16A10.9921%2c10.9921%2c0%2c0%2c1%2c545.1831%2c513.426Z' transform='translate(-169.93432 -164.42601)' fill='%233f3d56'/%3e%3cpath d='M403.1831%2c481.426a10.949%2c10.949%2c0%2c1%2c1-.21-2.16A10.9921%2c10.9921%2c0%2c0%2c1%2c403.1831%2c481.426Z' transform='translate(-169.93432 -164.42601)' fill='%233f3d56'/%3e%3ccircle cx='599.24878' cy='443' r='11' fill='%233f3d56'/%3e%3ccircle cx='426.24878' cy='338' r='16' fill='%233f3d56'/%3e%3cpath d='M1028.875%2c735.26666l-857.75.30733a1.19068%2c1.19068%2c0%2c1%2c1%2c0-2.38136l857.75-.30734a1.19069%2c1.19069%2c0%2c0%2c1%2c0%2c2.38137Z' transform='translate(-169.93432 -164.42601)' fill='%23cacaca'/%3e%3c/svg%3e";
+var img$f = "data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' data-name='Layer 1' width='860.13137' height='571.14799' viewBox='0 0 860.13137 571.14799' xmlns:xlink='http://www.w3.org/1999/xlink'%3e%3cpath d='M605.66974%2c324.95306c-7.66934-12.68446-16.7572-26.22768-30.98954-30.36953-16.482-4.7965-33.4132%2c4.73193-47.77473%2c14.13453a1392.15692%2c1392.15692%2c0%2c0%2c0-123.89338%2c91.28311l.04331.49238q46.22556-3.1878%2c92.451-6.37554c22.26532-1.53546%2c45.29557-3.2827%2c64.97195-13.8156%2c7.46652-3.99683%2c14.74475-9.33579%2c23.20555-9.70782%2c10.51175-.46217%2c19.67733%2c6.87923%2c26.8802%2c14.54931%2c42.60731%2c45.371%2c54.937%2c114.75409%2c102.73817%2c154.61591A1516.99453%2c1516.99453%2c0%2c0%2c0%2c605.66974%2c324.95306Z' transform='translate(-169.93432 -164.42601)' fill='%23f2f2f2'/%3e%3cpath d='M867.57068%2c709.78146c-4.71167-5.94958-6.6369-7.343-11.28457-13.34761q-56.7644-73.41638-106.70791-151.79237-33.92354-53.23-64.48275-108.50439-14.54864-26.2781-28.29961-52.96872-10.67044-20.6952-20.8646-41.63793c-1.94358-3.98782-3.8321-7.99393-5.71122-12.00922-4.42788-9.44232-8.77341-18.93047-13.43943-28.24449-5.31686-10.61572-11.789-21.74485-21.55259-28.877a29.40493%2c29.40493%2c0%2c0%2c0-15.31855-5.89458c-7.948-.51336-15.28184%2c2.76855-22.17568%2c6.35295-50.43859%2c26.301-97.65922%2c59.27589-140.3696%2c96.79771A730.77816%2c730.77816%2c0%2c0%2c0%2c303.32241%2c496.24719c-1.008%2c1.43927-3.39164.06417-2.37419-1.38422q6.00933-8.49818%2c12.25681-16.81288A734.817%2c734.817%2c0%2c0%2c1%2c500.80465%2c303.06436q18.24824-11.82581%2c37.18269-22.54245c6.36206-3.60275%2c12.75188-7.15967%2c19.25136-10.49653%2c6.37146-3.27274%2c13.13683-6.21547%2c20.41563-6.32547%2c24.7701-.385%2c37.59539%2c27.66695%2c46.40506%2c46.54248q4.15283%2c8.9106%2c8.40636%2c17.76626%2c16.0748%2c33.62106%2c33.38729%2c66.628%2c10.68453%2c20.379%2c21.83683%2c40.51955%2c34.7071%2c62.71816%2c73.77854%2c122.897c34.5059%2c53.1429%2c68.73651%2c100.08874%2c108.04585%2c149.78472C870.59617%2c709.21309%2c868.662%2c711.17491%2c867.57068%2c709.78146Z' transform='translate(-169.93432 -164.42601)' fill='%23e4e4e4'/%3e%3cpath d='M414.91613%2c355.804c-1.43911-1.60428-2.86927-3.20856-4.31777-4.81284-11.42244-12.63259-23.6788-25.11847-39.3644-32.36067a57.11025%2c57.11025%2c0%2c0%2c0-23.92679-5.54622c-8.56213.02753-16.93178%2c2.27348-24.84306%2c5.41792-3.74034%2c1.49427-7.39831%2c3.1902-11.00078%2c4.99614-4.11634%2c2.07182-8.15927%2c4.28118-12.1834%2c6.50883q-11.33112%2c6.27044-22.36816%2c13.09089-21.9606%2c13.57221-42.54566%2c29.21623-10.67111%2c8.11311-20.90174%2c16.75788-9.51557%2c8.03054-18.64618%2c16.492c-1.30169%2c1.20091-3.24527-.74255-1.94358-1.94347%2c1.60428-1.49428%2c3.22691-2.97938%2c4.84955-4.44613q6.87547-6.21546%2c13.9712-12.19257%2c12.93921-10.91827%2c26.54851-20.99312%2c21.16293-15.67614%2c43.78288-29.22541%2c11.30361-6.76545%2c22.91829-12.96259c2.33794-1.24675%2c4.70318-2.466%2c7.09572-3.6211a113.11578%2c113.11578%2c0%2c0%2c1%2c16.86777-6.86632%2c60.0063%2c60.0063%2c0%2c0%2c1%2c25.476-2.50265%2c66.32706%2c66.32706%2c0%2c0%2c1%2c23.50512%2c8.1314c15.40091%2c8.60812%2c27.34573%2c21.919%2c38.97%2c34.90915C418.03337%2c355.17141%2c416.09875%2c357.12405%2c414.91613%2c355.804Z' transform='translate(-169.93432 -164.42601)' fill='%23e4e4e4'/%3e%3cpath d='M730.47659%2c486.71092l36.90462-13.498%2c18.32327-6.70183c5.96758-2.18267%2c11.92082-4.66747%2c18.08988-6.23036a28.53871%2c28.53871%2c0%2c0%2c1%2c16.37356.20862%2c37.73753%2c37.73753%2c0%2c0%2c1%2c12.771%2c7.91666%2c103.63965%2c103.63965%2c0%2c0%2c1%2c10.47487%2c11.18643c3.98932%2c4.79426%2c7.91971%2c9.63877%2c11.86772%2c14.46706q24.44136%2c29.89094%2c48.56307%2c60.04134%2c24.12117%2c30.14991%2c47.91981%2c60.556%2c23.85681%2c30.48041%2c47.38548%2c61.21573%2c2.88229%2c3.76518%2c5.75966%2c7.53415c1.0598%2c1.38809%2c3.44949.01962%2c2.37472-1.38808Q983.582%2c650.9742%2c959.54931%2c620.184q-24.09177-30.86383-48.51647-61.46586-24.42421-30.60141-49.17853-60.93743-6.16706-7.55761-12.35445-15.09858c-3.47953-4.24073-6.91983-8.52718-10.73628-12.47427-7.00539-7.24516-15.75772-13.64794-26.23437-13.82166-6.15972-.10214-12.121%2c1.85248-17.844%2c3.92287-6.16968%2c2.232-12.32455%2c4.50571-18.48633%2c6.75941l-37.16269%2c13.59243-9.29067%2c3.3981c-1.64875.603-.93651%2c3.2619.73111%2c2.652Z' transform='translate(-169.93432 -164.42601)' fill='%23e4e4e4'/%3e%3cpath d='M366.37741%2c334.52609c-18.75411-9.63866-42.77137-7.75087-60.00508%2c4.29119a855.84708%2c855.84708%2c0%2c0%2c1%2c97.37056%2c22.72581C390.4603%2c353.75916%2c380.07013%2c341.5635%2c366.37741%2c334.52609Z' transform='translate(-169.93432 -164.42601)' fill='%23f2f2f2'/%3e%3cpath d='M306.18775%2c338.7841l-3.61042%2c2.93462c1.22123-1.02713%2c2.4908-1.99013%2c3.795-2.90144C306.31073%2c338.80665%2c306.24935%2c338.79473%2c306.18775%2c338.7841Z' transform='translate(-169.93432 -164.42601)' fill='%23f2f2f2'/%3e%3cpath d='M831.54929%2c486.84576c-3.6328-4.42207-7.56046-9.05222-12.99421-10.84836l-5.07308.20008A575.436%2c575.436%2c0%2c0%2c0%2c966.74929%2c651.418Q899.14929%2c569.13192%2c831.54929%2c486.84576Z' transform='translate(-169.93432 -164.42601)' fill='%23f2f2f2'/%3e%3cpath d='M516.08388%2c450.36652A37.4811%2c37.4811%2c0%2c0%2c0%2c531.015%2c471.32518c2.82017%2c1.92011%2c6.15681%2c3.76209%2c7.12158%2c7.03463a8.37858%2c8.37858%2c0%2c0%2c1-.87362%2c6.1499%2c24.88351%2c24.88351%2c0%2c0%2c1-3.86126%2c5.04137l-.13667.512c-6.99843-4.14731-13.65641-9.3934-17.52227-16.55115s-4.40553-16.53895.34116-23.14544' transform='translate(-169.93432 -164.42601)' fill='%23f2f2f2'/%3e%3cpath d='M749.08388%2c653.36652A37.4811%2c37.4811%2c0%2c0%2c0%2c764.015%2c674.32518c2.82017%2c1.92011%2c6.15681%2c3.76209%2c7.12158%2c7.03463a8.37858%2c8.37858%2c0%2c0%2c1-.87362%2c6.1499%2c24.88351%2c24.88351%2c0%2c0%2c1-3.86126%2c5.04137l-.13667.512c-6.99843-4.14731-13.65641-9.3934-17.52227-16.55115s-4.40553-16.53895.34116-23.14544' transform='translate(-169.93432 -164.42601)' fill='%23f2f2f2'/%3e%3cpath d='M284.08388%2c639.36652A37.4811%2c37.4811%2c0%2c0%2c0%2c299.015%2c660.32518c2.82017%2c1.92011%2c6.15681%2c3.76209%2c7.12158%2c7.03463a8.37858%2c8.37858%2c0%2c0%2c1-.87362%2c6.1499%2c24.88351%2c24.88351%2c0%2c0%2c1-3.86126%2c5.04137l-.13667.512c-6.99843-4.14731-13.65641-9.3934-17.52227-16.55115s-4.40553-16.53895.34116-23.14544' transform='translate(-169.93432 -164.42601)' fill='%23f2f2f2'/%3e%3ccircle cx='649.24878' cy='51' r='51' fill='%233bd461'/%3e%3cpath d='M911.21851%2c176.29639c-24.7168-3.34094-52.93512%2c10.01868-59.34131%2c34.12353a21.59653%2c21.59653%2c0%2c0%2c0-41.09351%2c2.10871l2.82972%2c2.02667a372.27461%2c372.27461%2c0%2c0%2c0%2c160.65881-.72638C957.07935%2c195.76%2c935.93537%2c179.63727%2c911.21851%2c176.29639Z' transform='translate(-169.93432 -164.42601)' fill='%23f0f0f0'/%3e%3cpath d='M805.21851%2c244.29639c-24.7168-3.34094-52.93512%2c10.01868-59.34131%2c34.12353a21.59653%2c21.59653%2c0%2c0%2c0-41.09351%2c2.10871l2.82972%2c2.02667a372.27461%2c372.27461%2c0%2c0%2c0%2c160.65881-.72638C851.07935%2c263.76%2c829.93537%2c247.63727%2c805.21851%2c244.29639Z' transform='translate(-169.93432 -164.42601)' fill='%23f0f0f0'/%3e%3cpath d='M1020.94552%2c257.15423a.98189.98189%2c0%2c0%2c1-.30176-.04688C756.237%2c173.48919%2c523.19942%2c184.42376%2c374.26388%2c208.32122c-20.26856%2c3.251-40.59131%2c7.00586-60.40381%2c11.16113-5.05811%2c1.05957-10.30567%2c2.19532-15.59668%2c3.37793-6.31885%2c1.40723-12.55371%2c2.85645-18.53223%2c4.30567q-3.873.917-7.59472%2c1.84863c-3.75831.92773-7.57178%2c1.89453-11.65967%2c2.957-4.56787%2c1.17774-9.209%2c2.41309-13.79737%2c3.67188a.44239.44239%2c0%2c0%2c1-.05127.01465l.00049.001c-5.18261%2c1.415-10.33789%2c2.8711-15.32324%2c4.3252-2.69824.77929-5.30371%2c1.54785-7.79932%2c2.30664-.2788.07715-.52587.15136-.77636.22754l-.53614.16308c-.31054.09473-.61718.1875-.92382.27539l-.01953.00586.00048.001-.81152.252c-.96777.293-1.91211.5791-2.84082.86426-24.54492%2c7.56641-38.03809%2c12.94922-38.17139%2c13.00195a1%2c1%2c0%2c1%2c1-.74414-1.85644c.13428-.05274%2c13.69336-5.46289%2c38.32764-13.05762.93213-.28613%2c1.87891-.57226%2c2.84961-.86621l.7539-.23438c.02588-.00976.05176-.01757.07813-.02539.30518-.08691.60986-.17968.91943-.27343l.53711-.16309c.26758-.08105.53125-.16113.80127-.23535%2c2.47852-.75391%2c5.09278-1.52441%2c7.79785-2.30664%2c4.98731-1.45508%2c10.14746-2.91113%2c15.334-4.32813.01611-.00586.03271-.00976.04883-.01464v-.001c4.60449-1.2627%2c9.26269-2.50293%2c13.84521-3.68457%2c4.09424-1.06348%2c7.915-2.03223%2c11.67969-2.96192q3.73755-.93017%2c7.60937-1.85253c5.98536-1.45118%2c12.23291-2.90235%2c18.563-4.3125%2c5.29932-1.1836%2c10.55567-2.32227%2c15.62207-3.38282%2c19.84326-4.16211%2c40.19776-7.92285%2c60.49707-11.17871C523.09591%2c182.415%2c756.46749%2c171.46282%2c1021.2463%2c255.2011a.99974.99974%2c0%2c0%2c1-.30078%2c1.95313Z' transform='translate(-169.93432 -164.42601)' fill='%23ccc'/%3e%3cpath d='M432.92309%2c584.266a6.72948%2c6.72948%2c0%2c0%2c0-1.7-2.67%2c6.42983%2c6.42983%2c0%2c0%2c0-.92-.71c-2.61-1.74-6.51-2.13-8.99%2c0a5.81012%2c5.81012%2c0%2c0%2c0-.69.71q-1.11%2c1.365-2.28%2c2.67c-1.28%2c1.46-2.59%2c2.87-3.96%2c4.24-.39.38-.78.77-1.18%2c1.15-.23.23-.46.45-.69.67-.88.84-1.78%2c1.65-2.69%2c2.45-.48.43-.96.85-1.45%2c1.26-.73.61-1.46%2c1.22-2.2%2c1.81-.07.05-.14.1-.21.16-.02.01-.03.03-.05.04-.01%2c0-.02%2c0-.03.02a.17861.17861%2c0%2c0%2c0-.07.05c-.22.15-.37.25-.48.34.04-.01995.08-.05.12-.07-.18.14-.37.28-.55.42-1.75%2c1.29-3.54%2c2.53-5.37%2c3.69a99.21022%2c99.21022%2c0%2c0%2c1-14.22%2c7.55c-.33.13-.67.27-1.01.4a85.96993%2c85.96993%2c0%2c0%2c1-40.85%2c6.02q-2.13008-.165-4.26-.45c-1.64-.24-3.27-.53-4.89-.86a97.93186%2c97.93186%2c0%2c0%2c1-18.02-5.44%2c118.65185%2c118.65185%2c0%2c0%2c1-20.66-12.12c-1-.71-2.01-1.42-3.02-2.11%2c1.15-2.82%2c2.28-5.64%2c3.38-8.48.55-1.37%2c1.08-2.74%2c1.6-4.12%2c4.09-10.63%2c7.93-21.36%2c11.61-32.13q5.58-16.365%2c10.53-32.92.51-1.68.99-3.36%2c2.595-8.745%2c4.98-17.53c.15-.56994.31-1.12994.45-1.7q.68994-2.52%2c1.35-5.04c1-3.79-1.26-8.32-5.24-9.23a7.63441%2c7.63441%2c0%2c0%2c0-9.22%2c5.24c-.43%2c1.62-.86%2c3.23-1.3%2c4.85q-3.165%2c11.74494-6.66%2c23.41-.51%2c1.68-1.02%2c3.36-7.71%2c25.41-16.93%2c50.31-1.11%2c3.015-2.25%2c6.01c-.37.98-.74%2c1.96-1.12%2c2.94-.73%2c1.93-1.48%2c3.86-2.23%2c5.79-.43006%2c1.13-.87006%2c2.26-1.31%2c3.38-.29.71-.57%2c1.42-.85%2c2.12a41.80941%2c41.80941%2c0%2c0%2c0-8.81-2.12l-.48-.06a27.397%2c27.397%2c0%2c0%2c0-7.01.06%2c23.91419%2c23.91419%2c0%2c0%2c0-17.24%2c10.66c-4.77%2c7.51-4.71%2c18.25%2c1.98%2c24.63%2c6.89%2c6.57%2c17.32%2c6.52%2c25.43%2c2.41a28.35124%2c28.35124%2c0%2c0%2c0%2c10.52-9.86%2c50.56939%2c50.56939%2c0%2c0%2c0%2c2.74-4.65c.21.14.42.28.63.43.8.56%2c1.6%2c1.13%2c2.39%2c1.69a111.73777%2c111.73777%2c0%2c0%2c0%2c14.51%2c8.91%2c108.35887%2c108.35887%2c0%2c0%2c0%2c34.62%2c10.47c.27.03.53.07.8.1%2c1.33.17%2c2.67.3%2c4.01.41a103.78229%2c103.78229%2c0%2c0%2c0%2c55.58-11.36q2.175-1.125%2c4.31-2.36%2c3.315-1.92%2c6.48-4.08c1.15-.78%2c2.27-1.57%2c3.38-2.4a101.04244%2c101.04244%2c0%2c0%2c0%2c13.51-11.95q2.35491-2.475%2c4.51-5.11005a8.0612%2c8.0612%2c0%2c0%2c0%2c2.2-5.3A7.5644%2c7.5644%2c0%2c0%2c0%2c432.92309%2c584.266Zm-165.59%2c23.82c.21-.15.42-.31.62-.47C267.89312%2c607.766%2c267.60308%2c607.936%2c267.33312%2c608.086Zm3.21-3.23c-.23.26-.44.52-.67.78a23.36609%2c23.36609%2c0%2c0%2c1-2.25%2c2.2c-.11.1-.23.2-.35.29a.00976.00976%2c0%2c0%2c0-.01.01%2c3.80417%2c3.80417%2c0%2c0%2c0-.42005.22q-.645.39-1.31994.72a17.00459%2c17.00459%2c0%2c0%2c1-2.71.75%2c16.79925%2c16.79925%2c0%2c0%2c1-2.13.02h-.02a14.82252%2c14.82252%2c0%2c0%2c1-1.45-.4c-.24-.12-.47-.25994-.7-.4-.09-.08-.17005-.16-.22-.21a2.44015%2c2.44015%2c0%2c0%2c1-.26995-.29.0098.0098%2c0%2c0%2c0-.01-.01c-.11005-.2-.23005-.4-.34-.6a.031.031%2c0%2c0%2c1-.01-.02c-.08-.25-.15-.51-.21-.77a12.51066%2c12.51066%2c0%2c0%2c1%2c.01-1.37%2c13.4675%2c13.4675%2c0%2c0%2c1%2c.54-1.88%2c11.06776%2c11.06776%2c0%2c0%2c1%2c.69-1.26c.02-.04.12-.2.23-.38.01-.01.01-.01.01-.02.15-.17.3-.35.46-.51.27-.3.56-.56.85-.83a18.02212%2c18.02212%2c0%2c0%2c1%2c1.75-1.01%2c19.48061%2c19.48061%2c0%2c0%2c1%2c2.93-.79%2c24.98945%2c24.98945%2c0%2c0%2c1%2c4.41.04%2c30.30134%2c30.30134%2c0%2c0%2c1%2c4.1%2c1.01%2c36.94452%2c36.94452%2c0%2c0%2c1-2.77%2c4.54C270.6231%2c604.746%2c270.58312%2c604.806%2c270.54308%2c604.856Zm-11.12-3.29a2.18029%2c2.18029%2c0%2c0%2c1-.31.38995A1.40868%2c1.40868%2c0%2c0%2c1%2c259.42309%2c601.566Z' transform='translate(-169.93432 -164.42601)' fill='%233f3d56'/%3e%3cpath d='M402.86309%2c482.136q-.13494%2c4.71-.27%2c9.42-.285%2c10.455-.59%2c20.92-.315%2c11.775-.66%2c23.54-.165%2c6.07507-.34%2c12.15-.465%2c16.365-.92%2c32.72c-.03%2c1.13-.07%2c2.25-.1%2c3.38q-.225%2c8.11506-.45%2c16.23-.255%2c8.805-.5%2c17.61-.18%2c6.59994-.37%2c13.21-1.34994%2c47.895-2.7%2c95.79a7.64844%2c7.64844%2c0%2c0%2c1-7.5%2c7.5%2c7.56114%2c7.56114%2c0%2c0%2c1-7.5-7.5q.75-26.94%2c1.52-53.88.675-24.36%2c1.37-48.72.225-8.025.45-16.06.345-12.09.68-24.18c.03-1.13.07-2.25.1-3.38.02-.99.05-1.97.08-2.96q.66-23.475%2c1.32-46.96.27-9.24.52-18.49.3-10.545.6-21.08c.09-3.09.17005-6.17.26-9.26a7.64844%2c7.64844%2c0%2c0%2c1%2c7.5-7.5A7.56116%2c7.56116%2c0%2c0%2c1%2c402.86309%2c482.136Z' transform='translate(-169.93432 -164.42601)' fill='%233f3d56'/%3e%3cpath d='M814.29118%2c484.2172a893.23753%2c893.23753%2c0%2c0%2c1-28.16112%2c87.94127c-3.007%2c7.94641-6.08319%2c15.877-9.3715%2c23.71185l.75606-1.7916a54.58274%2c54.58274%2c0%2c0%2c1-5.58953%2c10.61184q-.22935.32119-.46685.63642%2c1.16559-1.49043.4428-.589c-.25405.30065-.5049.60219-.7676.89546a23.66436%2c23.66436%2c0%2c0%2c1-2.2489%2c2.20318q-.30139.25767-.61188.5043l.93783-.729c-.10884.25668-.87275.59747-1.11067.74287a18.25362%2c18.25362%2c0%2c0%2c1-2.40479%2c1.21853l1.7916-.75606a19.0859%2c19.0859%2c0%2c0%2c1-4.23122%2c1.16069l1.9938-.26791a17.02055%2c17.02055%2c0%2c0%2c1-4.29785.046l1.99379.2679a14.0022%2c14.0022%2c0%2c0%2c1-3.40493-.917l1.79159.75606a12.01175%2c12.01175%2c0%2c0%2c1-1.67882-.89614c-.27135-.17688-1.10526-.80852-.01487.02461%2c1.13336.86595.14562.07434-.08763-.15584-.19427-.19171-.36962-.4-.55974-.595-.88208-.90454.99637%2c1.55662.39689.49858a18.18179%2c18.18179%2c0%2c0%2c1-.87827-1.63672l.75606%2c1.7916a11.92493%2c11.92493%2c0%2c0%2c1-.728-2.65143l.26791%2c1.9938a13.65147%2c13.65147%2c0%2c0%2c1-.00316-3.40491l-.2679%2c1.9938a15.96371%2c15.96371%2c0%2c0%2c1%2c.99486-3.68011l-.75606%2c1.7916a16.72914%2c16.72914%2c0%2c0%2c1%2c1.17794-2.29848%2c6.72934%2c6.72934%2c0%2c0%2c1%2c.72851-1.0714c.04915.01594-1.26865%2c1.51278-.56937.757.1829-.19767.354-.40592.539-.602.29617-.31382.61354-.60082.92561-.89791%2c1.04458-.99442-1.46188.966-.25652.17907a19.0489%2c19.0489%2c0%2c0%2c1%2c2.74925-1.49923l-1.79159.75606a20.31136%2c20.31136%2c0%2c0%2c1%2c4.99523-1.33984l-1.9938.2679a25.62828%2c25.62828%2c0%2c0%2c1%2c6.46062.07647l-1.9938-.2679a33.21056%2c33.21056%2c0%2c0%2c1%2c7.89178%2c2.2199l-1.7916-.75606c5.38965%2c2.31383%2c10.16308%2c5.74926%2c14.928%2c9.118a111.94962%2c111.94962%2c0%2c0%2c0%2c14.50615%2c8.9065%2c108.38849%2c108.38849%2c0%2c0%2c0%2c34.62226%2c10.47371%2c103.93268%2c103.93268%2c0%2c0%2c0%2c92.58557-36.75192%2c8.07773%2c8.07773%2c0%2c0%2c0%2c2.1967-5.3033%2c7.63232%2c7.63232%2c0%2c0%2c0-2.1967-5.3033c-2.75154-2.52586-7.94926-3.239-10.6066%2c0a95.63575%2c95.63575%2c0%2c0%2c1-8.10664%2c8.72692q-2.01736%2c1.914-4.14232%2c3.70983-1.21364%2c1.02588-2.46086%2c2.01121c-.3934.31081-1.61863%2c1.13807.26309-.19744-.43135.30614-.845.64036-1.27058.95478a99.26881%2c99.26881%2c0%2c0%2c1-20.33215%2c11.56478l1.79159-.75606a96.8364%2c96.8364%2c0%2c0%2c1-24.17119%2c6.62249l1.99379-.2679a97.64308%2c97.64308%2c0%2c0%2c1-25.75362-.03807l1.99379.2679a99.79982%2c99.79982%2c0%2c0%2c1-24.857-6.77027l1.7916.75607a116.02515%2c116.02515%2c0%2c0%2c1-21.7364-12.59112%2c86.87725%2c86.87725%2c0%2c0%2c0-11.113-6.99417%2c42.8238%2c42.8238%2c0%2c0%2c0-14.43784-4.38851c-9.43884-1.11076-19.0571%2c2.56562-24.24624%2c10.72035-4.77557%2c7.50482-4.71394%2c18.24362%2c1.97369%2c24.62519%2c6.8877%2c6.5725%2c17.31846%2c6.51693%2c25.43556%2c2.40567%2c7.81741-3.95946%2c12.51288-12.18539%2c15.815-19.94186%2c7.43109-17.45514%2c14.01023-35.31364%2c20.1399-53.263q9.09651-26.63712%2c16.49855-53.81332.91661-3.36581%2c1.80683-6.73869c1.001-3.78869-1.26094-8.32-5.23829-9.22589a7.63317%2c7.63317%2c0%2c0%2c0-9.22589%2c5.23829Z' transform='translate(-169.93432 -164.42601)' fill='%233f3d56'/%3e%3cpath d='M889.12382%2c482.13557l-2.69954%2c95.79311-2.68548%2c95.29418-1.5185%2c53.88362a7.56465%2c7.56465%2c0%2c0%2c0%2c7.5%2c7.5%2c7.64923%2c7.64923%2c0%2c0%2c0%2c7.5-7.5l2.69955-95.79311%2c2.68548-95.29418%2c1.51849-53.88362a7.56465%2c7.56465%2c0%2c0%2c0-7.5-7.5%2c7.64923%2c7.64923%2c0%2c0%2c0-7.5%2c7.5Z' transform='translate(-169.93432 -164.42601)' fill='%233f3d56'/%3e%3cpath d='M629.52566%2c700.36106h2.32885V594.31942h54.32863v-2.32291H631.85451V547.25214H673.8102q-.92256-1.17339-1.89893-2.31694H631.85451V515.38231c-.7703-.32846-1.54659-.64493-2.32885-.9435V544.9352h-45.652V507.07c-.78227.03583-1.55258.08959-2.3289.15527v37.71h-36.4201V516.68409c-.78227.34636-1.55258.71061-2.31694%2c1.0928V544.9352h-30.6158v2.31694h30.6158v44.74437h-30.6158v2.32291h30.6158V700.36106h2.31694V594.31942a36.41283%2c36.41283%2c0%2c0%2c1%2c36.4201%2c36.42007v69.62157h2.3289V594.31942h45.652Zm-84.401-108.36455V547.25214h36.4201v44.74437Zm38.749%2c0V547.25214h.91362a44.74135%2c44.74135%2c0%2c0%2c1%2c44.73842%2c44.74437Z' transform='translate(-169.93432 -164.42601)' opacity='0.2'/%3e%3cpath d='M615.30309%2c668.566a63.05854%2c63.05854%2c0%2c0%2c1-20.05%2c33.7c-.74.64-1.48%2c1.26-2.25%2c1.87q-2.805.25506-5.57.52c-1.53.14-3.04.29-4.54.43l-.27.03-.19-1.64-.76-6.64a37.623%2c37.623%2c0%2c0%2c1-3.3-32.44c2.64-7.12%2c7.42-13.41%2c12.12-19.65%2c6.49-8.62%2c12.8-17.14%2c13.03-27.65a60.54415%2c60.54415%2c0%2c0%2c1%2c7.9%2c13.33%2c16.432%2c16.432%2c0%2c0%2c0-5.12%2c3.76995c-.41.45-.82%2c1.08-.54%2c1.62006.24.46.84.57%2c1.36.62994%2c1.25.13%2c2.51.26%2c3.76.39%2c1%2c.11%2c2%2c.21%2c3%2c.32a63.99025%2c63.99025%2c0%2c0%2c1%2c2.45%2c12.18A61.18851%2c61.18851%2c0%2c0%2c1%2c615.30309%2c668.566Z' transform='translate(-169.93432 -164.42601)' fill='%233f3d56'/%3e%3cpath d='M648.50311%2c642.356c-5.9%2c4.29-9.35%2c10.46-12.03%2c17.26a16.62776%2c16.62776%2c0%2c0%2c0-7.17%2c4.58c-.41.45-.82%2c1.08-.54%2c1.62006.24.46.84.57%2c1.36.62994%2c1.25.13%2c2.51.26%2c3.76.39-2.68%2c8.04-5.14%2c16.36-9.88%2c23.15a36.98942%2c36.98942%2c0%2c0%2c1-12.03%2c10.91%2c38.49166%2c38.49166%2c0%2c0%2c1-4.02%2c1.99q-7.62.585-14.95%2c1.25-2.805.25506-5.57.52c-1.53.14-3.04.29-4.54.43q-.015-.825%2c0-1.65a63.30382%2c63.30382%2c0%2c0%2c1%2c15.25-39.86c.45-.52.91-1.03%2c1.38-1.54a61.7925%2c61.7925%2c0%2c0%2c1%2c16.81-12.7A62.65425%2c62.65425%2c0%2c0%2c1%2c648.50311%2c642.356Z' transform='translate(-169.93432 -164.42601)' fill='%233bd461'/%3e%3cpath d='M589.16308%2c699.526l-1.15%2c3.4-.58%2c1.73c-1.53.14-3.04.29-4.54.43l-.27.03c-1.66.17-3.31.34-4.96.51-.43-.5-.86-1.01-1.28-1.53a62.03045%2c62.03045%2c0%2c0%2c1%2c8.07-87.11c-1.32%2c6.91.22%2c13.53%2c2.75%2c20.1-.27.11-.53.22-.78.34a16.432%2c16.432%2c0%2c0%2c0-5.12%2c3.76995c-.41.45-.82%2c1.08-.54%2c1.62006.24.46.84.57%2c1.36.62994%2c1.25.13%2c2.51.26%2c3.76.39%2c1%2c.11%2c2%2c.21%2c3%2c.32q.705.075%2c1.41.15c.07.15.13.29.2.44%2c2.85%2c6.18%2c5.92%2c12.39%2c7.65%2c18.83a43.66591%2c43.66591%2c0%2c0%2c1%2c1.02%2c4.91A37.604%2c37.604%2c0%2c0%2c1%2c589.16308%2c699.526Z' transform='translate(-169.93432 -164.42601)' fill='%233bd461'/%3e%3cpath d='M689.82123%2c554.48655c-8.60876-16.79219-21.94605-30.92088-37.63219-41.30357a114.2374%2c114.2374%2c0%2c0%2c0-52.5626-18.37992q-3.69043-.33535-7.399-.39281c-2.92141-.04371-46.866%2c12.63176-61.58712%2c22.98214a114.29462%2c114.29462%2c0%2c0%2c0-35.333%2c39.527%2c102.49972%2c102.49972%2c0%2c0%2c0-12.12557%2c51.6334%2c113.56387%2c113.56387%2c0%2c0%2c0%2c14.70268%2c51.47577%2c110.47507%2c110.47507%2c0%2c0%2c0%2c36.44425%2c38.74592C549.66655%2c708.561%2c565.07375%2c734.51%2c583.1831%2c735.426c18.24576.923%2c39.05418-23.55495%2c55.6951-30.98707a104.42533%2c104.42533%2c0%2c0%2c0%2c41.72554-34.005%2c110.24964%2c110.24964%2c0%2c0%2c0%2c19.599-48.94777c2.57368-18.08313%2c1.37415-36.73271-4.80123-54.01627a111.85969%2c111.85969%2c0%2c0%2c0-5.58024-12.9833c-1.77961-3.50519-6.996-4.7959-10.26142-2.69063a7.67979%2c7.67979%2c0%2c0%2c0-2.69064%2c10.26142q1.56766%2c3.08773%2c2.91536%2c6.27758l-.75606-1.7916a101.15088%2c101.15088%2c0%2c0%2c1%2c6.87641%2c25.53816l-.26791-1.99379a109.2286%2c109.2286%2c0%2c0%2c1-.06613%2c28.68252l.26791-1.9938a109.73379%2c109.73379%2c0%2c0%2c1-7.55462%2c27.67419l.75606-1.79159a104.212%2c104.212%2c0%2c0%2c1-6.67151%2c13.09835q-1.92308%2c3.18563-4.08062%2c6.22159c-.63172.8881-1.28287%2c1.761-1.939%2c2.63114-.85625%2c1.13555%2c1.16691-1.48321.28228-.36941-.15068.18972-.30049.3801-.45182.5693q-.68121.85165-1.3818%2c1.68765a93.61337%2c93.61337%2c0%2c0%2c1-10.17647%2c10.38359q-1.36615%2c1.19232-2.77786%2c2.33115c-.46871.37832-.932.77269-1.42079%2c1.12472.01861-.0134%2c1.57956-1.19945.65556-.511-.2905.21644-.57851.43619-.86961.65184q-2.90994%2c2.1558-5.97433%2c4.092a103.48509%2c103.48509%2c0%2c0%2c1-14.75565%2c7.7131l1.7916-.75606a109.21493%2c109.21493%2c0%2c0%2c1-27.59663%2c7.55154l1.9938-.26791a108.15361%2c108.15361%2c0%2c0%2c1-28.58907.0506l1.99379.2679a99.835%2c99.835%2c0%2c0%2c1-25.09531-6.78448l1.79159.75607a93.64314%2c93.64314%2c0%2c0%2c1-13.41605-6.99094q-3.17437-2-6.18358-4.24743c-.2862-.21359-.56992-.43038-.855-.64549-.9155-.69088.65765.50965.67021.51787a19.16864%2c19.16864%2c0%2c0%2c1-1.535-1.22469q-1.45353-1.18358-2.86136-2.4218a101.98931%2c101.98931%2c0%2c0%2c1-10.49319-10.70945q-1.21308-1.43379-2.37407-2.91054c-.33524-.4263-.9465-1.29026.40424.5289-.17775-.23939-.36206-.47414-.54159-.71223q-.64657-.85751-1.27568-1.72793-2.203-3.048-4.18787-6.24586a109.29037%2c109.29037%2c0%2c0%2c1-7.8054-15.10831l.75606%2c1.7916a106.58753%2c106.58753%2c0%2c0%2c1-7.34039-26.837l.26791%2c1.9938a97.86589%2c97.86589%2c0%2c0%2c1-.04843-25.63587l-.2679%2c1.9938A94.673%2c94.673%2c0%2c0%2c1%2c505.27587%2c570.55l-.75606%2c1.7916a101.55725%2c101.55725%2c0%2c0%2c1%2c7.19519-13.85624q2.0655-3.32328%2c4.37767-6.4847.52528-.71832%2c1.06244-1.42786c.324-.4279%2c1.215-1.49333-.30537.38842.14906-.18449.29252-.37428.43942-.56041q1.26882-1.60756%2c2.59959-3.1649A107.40164%2c107.40164%2c0%2c0%2c1%2c530.772%2c536.21508q1.47408-1.29171%2c2.99464-2.52906.6909-.56218%2c1.39108-1.11284c.18664-.14673.37574-.29073.56152-.43858-1.99743%2c1.58953-.555.43261-.10157.09288q3.13393-2.34833%2c6.43534-4.46134a103.64393%2c103.64393%2c0%2c0%2c1%2c15.38655-8.10791l-1.7916.75606c7.76008-3.25839%2c42.14086-10.9492%2c48.394-10.10973l-1.99379-.26791A106.22471%2c106.22471%2c0%2c0%2c1%2c628.768%2c517.419l-1.7916-.75606a110.31334%2c110.31334%2c0%2c0%2c1%2c12.6002%2c6.32922q3.04344%2c1.78405%2c5.96742%2c3.76252%2c1.38351.93658%2c2.73809%2c1.915.677.48917%2c1.34626.98885c.24789.185.49386.37253.74135.558%2c1.03924.779-1.43148-1.1281-.34209-.26655a110.84261%2c110.84261%2c0%2c0%2c1%2c10.36783%2c9.2532q2.401%2c2.445%2c4.63686%2c5.04515%2c1.14659%2c1.33419%2c2.24643%2c2.70757c.36436.45495%2c1.60506%2c2.101.08448.08457.37165.49285.74744.98239%2c1.11436%2c1.47884a97.97718%2c97.97718%2c0%2c0%2c1%2c8.39161%2c13.53807c1.79317%2c3.49775%2c6.98675%2c4.80186%2c10.26142%2c2.69064A7.67666%2c7.67666%2c0%2c0%2c0%2c689.82123%2c554.48655Z' transform='translate(-169.93432 -164.42601)' fill='%233f3d56'/%3e%3cpath d='M602.43116%2c676.88167a3.77983%2c3.77983%2c0%2c0%2c1-2.73939-6.55137c.09531-.37882.16368-.65085.259-1.02968q-.05115-.12366-.1029-.24717c-3.47987-8.29769-25.685%2c14.83336-26.645%2c22.63179a30.029%2c30.029%2c0%2c0%2c0%2c.52714%2c10.32752A120.39223%2c120.39223%2c0%2c0%2c1%2c562.77838%2c652.01a116.20247%2c116.20247%2c0%2c0%2c1%2c.72078-12.96332q.59712-5.293%2c1.65679-10.51055a121.78667%2c121.78667%2c0%2c0%2c1%2c24.1515-51.61646c6.87378.38364%2c12.898-.66348%2c13.47967-13.98532.10346-2.36972%2c1.86113-4.42156%2c2.24841-6.756-.65621.08607-1.32321.13985-1.97941.18285-.20444.0107-.41958.02149-.624.03228l-.07709.00346a3.745%2c3.745%2c0%2c0%2c1-3.07566-6.10115q.425-.52305.85054-1.04557c.43036-.53793.87143-1.06507%2c1.30171-1.60292a1.865%2c1.865%2c0%2c0%2c0%2c.13986-.16144c.49494-.61322.98971-1.21564%2c1.48465-1.82885a10.82911%2c10.82911%2c0%2c0%2c0-3.55014-3.43169c-4.95941-2.90463-11.80146-.89293-15.38389%2c3.59313-3.59313%2c4.486-4.27083%2c10.77947-3.023%2c16.3843a43.39764%2c43.39764%2c0%2c0%2c0%2c6.003%2c13.3828c-.269.34429-.54872.67779-.81765%2c1.02209a122.57366%2c122.57366%2c0%2c0%2c0-12.79359%2c20.2681c1.0163-7.93863-11.41159-36.60795-16.21776-42.68052-5.773-7.29409-17.61108-4.11077-18.62815%2c5.13562q-.01476.13428-.02884.26849%2c1.07082.60411%2c2.0964%2c1.28237a5.12707%2c5.12707%2c0%2c0%2c1-2.06713%2c9.33031l-.10452.01613c-9.55573%2c13.64367%2c21.07745%2c49.1547%2c28.74518%2c41.18139a125.11045%2c125.11045%2c0%2c0%2c0-6.73449%2c31.69282%2c118.66429%2c118.66429%2c0%2c0%2c0%2c.08607%2c19.15986l-.03231-.22593C558.90163%2c648.154%2c529.674%2c627.51374%2c521.139%2c629.233c-4.91675.99041-9.75952.76525-9.01293%2c5.72484q.01788.11874.03635.2375a34.4418%2c34.4418%2c0%2c0%2c1%2c3.862%2c1.86105q1.07082.60423%2c2.09639%2c1.28237a5.12712%2c5.12712%2c0%2c0%2c1-2.06712%2c9.33039l-.10464.01606c-.07528.01079-.13987.02157-.21507.03237-4.34967%2c14.96631%2c27.90735%2c39.12%2c47.5177%2c31.43461h.01081a125.07484%2c125.07484%2c0%2c0%2c0%2c8.402%2c24.52806H601.679c.10765-.3335.20443-.67779.3013-1.01129a34.102%2c34.102%2c0%2c0%2c1-8.30521-.49477c2.22693-2.73257%2c4.45377-5.48664%2c6.6807-8.21913a1.86122%2c1.86122%2c0%2c0%2c0%2c.13986-.16135c1.12956-1.39849%2c2.26992-2.78627%2c3.39948-4.18476l.00061-.00173a49.95232%2c49.95232%2c0%2c0%2c0-1.46367-12.72495Zm-34.37066-67.613.0158-.02133-.0158.04282Zm-6.64832%2c59.93237-.25822-.58084c.01079-.41957.01079-.83914%2c0-1.26942%2c0-.11845-.0215-.23672-.0215-.35508.09678.74228.18285%2c1.48464.29042%2c2.22692Z' transform='translate(-169.93432 -164.42601)' fill='%233f3d56'/%3e%3ccircle cx='95.24878' cy='439' r='11' fill='%233f3d56'/%3e%3ccircle cx='227.24878' cy='559' r='11' fill='%233f3d56'/%3e%3ccircle cx='728.24878' cy='559' r='11' fill='%233f3d56'/%3e%3ccircle cx='755.24878' cy='419' r='11' fill='%233f3d56'/%3e%3ccircle cx='723.24878' cy='317' r='11' fill='%233f3d56'/%3e%3cpath d='M434.1831%2c583.426a10.949%2c10.949%2c0%2c1%2c1-.21-2.16A10.9921%2c10.9921%2c0%2c0%2c1%2c434.1831%2c583.426Z' transform='translate(-169.93432 -164.42601)' fill='%233f3d56'/%3e%3ccircle cx='484.24878' cy='349' r='11' fill='%233f3d56'/%3e%3cpath d='M545.1831%2c513.426a10.949%2c10.949%2c0%2c1%2c1-.21-2.16A10.9921%2c10.9921%2c0%2c0%2c1%2c545.1831%2c513.426Z' transform='translate(-169.93432 -164.42601)' fill='%233f3d56'/%3e%3cpath d='M403.1831%2c481.426a10.949%2c10.949%2c0%2c1%2c1-.21-2.16A10.9921%2c10.9921%2c0%2c0%2c1%2c403.1831%2c481.426Z' transform='translate(-169.93432 -164.42601)' fill='%233f3d56'/%3e%3ccircle cx='599.24878' cy='443' r='11' fill='%233f3d56'/%3e%3ccircle cx='426.24878' cy='338' r='16' fill='%233f3d56'/%3e%3cpath d='M1028.875%2c735.26666l-857.75.30733a1.19068%2c1.19068%2c0%2c1%2c1%2c0-2.38136l857.75-.30734a1.19069%2c1.19069%2c0%2c0%2c1%2c0%2c2.38137Z' transform='translate(-169.93432 -164.42601)' fill='%23cacaca'/%3e%3c/svg%3e";
 
 /* src\Components\NotFound.svelte generated by Svelte v3.59.2 */
 const file$h = "src\\Components\\NotFound.svelte";
@@ -14782,14 +23492,14 @@ function create_fragment$i(ctx) {
 			t2 = space();
 			p = element("p");
 			t3 = text(t3_value);
-			if (!src_url_equal(img.src, img_src_value = img$e)) attr_dev(img, "src", img_src_value);
+			if (!src_url_equal(img.src, img_src_value = img$f)) attr_dev(img, "src", img_src_value);
 			attr_dev(img, "alt", "");
 			attr_dev(img, "class", "svelte-1412f9t");
-			add_location(img, file$h, 6, 2, 117);
-			add_location(h1, file$h, 7, 2, 149);
-			add_location(p, file$h, 8, 2, 186);
+			add_location(img, file$h, 6, 2, 123);
+			add_location(h1, file$h, 7, 2, 156);
+			add_location(p, file$h, 8, 2, 194);
 			attr_dev(div, "class", "svelte-1412f9t");
-			add_location(div, file$h, 5, 0, 109);
+			add_location(div, file$h, 5, 0, 114);
 		},
 		l: function claim(nodes) {
 			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -14838,7 +23548,7 @@ function instance$i($$self, $$props, $$invalidate) {
 		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<NotFound> was created with unknown prop '${key}'`);
 	});
 
-	$$self.$capture_state = () => ({ _: $format, Error404: img$e, $_ });
+	$$self.$capture_state = () => ({ _: $format, Error404: img$f, $_ });
 	return [$_];
 }
 
@@ -14892,13 +23602,13 @@ function create_else_block$4(ctx) {
 			if (!src_url_equal(img.src, img_src_value = /*imgLink*/ ctx[2])) attr_dev(img, "src", img_src_value);
 			attr_dev(img, "alt", "Profile avatar");
 			attr_dev(img, "class", "svelte-7v2i21");
-			add_location(img, file$g, 38, 6, 855);
-			add_location(p0, file$g, 40, 8, 939);
-			add_location(p1, file$g, 41, 8, 975);
+			add_location(img, file$g, 38, 6, 893);
+			add_location(p0, file$g, 40, 8, 979);
+			add_location(p1, file$g, 41, 8, 1016);
 			attr_dev(div0, "class", "flex-wrapper svelte-7v2i21");
-			add_location(div0, file$g, 39, 6, 904);
+			add_location(div0, file$g, 39, 6, 943);
 			attr_dev(div1, "class", "flex svelte-7v2i21");
-			add_location(div1, file$g, 37, 4, 830);
+			add_location(div1, file$g, 37, 4, 867);
 		},
 		m: function mount(target, anchor) {
 			insert_dev(target, div1, anchor);
@@ -14948,7 +23658,7 @@ function create_if_block$d(ctx) {
 			p = element("p");
 			t0 = text("Error: ");
 			t1 = text(/*error*/ ctx[3]);
-			add_location(p, file$g, 35, 4, 794);
+			add_location(p, file$g, 35, 4, 829);
 		},
 		m: function mount(target, anchor) {
 			insert_dev(target, p, anchor);
@@ -14994,9 +23704,9 @@ function create_fragment$h(ctx) {
 			h1.textContent = "Profile tab";
 			t1 = space();
 			if_block.c();
-			add_location(h1, file$g, 33, 2, 755);
+			add_location(h1, file$g, 33, 2, 788);
 			attr_dev(div, "class", "profile svelte-7v2i21");
-			add_location(div, file$g, 32, 0, 731);
+			add_location(div, file$g, 32, 0, 763);
 		},
 		l: function claim(nodes) {
 			throw new Error_1$4("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -15114,9 +23824,9 @@ class Profile extends SvelteComponentDev {
 	}
 }
 
-var img$d = "data:image/svg+xml,%3c%3fxml version='1.0' %3f%3e%3csvg viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3e%3cdefs%3e%3cstyle%3e.cls-1%7bfill:none%3bstroke:black%3bstroke-linecap:round%3bstroke-linejoin:round%3bstroke-width:2px%3b%7d%3c/style%3e%3c/defs%3e%3ctitle/%3e%3cg id='plus'%3e%3cline class='cls-1' x1='16' x2='16' y1='7' y2='25'/%3e%3cline class='cls-1' x1='7' x2='25' y1='16' y2='16'/%3e%3c/g%3e%3c/svg%3e";
+var img$e = "data:image/svg+xml,%3c%3fxml version='1.0' %3f%3e%3csvg viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3e%3cdefs%3e%3cstyle%3e.cls-1%7bfill:none%3bstroke:black%3bstroke-linecap:round%3bstroke-linejoin:round%3bstroke-width:2px%3b%7d%3c/style%3e%3c/defs%3e%3ctitle/%3e%3cg id='plus'%3e%3cline class='cls-1' x1='16' x2='16' y1='7' y2='25'/%3e%3cline class='cls-1' x1='7' x2='25' y1='16' y2='16'/%3e%3c/g%3e%3c/svg%3e";
 
-var img$c = "data:image/svg+xml,%3c%3fxml version='1.0' %3f%3e%3csvg viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3e%3ctitle/%3e%3cg data-name='Layer 2' id='Layer_2'%3e%3cpath d='M10.1%2c23a1%2c1%2c0%2c0%2c0%2c0-1.41L5.5%2c17H29.05a1%2c1%2c0%2c0%2c0%2c0-2H5.53l4.57-4.57A1%2c1%2c0%2c0%2c0%2c8.68%2c9L2.32%2c15.37a.9.9%2c0%2c0%2c0%2c0%2c1.27L8.68%2c23A1%2c1%2c0%2c0%2c0%2c10.1%2c23Z'/%3e%3c/g%3e%3c/svg%3e";
+var img$d = "data:image/svg+xml,%3c%3fxml version='1.0' %3f%3e%3csvg viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3e%3ctitle/%3e%3cg data-name='Layer 2' id='Layer_2'%3e%3cpath d='M10.1%2c23a1%2c1%2c0%2c0%2c0%2c0-1.41L5.5%2c17H29.05a1%2c1%2c0%2c0%2c0%2c0-2H5.53l4.57-4.57A1%2c1%2c0%2c0%2c0%2c8.68%2c9L2.32%2c15.37a.9.9%2c0%2c0%2c0%2c0%2c1.27L8.68%2c23A1%2c1%2c0%2c0%2c0%2c10.1%2c23Z'/%3e%3c/g%3e%3c/svg%3e";
 
 function clearableInput(node) {
   const handleClear = event => {
@@ -15712,7 +24422,7 @@ class ToggleComponent extends SvelteComponentDev {
 	}
 }
 
-var img$b = "data:image/svg+xml,%3c%3fxml version='1.0' %3f%3e%3csvg viewBox='0 0 448 512' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M432 80h-82.38l-34-56.75C306.1 8.827 291.4 0 274.6 0H173.4C156.6 0 141 8.827 132.4 23.25L98.38 80H16C7.125 80 0 87.13 0 96v16C0 120.9 7.125 128 16 128H32v320c0 35.35 28.65 64 64 64h256c35.35 0 64-28.65 64-64V128h16C440.9 128 448 120.9 448 112V96C448 87.13 440.9 80 432 80zM171.9 50.88C172.9 49.13 174.9 48 177 48h94c2.125 0 4.125 1.125 5.125 2.875L293.6 80H154.4L171.9 50.88zM352 464H96c-8.837 0-16-7.163-16-16V128h288v320C368 456.8 360.8 464 352 464zM224 416c8.844 0 16-7.156 16-16V192c0-8.844-7.156-16-16-16S208 183.2 208 192v208C208 408.8 215.2 416 224 416zM144 416C152.8 416 160 408.8 160 400V192c0-8.844-7.156-16-16-16S128 183.2 128 192v208C128 408.8 135.2 416 144 416zM304 416c8.844 0 16-7.156 16-16V192c0-8.844-7.156-16-16-16S288 183.2 288 192v208C288 408.8 295.2 416 304 416z'/%3e%3c/svg%3e";
+var img$c = "data:image/svg+xml,%3c%3fxml version='1.0' %3f%3e%3csvg viewBox='0 0 448 512' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M432 80h-82.38l-34-56.75C306.1 8.827 291.4 0 274.6 0H173.4C156.6 0 141 8.827 132.4 23.25L98.38 80H16C7.125 80 0 87.13 0 96v16C0 120.9 7.125 128 16 128H32v320c0 35.35 28.65 64 64 64h256c35.35 0 64-28.65 64-64V128h16C440.9 128 448 120.9 448 112V96C448 87.13 440.9 80 432 80zM171.9 50.88C172.9 49.13 174.9 48 177 48h94c2.125 0 4.125 1.125 5.125 2.875L293.6 80H154.4L171.9 50.88zM352 464H96c-8.837 0-16-7.163-16-16V128h288v320C368 456.8 360.8 464 352 464zM224 416c8.844 0 16-7.156 16-16V192c0-8.844-7.156-16-16-16S208 183.2 208 192v208C208 408.8 215.2 416 224 416zM144 416C152.8 416 160 408.8 160 400V192c0-8.844-7.156-16-16-16S128 183.2 128 192v208C128 408.8 135.2 416 144 416zM304 416c8.844 0 16-7.156 16-16V192c0-8.844-7.156-16-16-16S288 183.2 288 192v208C288 408.8 295.2 416 304 416z'/%3e%3c/svg%3e";
 
 /* src\Components\Modal\Components\AddByEmail\EmailComponent.svelte generated by Svelte v3.59.2 */
 const file$d = "src\\Components\\Modal\\Components\\AddByEmail\\EmailComponent.svelte";
@@ -15761,7 +24471,7 @@ function create_fragment$e(ctx) {
 			input.disabled = true;
 			attr_dev(input, "class", "svelte-gj40du");
 			add_location(input, file$d, 29, 4, 875);
-			if (!src_url_equal(img.src, img_src_value = img$b)) attr_dev(img, "src", img_src_value);
+			if (!src_url_equal(img.src, img_src_value = img$c)) attr_dev(img, "src", img_src_value);
 			attr_dev(img, "alt", img_alt_value = /*$_*/ ctx[2]("modalEmailComponents.altRemove"));
 			attr_dev(img, "class", "svelte-gj40du");
 			add_location(img, file$d, 31, 6, 968);
@@ -15891,7 +24601,7 @@ function instance$e($$self, $$props, $$invalidate) {
 	$$self.$capture_state = () => ({
 		createEventDispatcher,
 		ToggleComponent,
-		trashIcon: img$b,
+		trashIcon: img$c,
 		_: $format,
 		email,
 		role,
@@ -16553,7 +25263,7 @@ class AddByEmailBox extends SvelteComponentDev {
 	}
 }
 
-var img$a = "data:image/svg+xml,%3c%3fxml version='1.0' %3f%3e%3csvg viewBox='0 0 448 512' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M433.941 65.941l-51.882-51.882A48 48 0 0 0 348.118 0H176c-26.51 0-48 21.49-48 48v48H48c-26.51 0-48 21.49-48 48v320c0 26.51 21.49 48 48 48h224c26.51 0 48-21.49 48-48v-48h80c26.51 0 48-21.49 48-48V99.882a48 48 0 0 0-14.059-33.941zM266 464H54a6 6 0 0 1-6-6V150a6 6 0 0 1 6-6h74v224c0 26.51 21.49 48 48 48h96v42a6 6 0 0 1-6 6zm128-96H182a6 6 0 0 1-6-6V54a6 6 0 0 1 6-6h106v88c0 13.255 10.745 24 24 24h88v202a6 6 0 0 1-6 6zm6-256h-64V48h9.632c1.591 0 3.117.632 4.243 1.757l48.368 48.368a6 6 0 0 1 1.757 4.243V112z'/%3e%3c/svg%3e";
+var img$b = "data:image/svg+xml,%3c%3fxml version='1.0' %3f%3e%3csvg viewBox='0 0 448 512' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M433.941 65.941l-51.882-51.882A48 48 0 0 0 348.118 0H176c-26.51 0-48 21.49-48 48v48H48c-26.51 0-48 21.49-48 48v320c0 26.51 21.49 48 48 48h224c26.51 0 48-21.49 48-48v-48h80c26.51 0 48-21.49 48-48V99.882a48 48 0 0 0-14.059-33.941zM266 464H54a6 6 0 0 1-6-6V150a6 6 0 0 1 6-6h74v224c0 26.51 21.49 48 48 48h96v42a6 6 0 0 1-6 6zm128-96H182a6 6 0 0 1-6-6V54a6 6 0 0 1 6-6h106v88c0 13.255 10.745 24 24 24h88v202a6 6 0 0 1-6 6zm6-256h-64V48h9.632c1.591 0 3.117.632 4.243 1.757l48.368 48.368a6 6 0 0 1 1.757 4.243V112z'/%3e%3c/svg%3e";
 
 /* src\Components\Modal\Components\AddByLinkBox.svelte generated by Svelte v3.59.2 */
 const file$b = "src\\Components\\Modal\\Components\\AddByLinkBox.svelte";
@@ -16657,7 +25367,7 @@ function create_fragment$c(ctx) {
 			attr_dev(input0, "placeholder", "place for link");
 			attr_dev(input0, "class", "svelte-acyjkr");
 			add_location(input0, file$b, 15, 6, 507);
-			if (!src_url_equal(img0.src, img0_src_value = img$a)) attr_dev(img0, "src", img0_src_value);
+			if (!src_url_equal(img0.src, img0_src_value = img$b)) attr_dev(img0, "src", img0_src_value);
 			attr_dev(img0, "alt", img0_alt_value = /*$_*/ ctx[1]("modalAddByLinkBox.altCopyToClipBoard"));
 			attr_dev(img0, "class", "svelte-acyjkr");
 			add_location(img0, file$b, 22, 6, 650);
@@ -16674,7 +25384,7 @@ function create_fragment$c(ctx) {
 			attr_dev(input1, "placeholder", "place for link");
 			attr_dev(input1, "class", "svelte-acyjkr");
 			add_location(input1, file$b, 31, 6, 951);
-			if (!src_url_equal(img1.src, img1_src_value = img$a)) attr_dev(img1, "src", img1_src_value);
+			if (!src_url_equal(img1.src, img1_src_value = img$b)) attr_dev(img1, "src", img1_src_value);
 			attr_dev(img1, "alt", img1_alt_value = /*$_*/ ctx[1]("modalAddByLinkBox.altCopyToClipBoard"));
 			attr_dev(img1, "class", "svelte-acyjkr");
 			add_location(img1, file$b, 38, 6, 1094);
@@ -16773,7 +25483,7 @@ function instance$c($$self, $$props, $$invalidate) {
 		if ('showHeader' in $$props) $$invalidate(0, showHeader = $$props.showHeader);
 	};
 
-	$$self.$capture_state = () => ({ copyToClipboardIcon: img$a, showHeader, _: $format, $_ });
+	$$self.$capture_state = () => ({ copyToClipboardIcon: img$b, showHeader, _: $format, $_ });
 
 	$$self.$inject_state = $$props => {
 		if ('showHeader' in $$props) $$invalidate(0, showHeader = $$props.showHeader);
@@ -17180,7 +25890,7 @@ function create_if_block_3$3(ctx) {
 	const block = {
 		c: function create() {
 			img = element("img");
-			if (!src_url_equal(img.src, img_src_value = img$c)) attr_dev(img, "src", img_src_value);
+			if (!src_url_equal(img.src, img_src_value = img$d)) attr_dev(img, "src", img_src_value);
 			attr_dev(img, "alt", img_alt_value = /*$_*/ ctx[3]("modalCreateProjectScreen.altBack"));
 			attr_dev(img, "class", "content-wrapper__back-icon svelte-1o9arsq");
 			add_location(img, file$9, 62, 4, 1896);
@@ -17629,7 +26339,7 @@ function instance$a($$self, $$props, $$invalidate) {
 	$$self.$capture_state = () => ({
 		createEventDispatcher,
 		_: $format,
-		ArrowBack: img$c,
+		ArrowBack: img$d,
 		NameProject: NameOrRenameProject,
 		ToggleAddByLinkAndEmail,
 		backendUrl: backendUrl$4,
@@ -17685,7 +26395,7 @@ class CreateProjectScreen extends SvelteComponentDev {
 	}
 }
 
-var img$9 = "data:image/svg+xml,%3c%3fxml version='1.0' %3f%3e%3csvg viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3e%3ctitle/%3e%3cg data-name='Layer 57' id='Layer_57'%3e%3cpath d='M18.83%2c16l8.59-8.59a2%2c2%2c0%2c0%2c0-2.83-2.83L16%2c13.17%2c7.41%2c4.59A2%2c2%2c0%2c0%2c0%2c4.59%2c7.41L13.17%2c16%2c4.59%2c24.59a2%2c2%2c0%2c1%2c0%2c2.83%2c2.83L16%2c18.83l8.59%2c8.59a2%2c2%2c0%2c0%2c0%2c2.83-2.83Z'/%3e%3c/g%3e%3c/svg%3e";
+var img$a = "data:image/svg+xml,%3c%3fxml version='1.0' %3f%3e%3csvg viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3e%3ctitle/%3e%3cg data-name='Layer 57' id='Layer_57'%3e%3cpath d='M18.83%2c16l8.59-8.59a2%2c2%2c0%2c0%2c0-2.83-2.83L16%2c13.17%2c7.41%2c4.59A2%2c2%2c0%2c0%2c0%2c4.59%2c7.41L13.17%2c16%2c4.59%2c24.59a2%2c2%2c0%2c1%2c0%2c2.83%2c2.83L16%2c18.83l8.59%2c8.59a2%2c2%2c0%2c0%2c0%2c2.83-2.83Z'/%3e%3c/g%3e%3c/svg%3e";
 
 /* src\Components\Modal\Modal.svelte generated by Svelte v3.59.2 */
 const file$8 = "src\\Components\\Modal\\Modal.svelte";
@@ -17724,7 +26434,7 @@ function create_if_block$7(ctx) {
 			attr_dev(h1, "class", "backdrop__header svelte-5t89we");
 			add_location(h1, file$8, 60, 6, 1292);
 			attr_dev(img, "class", "backdrop__exit-icon svelte-5t89we");
-			if (!src_url_equal(img.src, img_src_value = img$9)) attr_dev(img, "src", img_src_value);
+			if (!src_url_equal(img.src, img_src_value = img$a)) attr_dev(img, "src", img_src_value);
 			attr_dev(img, "alt", img_alt_value = /*$_*/ ctx[4]("modal.close"));
 			add_location(img, file$8, 61, 6, 1345);
 			attr_dev(div0, "class", "backdrop__line svelte-5t89we");
@@ -17974,7 +26684,7 @@ function instance$9($$self, $$props, $$invalidate) {
 		onMount,
 		onDestroy,
 		tick,
-		exitIcon: img$9,
+		exitIcon: img$a,
 		createEventDispatcher,
 		_: $format,
 		panelName,
@@ -18191,7 +26901,7 @@ function create_fragment$8(ctx) {
 			add_location(p, file$7, 30, 4, 929);
 			attr_dev(div0, "class", "project-wrapper__name svelte-1625v8g");
 			add_location(div0, file$7, 29, 2, 888);
-			if (!src_url_equal(img.src, img_src_value = img$d)) attr_dev(img, "src", img_src_value);
+			if (!src_url_equal(img.src, img_src_value = img$e)) attr_dev(img, "src", img_src_value);
 			attr_dev(img, "alt", img_alt_value = /*$_*/ ctx[2]("projects.addNew"));
 			attr_dev(img, "class", "svelte-1625v8g");
 			add_location(img, file$7, 33, 4, 1021);
@@ -18320,7 +27030,7 @@ function instance$8($$self, $$props, $$invalidate) {
 	$$self.$capture_state = () => ({
 		createEventDispatcher,
 		_: $format,
-		AddIcon: img$d,
+		AddIcon: img$e,
 		CreateProjectScreen,
 		Modal,
 		dispatch,
@@ -18357,6 +27067,8 @@ class CreateProject extends SvelteComponentDev {
 		});
 	}
 }
+
+var img$9 = "data:image/svg+xml,%3c%3fxml version='1.0' %3f%3e%3csvg style='enable-background:new 0 0 24 24%3b' version='1.1' viewBox='0 0 24 24' xml:space='preserve' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'%3e%3cg id='info'/%3e%3cg id='icons'%3e%3cg id='save'%3e%3cpath d='M11.2%2c16.6c0.4%2c0.5%2c1.2%2c0.5%2c1.6%2c0l6-6.3C19.3%2c9.8%2c18.8%2c9%2c18%2c9h-4c0%2c0%2c0.2-4.6%2c0-7c-0.1-1.1-0.9-2-2-2c-1.1%2c0-1.9%2c0.9-2%2c2 c-0.2%2c2.3%2c0%2c7%2c0%2c7H6c-0.8%2c0-1.3%2c0.8-0.8%2c1.4L11.2%2c16.6z'/%3e%3cpath d='M19%2c19H5c-1.1%2c0-2%2c0.9-2%2c2v0c0%2c0.6%2c0.4%2c1%2c1%2c1h16c0.6%2c0%2c1-0.4%2c1-1v0C21%2c19.9%2c20.1%2c19%2c19%2c19z'/%3e%3c/g%3e%3c/g%3e%3c/svg%3e";
 
 var img$8 = "data:image/svg+xml,%3c%3fxml version='1.0' %3f%3e%3csvg enable-background='new 0 0 32 32' id='Layer_3' version='1.1' viewBox='0 0 32 32' xml:space='preserve' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'%3e%3cg%3e%3cpath d='M27.126%2c15.264C28.241%2c14.613%2c29%2c13.417%2c29%2c12.036v-1.571c0-1.477-1.202-2.679-2.679-2.679h-2.643 C22.202%2c7.786%2c21%2c8.987%2c21%2c10.464v1.571c0%2c1.379%2c0.757%2c2.573%2c1.868%2c3.225c-0.912%2c0.416-1.674%2c1.087-2.184%2c1.945 c-0.506-0.341-1.053-0.632-1.639-0.857C19.632%2c15.652%2c20%2c14.765%2c20%2c13.786v-0.888c0-1.716-1.396-3.112-3.112-3.112h-1.775 c-1.716%2c0-3.112%2c1.396-3.112%2c3.112v0.888c0%2c0.98%2c0.368%2c1.866%2c0.954%2c2.562c-0.586%2c0.225-1.133%2c0.516-1.639%2c0.857 c-0.51-0.857-1.272-1.528-2.184-1.945C10.243%2c14.609%2c11%2c13.415%2c11%2c12.036v-1.571c0-1.477-1.202-2.679-2.679-2.679H5.679 C4.202%2c7.786%2c3%2c8.987%2c3%2c10.464v1.571c0%2c1.382%2c0.759%2c2.578%2c1.874%2c3.228C3.182%2c16.043%2c2%2c17.706%2c2%2c19.643c0%2c0.552%2c0.448%2c1%2c1%2c1 s1-0.448%2c1-1c0-1.576%2c1.346-2.857%2c3-2.857c1.222%2c0%2c2.32%2c0.723%2c2.775%2c1.773C8.667%2c19.834%2c8%2c21.452%2c8%2c23.214c0%2c0.552%2c0.448%2c1%2c1%2c1 s1-0.448%2c1-1c0-2.993%2c2.691-5.429%2c6-5.429s6%2c2.436%2c6%2c5.429c0%2c0.552%2c0.448%2c1%2c1%2c1s1-0.448%2c1-1c0-1.762-0.667-3.38-1.775-4.655 c0.455-1.05%2c1.553-1.773%2c2.775-1.773c1.654%2c0%2c3%2c1.282%2c3%2c2.857c0%2c0.552%2c0.448%2c1%2c1%2c1s1-0.448%2c1-1 C30%2c17.706%2c28.818%2c16.043%2c27.126%2c15.264z M5%2c10.464c0-0.374%2c0.305-0.679%2c0.679-0.679h2.643C8.695%2c9.786%2c9%2c10.09%2c9%2c10.464v1.571 c0%2c0.965-0.785%2c1.75-1.75%2c1.75h-0.5C5.785%2c13.786%2c5%2c13%2c5%2c12.036V10.464z M14%2c13.786v-0.888c0-0.613%2c0.499-1.112%2c1.112-1.112h1.775 c0.613%2c0%2c1.112%2c0.499%2c1.112%2c1.112v0.888c0%2c1.103-0.897%2c2-2%2c2S14%2c14.889%2c14%2c13.786z M23%2c10.464c0-0.374%2c0.305-0.679%2c0.679-0.679 h2.643c0.374%2c0%2c0.679%2c0.305%2c0.679%2c0.679v1.571c0%2c0.965-0.785%2c1.75-1.75%2c1.75h-0.5c-0.965%2c0-1.75-0.785-1.75-1.75V10.464z'/%3e%3c/g%3e%3c/svg%3e";
 
@@ -18708,7 +27420,7 @@ function create_if_block_5$2(ctx) {
 			add_location(button1, file$5, 158, 8, 4636);
 			add_location(li1, file$5, 157, 6, 4622);
 			attr_dev(img2, "class", "nav-panel__icon svelte-14zhem");
-			if (!src_url_equal(img2.src, img2_src_value = img$b)) attr_dev(img2, "src", img2_src_value);
+			if (!src_url_equal(img2.src, img2_src_value = img$c)) attr_dev(img2, "src", img2_src_value);
 			attr_dev(img2, "alt", "");
 			add_location(img2, file$5, 171, 11, 5128);
 			attr_dev(h32, "class", h32_class_value = "transition " + (/*isMenuOpen*/ ctx[6] ? 'show' : 'hide') + " svelte-14zhem");
@@ -19421,7 +28133,7 @@ function create_fragment$6(ctx) {
 			t14 = space();
 			if (if_block5) if_block5.c();
 			if_block5_anchor = empty();
-			if (!src_url_equal(img0.src, img0_src_value = img$c)) attr_dev(img0, "src", img0_src_value);
+			if (!src_url_equal(img0.src, img0_src_value = img$d)) attr_dev(img0, "src", img0_src_value);
 			attr_dev(img0, "alt", img0_alt_value = /*$_*/ ctx[7]("projectsLeftSideNav.altClose"));
 			attr_dev(img0, "class", "nav-panel__toggle-icon-close svelte-14zhem");
 			add_location(img0, file$5, 102, 6, 2887);
@@ -19445,7 +28157,7 @@ function create_fragment$6(ctx) {
 			add_location(button0, file$5, 127, 6, 3575);
 			add_location(li2, file$5, 126, 4, 3563);
 			attr_dev(img3, "class", "nav-panel__icon svelte-14zhem");
-			if (!src_url_equal(img3.src, img3_src_value = img$l)) attr_dev(img3, "src", img3_src_value);
+			if (!src_url_equal(img3.src, img3_src_value = img$9)) attr_dev(img3, "src", img3_src_value);
 			attr_dev(img3, "alt", "");
 			add_location(img3, file$5, 140, 9, 4025);
 			attr_dev(h32, "class", h32_class_value = "transition " + (/*isMenuOpen*/ ctx[6] ? 'show' : 'hide') + " svelte-14zhem");
@@ -19837,14 +28549,14 @@ function instance$6($$self, $$props, $$invalidate) {
 		onMount,
 		onDestroy,
 		_: $format,
-		saveIcon: img$l,
+		saveIcon: img$9,
 		manageTeamIcon: img$8,
 		openIcon: img$7,
 		renameIcon: img$6,
-		deleteIcon: img$b,
+		deleteIcon: img$c,
 		leaveIcon: img$5,
 		DeleteOrLeave,
-		ArrowLeft: img$c,
+		ArrowLeft: img$d,
 		ArrowRight: img$4,
 		RenameProject: NameOrRenameProject,
 		ToggleAddByLinkAndEmail,
@@ -19980,7 +28692,7 @@ function create_if_block$4(ctx) {
 			t2 = space();
 			button1 = element("button");
 			img1 = element("img");
-			if (!src_url_equal(img0.src, img0_src_value = img$c)) attr_dev(img0, "src", img0_src_value);
+			if (!src_url_equal(img0.src, img0_src_value = img$d)) attr_dev(img0, "src", img0_src_value);
 			attr_dev(img0, "alt", img0_alt_value = /*$_*/ ctx[4]("projects.previous"));
 			attr_dev(img0, "class", "svelte-1h4mzhq");
 			toggle_class(img0, "hidden", /*currentPage*/ ctx[0] === 1);
@@ -20188,7 +28900,7 @@ function instance$5($$self, $$props, $$invalidate) {
 
 	$$self.$capture_state = () => ({
 		createEventDispatcher,
-		ArrowLeft: img$c,
+		ArrowLeft: img$d,
 		ArrowRight: img$4,
 		_: $format,
 		projectPerPage,
@@ -21856,7 +30568,7 @@ function create_if_block$2(ctx) {
 			h3 = element("h3");
 			t = text(t_value);
 			attr_dev(h3, "class", "error svelte-1n1a53w");
-			add_location(h3, file$1, 21, 8, 577);
+			add_location(h3, file$1, 21, 8, 598);
 		},
 		m: function mount(target, anchor) {
 			insert_dev(target, h3, anchor);
@@ -21933,44 +30645,44 @@ function create_fragment$2(ctx) {
 			t7 = space();
 			a = element("a");
 			t8 = text(t8_value);
-			add_location(h1, file$1, 18, 4, 491);
+			add_location(h1, file$1, 18, 4, 509);
 			attr_dev(input0, "type", "text");
 			attr_dev(input0, "name", "username");
 			attr_dev(input0, "placeholder", input0_placeholder_value = /*$_*/ ctx[2]("register.username"));
 			input0.required = true;
 			attr_dev(input0, "class", "svelte-1n1a53w");
-			add_location(input0, file$1, 25, 10, 770);
+			add_location(input0, file$1, 25, 10, 795);
 			attr_dev(input1, "type", "email");
 			attr_dev(input1, "name", "email");
 			attr_dev(input1, "placeholder", input1_placeholder_value = /*$_*/ ctx[2]("register.email"));
 			input1.required = true;
 			attr_dev(input1, "class", "svelte-1n1a53w");
-			add_location(input1, file$1, 31, 10, 923);
+			add_location(input1, file$1, 31, 10, 954);
 			attr_dev(input2, "type", "password");
 			attr_dev(input2, "name", "password");
 			attr_dev(input2, "placeholder", input2_placeholder_value = /*$_*/ ctx[2]("register.password"));
 			input2.required = true;
 			attr_dev(input2, "class", "svelte-1n1a53w");
-			add_location(input2, file$1, 37, 10, 1071);
+			add_location(input2, file$1, 37, 10, 1108);
 			attr_dev(button, "class", "button--blue");
 			attr_dev(button, "type", "submit");
-			add_location(button, file$1, 44, 12, 1271);
+			add_location(button, file$1, 44, 12, 1315);
 			attr_dev(div0, "class", "button-container svelte-1n1a53w");
-			add_location(div0, file$1, 43, 10, 1228);
+			add_location(div0, file$1, 43, 10, 1271);
 			attr_dev(form, "action", backendUrl$1 + "/register");
 			attr_dev(form, "method", "post");
 			attr_dev(form, "class", "svelte-1n1a53w");
-			add_location(form, file$1, 24, 8, 705);
+			add_location(form, file$1, 24, 8, 729);
 			attr_dev(a, "href", "/login");
 			attr_dev(a, "class", "svelte-1n1a53w");
-			add_location(a, file$1, 49, 8, 1418);
+			add_location(a, file$1, 49, 8, 1467);
 			attr_dev(div1, "class", "password-login svelte-1n1a53w");
-			add_location(div1, file$1, 23, 6, 668);
+			add_location(div1, file$1, 23, 6, 691);
 			attr_dev(div2, "class", "login-component");
-			add_location(div2, file$1, 19, 4, 514);
+			add_location(div2, file$1, 19, 4, 533);
 			attr_dev(div3, "class", "main-component svelte-1n1a53w");
-			add_location(div3, file$1, 17, 2, 458);
-			add_location(main, file$1, 16, 0, 449);
+			add_location(div3, file$1, 17, 2, 475);
+			add_location(main, file$1, 16, 0, 465);
 		},
 		l: function claim(nodes) {
 			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -22138,12 +30850,13 @@ function create_if_block_5(ctx) {
 			a = element("a");
 			h3 = element("h3");
 			t = text(t_value);
-			add_location(h3, file, 140, 10, 4930);
+			attr_dev(h3, "class", "svelte-1px6pi6");
+			add_location(h3, file, 140, 10, 5077);
 			attr_dev(a, "href", "/projects");
-			attr_dev(a, "class", "svelte-24zu8");
-			add_location(a, file, 139, 8, 4899);
-			attr_dev(li, "class", "top-nav__item " + (isActivePage('/projects') ? 'active' : '') + " svelte-24zu8");
-			add_location(li, file, 138, 6, 4820);
+			attr_dev(a, "class", "svelte-1px6pi6");
+			add_location(a, file, 139, 8, 5045);
+			attr_dev(li, "class", "top-nav__item " + (isActivePage('/projects') ? 'active' : '') + " svelte-1px6pi6");
+			add_location(li, file, 138, 6, 4965);
 		},
 		m: function mount(target, anchor) {
 			insert_dev(target, li, anchor);
@@ -22184,12 +30897,13 @@ function create_if_block_4(ctx) {
 			a = element("a");
 			h3 = element("h3");
 			t = text(t_value);
-			add_location(h3, file, 152, 10, 5308);
+			attr_dev(h3, "class", "svelte-1px6pi6");
+			add_location(h3, file, 152, 10, 5467);
 			attr_dev(a, "href", "/profile");
-			attr_dev(a, "class", "svelte-24zu8");
-			add_location(a, file, 151, 8, 5278);
-			attr_dev(li, "class", "top-nav__item " + (isActivePage('/profile') ? 'active' : '') + " svelte-24zu8");
-			add_location(li, file, 150, 6, 5200);
+			attr_dev(a, "class", "svelte-1px6pi6");
+			add_location(a, file, 151, 8, 5436);
+			attr_dev(li, "class", "top-nav__item " + (isActivePage('/profile') ? 'active' : '') + " svelte-1px6pi6");
+			add_location(li, file, 150, 6, 5357);
 		},
 		m: function mount(target, anchor) {
 			insert_dev(target, li, anchor);
@@ -22230,12 +30944,13 @@ function create_else_block$1(ctx) {
 			a = element("a");
 			h3 = element("h3");
 			t = text(t_value);
-			add_location(h3, file, 165, 10, 5667);
+			attr_dev(h3, "class", "svelte-1px6pi6");
+			add_location(h3, file, 165, 10, 5839);
 			attr_dev(a, "href", "/login");
-			attr_dev(a, "class", "svelte-24zu8");
-			add_location(a, file, 164, 8, 5639);
-			attr_dev(li, "class", "top-nav__item " + (isActivePage('/login') ? 'active' : '') + " svelte-24zu8");
-			add_location(li, file, 163, 6, 5563);
+			attr_dev(a, "class", "svelte-1px6pi6");
+			add_location(a, file, 164, 8, 5810);
+			attr_dev(li, "class", "top-nav__item " + (isActivePage('/login') ? 'active' : '') + " svelte-1px6pi6");
+			add_location(li, file, 163, 6, 5733);
 		},
 		m: function mount(target, anchor) {
 			insert_dev(target, li, anchor);
@@ -22276,12 +30991,13 @@ function create_if_block_3(ctx) {
 			a = element("a");
 			h3 = element("h3");
 			t = text(t_value);
-			add_location(h3, file, 159, 10, 5485);
+			attr_dev(h3, "class", "svelte-1px6pi6");
+			add_location(h3, file, 159, 10, 5651);
 			attr_dev(a, "href", backendUrl + "/logout");
-			attr_dev(a, "class", "svelte-24zu8");
-			add_location(a, file, 158, 8, 5441);
-			attr_dev(li, "class", "top-nav__item svelte-24zu8");
-			add_location(li, file, 157, 6, 5406);
+			attr_dev(a, "class", "svelte-1px6pi6");
+			add_location(a, file, 158, 8, 5606);
+			attr_dev(li, "class", "top-nav__item svelte-1px6pi6");
+			add_location(li, file, 157, 6, 5570);
 		},
 		m: function mount(target, anchor) {
 			insert_dev(target, li, anchor);
@@ -22322,12 +31038,13 @@ function create_if_block_2(ctx) {
 			a = element("a");
 			h3 = element("h3");
 			t = text(t_value);
-			add_location(h3, file, 172, 10, 5874);
+			attr_dev(h3, "class", "svelte-1px6pi6");
+			add_location(h3, file, 172, 10, 6053);
 			attr_dev(a, "href", "/register");
-			attr_dev(a, "class", "svelte-24zu8");
-			add_location(a, file, 171, 8, 5843);
-			attr_dev(li, "class", "top-nav__item " + (isActivePage('/register') ? 'active' : '') + " svelte-24zu8");
-			add_location(li, file, 170, 6, 5764);
+			attr_dev(a, "class", "svelte-1px6pi6");
+			add_location(a, file, 171, 8, 6021);
+			attr_dev(li, "class", "top-nav__item " + (isActivePage('/register') ? 'active' : '') + " svelte-1px6pi6");
+			add_location(li, file, 170, 6, 5941);
 		},
 		m: function mount(target, anchor) {
 			insert_dev(target, li, anchor);
@@ -22363,7 +31080,8 @@ function create_if_block_1(ctx) {
 		c: function create() {
 			h3 = element("h3");
 			t = text(/*$locale*/ ctx[4]);
-			add_location(h3, file, 187, 10, 6241);
+			attr_dev(h3, "class", "svelte-1px6pi6");
+			add_location(h3, file, 187, 10, 6435);
 		},
 		m: function mount(target, anchor) {
 			insert_dev(target, h3, anchor);
@@ -22397,7 +31115,8 @@ function create_if_block$1(ctx) {
 		c: function create() {
 			h3 = element("h3");
 			t = text(/*$locale*/ ctx[4]);
-			add_location(h3, file, 190, 10, 6315);
+			attr_dev(h3, "class", "svelte-1px6pi6");
+			add_location(h3, file, 190, 10, 6512);
 		},
 		m: function mount(target, anchor) {
 			insert_dev(target, h3, anchor);
@@ -22438,10 +31157,10 @@ function create_each_block(ctx) {
 			h3 = element("h3");
 			t0 = text(t0_value);
 			t1 = space();
-			attr_dev(h3, "class", "svelte-24zu8");
-			add_location(h3, file, 209, 12, 6871);
-			attr_dev(div, "class", "dropdown__item-container svelte-24zu8");
-			add_location(div, file, 204, 10, 6707);
+			attr_dev(h3, "class", "svelte-1px6pi6");
+			add_location(h3, file, 209, 12, 7087);
+			attr_dev(div, "class", "dropdown__item-container svelte-1px6pi6");
+			add_location(div, file, 204, 10, 6918);
 		},
 		m: function mount(target, anchor) {
 			insert_dev(target, div, anchor);
@@ -22593,67 +31312,69 @@ function create_fragment$1(ctx) {
 				each_blocks[i].c();
 			}
 
-			attr_dev(h30, "class", "svelte-24zu8");
-			add_location(h30, file, 104, 10, 3927);
-			attr_dev(div0, "class", "top-nav__logo svelte-24zu8");
-			add_location(div0, file, 103, 8, 3889);
+			attr_dev(h30, "class", "svelte-1px6pi6");
+			add_location(h30, file, 104, 10, 4038);
+			attr_dev(div0, "class", "top-nav__logo svelte-1px6pi6");
+			add_location(div0, file, 103, 8, 3999);
 			attr_dev(a0, "href", "/");
-			attr_dev(a0, "class", "svelte-24zu8");
-			add_location(a0, file, 102, 6, 3868);
-			attr_dev(div1, "class", "top-nav__route-wrapper");
-			add_location(div1, file, 101, 4, 3825);
-			attr_dev(div2, "class", "top-nav__logo-container svelte-24zu8");
-			add_location(div2, file, 100, 2, 3783);
-			attr_dev(img0, "class", "hamburger--btn__exit-icon svelte-24zu8");
+			attr_dev(a0, "class", "svelte-1px6pi6");
+			add_location(a0, file, 102, 6, 3977);
+			attr_dev(div1, "class", "top-nav__route-wrapper svelte-1px6pi6");
+			add_location(div1, file, 101, 4, 3933);
+			attr_dev(div2, "class", "top-nav__logo-container svelte-1px6pi6");
+			add_location(div2, file, 100, 2, 3890);
+			attr_dev(img0, "class", "hamburger--btn__exit-icon svelte-1px6pi6");
 			if (!src_url_equal(img0.src, img0_src_value = img$1)) attr_dev(img0, "src", img0_src_value);
 			attr_dev(img0, "alt", img0_alt_value = /*$_*/ ctx[3]("navigation.close"));
 			toggle_class(img0, "active", /*hamburgerDropdownVisible*/ ctx[2]);
-			add_location(img0, file, 116, 6, 4215);
+			add_location(img0, file, 116, 6, 4338);
 
 			attr_dev(img1, "class", img1_class_value = "hamburger--btn__burger-icon " + (/*hamburgerDropdownVisible*/ ctx[2]
 			? 'hidden'
-			: 'active') + " svelte-24zu8");
+			: 'active') + " svelte-1px6pi6");
 
 			if (!src_url_equal(img1.src, img1_src_value = img)) attr_dev(img1, "src", img1_src_value);
 			attr_dev(img1, "alt", img1_alt_value = /*$_*/ ctx[3]("navigation.open"));
-			add_location(img1, file, 122, 6, 4386);
+			add_location(img1, file, 122, 6, 4515);
 			attr_dev(button0, "type", "button");
-			attr_dev(button0, "class", "hamburger--btn button--default svelte-24zu8");
+			attr_dev(button0, "class", "hamburger--btn button--default svelte-1px6pi6");
 			toggle_class(button0, "active", /*hamburgerDropdownVisible*/ ctx[2]);
-			add_location(button0, file, 110, 4, 4038);
-			attr_dev(div3, "class", "top-nav__button-container svelte-24zu8");
-			add_location(div3, file, 109, 2, 3994);
-			add_location(h31, file, 134, 8, 4737);
+			add_location(button0, file, 110, 4, 4155);
+			attr_dev(div3, "class", "top-nav__button-container svelte-1px6pi6");
+			add_location(div3, file, 109, 2, 4110);
+			attr_dev(h31, "class", "svelte-1px6pi6");
+			add_location(h31, file, 134, 8, 4878);
 			attr_dev(a1, "href", "/editor");
-			attr_dev(a1, "class", "svelte-24zu8");
-			add_location(a1, file, 133, 6, 4710);
-			attr_dev(li0, "class", "top-nav__item " + (isActivePage('/editor') ? 'active' : '') + " svelte-24zu8");
-			add_location(li0, file, 132, 4, 4635);
-			add_location(h32, file, 146, 8, 5114);
+			attr_dev(a1, "class", "svelte-1px6pi6");
+			add_location(a1, file, 133, 6, 4850);
+			attr_dev(li0, "class", "top-nav__item " + (isActivePage('/editor') ? 'active' : '') + " svelte-1px6pi6");
+			add_location(li0, file, 132, 4, 4774);
+			attr_dev(h32, "class", "svelte-1px6pi6");
+			add_location(h32, file, 146, 8, 5267);
 			attr_dev(a2, "href", "/templates");
-			attr_dev(a2, "class", "svelte-24zu8");
-			add_location(a2, file, 145, 6, 5084);
-			attr_dev(li1, "class", "top-nav__item " + (isActivePage('/templates') ? 'active' : '') + " svelte-24zu8");
-			add_location(li1, file, 144, 4, 5006);
+			attr_dev(a2, "class", "svelte-1px6pi6");
+			add_location(a2, file, 145, 6, 5236);
+			attr_dev(li1, "class", "top-nav__item " + (isActivePage('/templates') ? 'active' : '') + " svelte-1px6pi6");
+			add_location(li1, file, 144, 4, 5157);
 			attr_dev(img2, "id", "dropdown__arrow-icon");
 			if (!src_url_equal(img2.src, img2_src_value = img$2)) attr_dev(img2, "src", img2_src_value);
 			attr_dev(img2, "alt", "toggle language select");
-			attr_dev(img2, "class", "svelte-24zu8");
+			attr_dev(img2, "class", "svelte-1px6pi6");
 			toggle_class(img2, "active", /*langDropdownVisible*/ ctx[1]);
-			add_location(img2, file, 192, 8, 6356);
+			add_location(img2, file, 192, 8, 6555);
 			attr_dev(button1, "type", "button");
-			attr_dev(button1, "class", "dropdown--btn button--default svelte-24zu8");
+			attr_dev(button1, "class", "dropdown--btn button--default svelte-1px6pi6");
 			toggle_class(button1, "active", /*langDropdownVisible*/ ctx[1]);
-			add_location(button1, file, 181, 6, 6073);
-			attr_dev(div4, "class", "dropdown__dropdown-content svelte-24zu8");
+			add_location(button1, file, 181, 6, 6261);
+			attr_dev(div4, "class", "dropdown__dropdown-content svelte-1px6pi6");
 			toggle_class(div4, "visible", /*langDropdownVisible*/ ctx[1]);
-			add_location(div4, file, 199, 6, 6540);
-			attr_dev(li2, "class", "dropdown svelte-24zu8");
-			add_location(li2, file, 176, 4, 5950);
-			attr_dev(menu, "class", "top-nav__list svelte-24zu8");
-			add_location(menu, file, 131, 2, 4602);
-			attr_dev(header, "class", "top-nav svelte-24zu8");
-			add_location(header, file, 99, 0, 3756);
+			add_location(div4, file, 199, 6, 6746);
+			attr_dev(li2, "class", "dropdown svelte-1px6pi6");
+			add_location(li2, file, 176, 4, 6133);
+			attr_dev(menu, "class", "top-nav__list svelte-1px6pi6");
+			add_location(menu, file, 131, 2, 4740);
+			attr_dev(header, "class", "top-nav svelte-1px6pi6");
+			add_location(header, file, 99, 0, 3862);
 		},
 		l: function claim(nodes) {
 			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -22728,7 +31449,7 @@ function create_fragment$1(ctx) {
 
 			if (dirty & /*hamburgerDropdownVisible*/ 4 && img1_class_value !== (img1_class_value = "hamburger--btn__burger-icon " + (/*hamburgerDropdownVisible*/ ctx[2]
 			? 'hidden'
-			: 'active') + " svelte-24zu8")) {
+			: 'active') + " svelte-1px6pi6")) {
 				attr_dev(img1, "class", img1_class_value);
 			}
 
@@ -22909,9 +31630,6 @@ function instance$1($$self, $$props, $$invalidate) {
 	let langDropdownButtonText;
 	let dropdownMenuClass;
 
-	// checks if user is logged to differently render the navigation by
-	// checking if a specific cookie exists, on logout the backend takes
-	// care of clearing the cookie
 	function isUserLoggedIn() {
 		$$invalidate(0, isLoggedIn = document.cookie.includes("JSESSIONID="));
 	}
@@ -23049,14 +31767,15 @@ function instance$1($$self, $$props, $$invalidate) {
 		$locale$1,
 		handleLangDropdownClick,
 		handleHamburgerDropdownClick,
-		handleLanguageSelect
+		handleLanguageSelect,
+		isUserLoggedIn
 	];
 }
 
 class TopNavigation extends SvelteComponentDev {
 	constructor(options) {
 		super(options);
-		init$1(this, options, instance$1, create_fragment$1, safe_not_equal, {});
+		init$1(this, options, instance$1, create_fragment$1, safe_not_equal, { isUserLoggedIn: 8 });
 
 		dispatch_dev("SvelteRegisterComponent", {
 			component: this,
@@ -23064,6 +31783,14 @@ class TopNavigation extends SvelteComponentDev {
 			options,
 			id: create_fragment$1.name
 		});
+	}
+
+	get isUserLoggedIn() {
+		return this.$$.ctx[8];
+	}
+
+	set isUserLoggedIn(value) {
+		throw new Error("<TopNavigation>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
 	}
 }
 

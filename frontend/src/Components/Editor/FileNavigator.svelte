@@ -124,6 +124,7 @@
   #file-navigator {
     display: flex;
     flex-direction: column;
+    background: transparent;
     width: 100%;
     height: 73%;
   }
@@ -132,9 +133,9 @@
     display: flex;
     justify-content: flex-end;
     height: 40px;
-    box-shadow: 2px 4px 8px 0px #343434; /* Adjusted vertical offset */
+    border-bottom: 1px solid var(--silver);
     z-index: 2;
-    background-color: var(--grey85);
+    background-color: var(--white);
   }
   #project-name {
     position: absolute;
@@ -153,10 +154,6 @@
     position: relative;
     background: transparent;
     border: none;
-  }
-  .project-toolbar-btn:hover {
-    transform: scale(1.05);
-    transition: transform 0.3s ease;
     cursor: pointer;
   }
   .flex-column {
@@ -176,7 +173,7 @@
     display: flex;
     width: 100%;
     z-index: 1;
-    background-color: var(--grey85);
+    background-color: transparent;
     border-bottom: 1px solid var(--silver);
   }
   #file-selector ul {
@@ -219,13 +216,13 @@
   }
 
   #file-selector li:hover {
-    background-color: #e0e0e0;
+    background-color: #afbeff;
     cursor: pointer;
   }
 
   #file-selector li.active {
-    background-color: var(--silver-dark);
-    color: #000000; /* white text for active tab */
+    background-color: rgb(71, 112, 226);
+    color: var(--white); /* white text for active tab */
     transition:
       background-color 0.3s ease,
       color 0.3s ease;
