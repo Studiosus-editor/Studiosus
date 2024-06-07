@@ -1,4 +1,5 @@
 <script>
+  export let toastNotifications;
   export let header;
   export let footer;
 
@@ -15,6 +16,7 @@
   }
 </script>
 
+<svelte:component this={toastNotifications} />
 <div class={pageClass + " content-wrapper"}>
   <div class="header"><svelte:component this={header} /></div>
   <main>

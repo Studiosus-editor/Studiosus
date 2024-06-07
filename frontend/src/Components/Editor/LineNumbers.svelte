@@ -1,9 +1,9 @@
 <script>
-  export let textareaValue;
+  import { textareaValueStore } from "./scripts/store.js";
 
-  // Reactive statement to generate line numbers whenever textareaValue changes
+  // Reactive statement to generate line numbers whenever textareaValueStore changes
   $: lineNumbers = Array.from(
-    { length: Math.max(1, $textareaValue.split("\n").length - 1) },
+    { length: Math.max(1, $textareaValueStore.split("\n").length - 1) },
     (_, i) => i + 1
   );
 </script>

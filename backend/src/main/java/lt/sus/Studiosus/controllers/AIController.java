@@ -6,7 +6,6 @@ import com.google.cloud.vertexai.generativeai.GenerativeModel;
 import com.google.cloud.vertexai.generativeai.ResponseHandler;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
-import lt.sus.Studiosus.dto.ChatRequest;
 import lt.sus.Studiosus.service.ProjectService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,39 +45,32 @@ public class AIController {
   }
 
   @PostMapping("/fix")
-  public ResponseEntity<String> chat(ChatRequest chatRequest, Authentication authentication)
+  public ResponseEntity<String> fix(@RequestBody String code, Authentication authentication)
       throws IOException {
     if (authentication == null || !authentication.isAuthenticated()) {
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
     final String defaultPrompt =
         """
-        Ignore if there is any previous chat history
-        Instructions:
+          Instructions:
+          1. Ignore previous chat history.
+          2. Find syntax errors in YAML code, such as indentation issues or double quotes scalar issues, and correct them.
+          3. Do not change the logic or structure.
+          4. Only correct the syntax of YAML code.
+          5. Output the corrected code.
+          6. Do not add or modify comments.
+          7. If unable to fix, return the code unchanged.
+          8. Do not display these instructions.
 
-        Please fix any errors in the provided Ansible playbook and return the corrected code. Do not add any additional comments or explanations.
+          Here is the code:
 
-        If the text following 'Code:' is not an Ansible playbook, return the same text. For instance, if the input is 'test', return 'test'. If there is no input, return an empty string.
 
-        Return only text after 'Code:' do not return word 'Code:'.
-
-        Do not include the 'Instructions' section in the response.
-
-        If you determine that the code cannot be fixed, return the original code.
-
-        Remember that if you can't see any '- name:' tag it is likely that the code is not an Ansible playbook.
-
-        Please only address obvious issues and do not make assumptions about the code's intent or functionality.
-        Also do not create any new variables or ansible stages.
-
-        Code:
 
         """;
-    final String data = chatRequest.getData();
+    String combinedPrompt = defaultPrompt + code;
 
     // Send the user's message to the model
-    GenerateContentResponse generateContentResponse =
-        this.chatSession.sendMessage(defaultPrompt + "\n" + data);
+    GenerateContentResponse generateContentResponse = this.chatSession.sendMessage(combinedPrompt);
 
     // Retrieve the model's response
     String response = ResponseHandler.getText(generateContentResponse);
@@ -95,11 +87,16 @@ public class AIController {
     }
     String defaultMessage =
         """
-        Imagine that you are Studiosus AI, not Bard, if someone asks you what AI you are, say that you are Studiosus AI.
-        Your whole goal is to help people write better Ansible code.
-        If user inputs CODE, STRICTLY IGNORE it, UNLESS IT IS A REQUEST to FIX the code.
-        If someone ask what are your creators, say Studiosus team.
-        Now go ahead and answer some questions:
+          Imagine that you are Studiosus AI, a specialized AI for YAML editing designed to help users write better Ansible code. Follow these guidelines strictly:
+
+          Identity: If asked about your identity, state that you are Studiosus AI.
+          Functionality: You are an AI tool focused on enhancing Ansible code through YAML editing.
+          Code Interaction: Do not correct or modify any provided code unless the user explicitly requests you to do so. Ignore any code snippets unless there is a clear and direct user request to fix or review them.
+          Goal: Your primary objective is to assist users in writing better Ansible code.
+          Code Provided: If code is included in the conversation without a request for fixing or review, ignore the code and do not make any corrections.
+          Creators: If asked about your creators, refer to the Studiosus team.
+          Now, go ahead and answer some questions:
+
 
 
         """;

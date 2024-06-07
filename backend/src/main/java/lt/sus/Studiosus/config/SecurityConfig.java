@@ -1,24 +1,35 @@
 package lt.sus.Studiosus.config;
 
+import static lt.sus.Studiosus.service.UserDetailsServiceImpl.getEmail;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import lt.sus.Studiosus.model.*;
+import lt.sus.Studiosus.model.enums.Role;
+import lt.sus.Studiosus.repository.*;
 import lt.sus.Studiosus.service.OAuth2UserService;
+import lt.sus.Studiosus.service.ProjectService;
 import lt.sus.Studiosus.service.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -26,6 +37,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.header.writers.ContentSecurityPolicyHeaderWriter;
 
 @Configuration
@@ -38,14 +50,12 @@ public class SecurityConfig {
   // Secrets.properties file configuration
   @Autowired private Environment env;
 
-  // Local database configuration
-  @Bean
-  EmbeddedDatabase datasource() {
-    return new EmbeddedDatabaseBuilder()
-        .setType(EmbeddedDatabaseType.H2)
-        .setName("studiosus")
-        .build();
-  }
+  @Autowired private ProjectService projectService;
+  @Autowired private UserRepository userRepository;
+  @Autowired private ProjectRepository projectRepository;
+  @Autowired private UserProjectRoleRepository userProjectRoleRepository;
+  @Autowired private ProjectInvitedMembersRepository projectInvitedMembersRepository;
+  @Autowired private InvitedMembersRepository invitedMembersRepository;
 
   // Password encoding
   @Bean
@@ -97,7 +107,48 @@ public class SecurityConfig {
                       .userInfoEndpoint(userInfo -> userInfo.userService(oAuth2UserService()))
                       .successHandler(
                           (request, response, authentication) -> {
-                            response.sendRedirect(frontendUrl);
+                            Cookie[] cookies = request.getCookies();
+                            if (cookies != null) {
+                              for (Cookie cookie : cookies) {
+                                if (cookie.getName().equals("linkAndRole")) {
+                                  // Decode the cookie value
+                                  String decodedLinkAndRole =
+                                      new String(Base64.getDecoder().decode(cookie.getValue()));
+
+                                  // Parse the JSON string back to a map
+                                  Map<String, String> linkAndRole =
+                                      new ObjectMapper()
+                                          .readValue(
+                                              decodedLinkAndRole,
+                                              new TypeReference<Map<String, String>>() {});
+
+                                  String link = linkAndRole.get("link");
+                                  Role role = Role.valueOf(linkAndRole.get("role"));
+
+                                  // remove cookie
+                                  cookie.setMaxAge(0);
+                                  response.addCookie(cookie);
+
+                                  if (assignRoleToTheProject(link, role, authentication)) {
+                                    response.sendRedirect(
+                                        frontendUrl
+                                            + "/projects?status=addedToProjectSuccessfully");
+                                    return;
+                                  } else {
+                                    response.sendRedirect(
+                                        frontendUrl + "/projects?status=invalidLink");
+                                    return;
+                                  }
+                                }
+                              }
+                            }
+
+                            String referer = request.getHeader("Referer");
+                            if (referer != null) {
+                              response.sendRedirect(referer);
+                            } else {
+                              response.sendRedirect(frontendUrl);
+                            }
                           }))
           .formLogin(
               form ->
@@ -106,12 +157,57 @@ public class SecurityConfig {
                       .failureHandler(authenticationFailureHandler())
                       .successHandler(
                           (request, response, authentication) -> {
-                            response.sendRedirect(frontendUrl);
+                            Cookie[] cookies = request.getCookies();
+                            if (cookies != null) {
+                              for (Cookie cookie : cookies) {
+                                if (cookie.getName().equals("linkAndRole")) {
+                                  // Decode the cookie value
+                                  String decodedLinkAndRole =
+                                      new String(Base64.getDecoder().decode(cookie.getValue()));
+
+                                  // Parse the JSON string back to a map
+                                  Map<String, String> linkAndRole =
+                                      new ObjectMapper()
+                                          .readValue(
+                                              decodedLinkAndRole,
+                                              new TypeReference<Map<String, String>>() {});
+
+                                  String link = linkAndRole.get("link");
+                                  Role role = Role.valueOf(linkAndRole.get("role"));
+
+                                  // remove cookie
+                                  cookie.setMaxAge(0);
+                                  response.addCookie(cookie);
+
+                                  if (assignRoleToTheProject(link, role, authentication)) {
+                                    response.sendRedirect(
+                                        frontendUrl
+                                            + "/projects?status=addedToProjectSuccessfully");
+                                    return;
+                                  } else {
+                                    response.sendRedirect(
+                                        frontendUrl + "/projects?status=invalidLink");
+                                    return;
+                                  }
+                                }
+                              }
+                            }
+
+                            String referer = request.getHeader("Referer");
+                            if (referer != null) {
+                              response.sendRedirect(referer);
+                            } else {
+                              response.sendRedirect(frontendUrl);
+                            }
                           }))
           .logout(
               logout -> {
                 logout.invalidateHttpSession(true);
                 logout.deleteCookies("JSESSIONID");
+              })
+          .securityContext(
+              security -> {
+                security.securityContextRepository(new HttpSessionSecurityContextRepository());
               })
           .build();
     } else {
@@ -135,14 +231,166 @@ public class SecurityConfig {
                       .failureHandler(authenticationFailureHandler())
                       .successHandler(
                           (request, response, authentication) -> {
-                            response.sendRedirect(frontendUrl);
+                            Cookie[] cookies = request.getCookies();
+                            if (cookies != null) {
+                              for (Cookie cookie : cookies) {
+                                if (cookie.getName().equals("linkAndRole")) {
+                                  // Decode the cookie value
+                                  String decodedLinkAndRole =
+                                      new String(Base64.getDecoder().decode(cookie.getValue()));
+
+                                  // Parse the JSON string back to a map
+                                  Map<String, String> linkAndRole =
+                                      new ObjectMapper()
+                                          .readValue(
+                                              decodedLinkAndRole,
+                                              new TypeReference<Map<String, String>>() {});
+
+                                  String link = linkAndRole.get("link");
+                                  Role role = Role.valueOf(linkAndRole.get("role"));
+
+                                  // remove cookie
+                                  cookie.setMaxAge(0);
+                                  response.addCookie(cookie);
+
+                                  if (assignRoleToTheProject(link, role, authentication)) {
+                                    response.sendRedirect(
+                                        frontendUrl
+                                            + "/projects?status=addedToProjectSuccessfully");
+                                    return;
+                                  } else {
+                                    response.sendRedirect(
+                                        frontendUrl + "/projects?status=invalidLink");
+                                    return;
+                                  }
+                                }
+                              }
+                            }
+
+                            String referer = request.getHeader("Referer");
+                            if (referer != null) {
+                              response.sendRedirect(referer);
+                            } else {
+                              response.sendRedirect(frontendUrl);
+                            }
                           }))
           .logout(
               logout -> {
                 logout.invalidateHttpSession(true);
                 logout.deleteCookies("JSESSIONID");
               })
+          .securityContext(
+              security -> {
+                security.securityContextRepository(new HttpSessionSecurityContextRepository());
+              })
           .build();
+    }
+  }
+
+  private boolean assignRoleToTheProject(String link, Role role, Authentication authentication) {
+
+    String email;
+    User user;
+    Project project;
+    try {
+      email = getEmail(authentication);
+
+      user =
+          userRepository
+              .findUserByEmail(email)
+              .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+      if (role != Role.EMAIL) {
+        project =
+            (role == Role.EDITOR
+                    ? projectRepository.findProjectByEditorLink(link)
+                    : projectRepository.findProjectByViewerLink(link))
+                .orElseThrow(() -> new IllegalArgumentException("Invalid link"));
+
+        Optional<UserProjectRole> userProjectRole =
+            userProjectRoleRepository.findUserProjectRoleByUserAndProject(user, project);
+
+        if (userProjectRole.isPresent()) {
+          Role userRole = Role.valueOf(userProjectRole.get().getRole().toUpperCase());
+
+          if (userRole.getValue() >= role.getValue()) {
+            throw new IllegalArgumentException("User already has higher or same authority");
+          }
+        }
+        if (role == Role.VIEWER) {
+          projectService.addViewerToProjectByLink(email, link);
+        } else {
+          projectService.addEditorToProjectByLink(email, link);
+        }
+        return true;
+      }
+
+      ProjectInvitedMembers projectInvitedMembers;
+
+      try {
+        projectInvitedMembers =
+            projectInvitedMembersRepository
+                .findByInviteLink(link)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid link"));
+        project = projectInvitedMembers.getProject();
+
+      } catch (IllegalArgumentException e) {
+        return false;
+      }
+
+      Optional<UserProjectRole> userProjectRole =
+          userProjectRoleRepository.findUserProjectRoleByUserAndProject(user, project);
+
+      addUserToProjectFromEmailInvite(userProjectRole, user, projectInvitedMembers);
+      return true;
+    } catch (IllegalArgumentException e) {
+      return false;
+    }
+  }
+
+  public void addUserToProjectFromEmailInvite(
+      Optional<UserProjectRole> userProjectRole,
+      User user,
+      ProjectInvitedMembers projectInvitedMembers) {
+
+    if (userProjectRole.isPresent()) {
+      Role userRole = Role.valueOf(userProjectRole.get().getRole().toUpperCase());
+
+      if (userRole.getValue() >= projectInvitedMembers.getType()) {
+        throw new IllegalArgumentException("User already has higher or same authority");
+      }
+
+      UserProjectRole newUserProjectRole = userProjectRole.get();
+      newUserProjectRole.setRole(Role.getRoleByValue(projectInvitedMembers.getType()).name());
+      userProjectRoleRepository.save(newUserProjectRole);
+      projectInvitedMembersRepository.delete(projectInvitedMembers);
+
+      // Check if the invited member is not invited to any other project
+      // if so delete it
+      InvitedMembers invitedMembers = projectInvitedMembers.getInvitedMembers();
+      List<ProjectInvitedMembers> projectInvitedMembersList =
+          projectInvitedMembersRepository.findAllByInvitedMembers(invitedMembers);
+      if (projectInvitedMembersList.isEmpty()) {
+        invitedMembersRepository.delete(invitedMembers);
+      }
+      return;
+    }
+
+    UserProjectRole newUserProjectRole =
+        new UserProjectRole(
+            user,
+            projectInvitedMembers.getProject(),
+            Role.getRoleByValue(projectInvitedMembers.getType()).name());
+    userProjectRoleRepository.save(newUserProjectRole);
+    projectInvitedMembersRepository.delete(projectInvitedMembers);
+
+    // Check if the invited member is not invited to any other project
+    // if so delete it
+    InvitedMembers invitedMembers = projectInvitedMembers.getInvitedMembers();
+    List<ProjectInvitedMembers> projectInvitedMembersList =
+        projectInvitedMembersRepository.findAllByInvitedMembers(invitedMembers);
+    if (projectInvitedMembersList.isEmpty()) {
+      invitedMembersRepository.delete(invitedMembers);
     }
   }
 

@@ -10,6 +10,12 @@
     errorMessage = params.get("exception");
     if (errorMessage === "IllegalArgumentException") {
       errorMessageKey = "emailAlreadyInUse";
+    } else if (errorMessage === "UsernameTooLong") {
+      errorMessageKey = "usernameTooLong";
+    } else if (errorMessage === "EmailTooLong") {
+      errorMessageKey = "emailTooLong";
+    } else if (errorMessage === "PasswordTooLong") {
+      errorMessageKey = "passwordTooLong";
     }
   });
 </script>
@@ -28,18 +34,21 @@
             name="username"
             placeholder={$_("register.username")}
             required
+            maxlength="64"
           />
           <input
             type="email"
             name="email"
             placeholder={$_("register.email")}
             required
+            maxlength="64"
           />
           <input
             type="password"
             name="password"
             placeholder={$_("register.password")}
             required
+            maxlength="64"
           />
           <div class="button-container">
             <button class="button--blue" type="submit"

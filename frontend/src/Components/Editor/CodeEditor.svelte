@@ -1,36 +1,94 @@
 <script>
-  import { onMount } from "svelte";
-  import { writable } from "svelte/store";
+  import { parse } from "yaml";
+  import { onMount, tick } from "svelte";
   import Problems from "./Problems.svelte";
   import Dashboard from "./Dashboard.svelte";
-  import FileNavigator from "./FileNavigator.svelte";
+  import FileNavigator from "./FileNavigator/FileNavigator.svelte";
   import LineNumbers from "./LineNumbers.svelte";
-  import CodeEditor from "./scripts/CodeEditor";
-  import FileManager from "./scripts/FileManager.js";
   import GeneralToolbar from "./GeneralToolbar.svelte";
   import NavController from "./NavigatorController.svelte";
-  import Assistant from "./Assistant/Assistant.svelte";
-  import { projectExplorer, projectAssistant } from "./scripts/store.js";
-  import { editorWrapperHeightStore, textareaStore } from "./scripts/store.js";
+  import {
+    currentFileStore,
+    textareaValueStore,
+    openedRemoteFilesStore,
+    connectedUsersStore,
+    stompClientStore,
+    activeProjectFilesStores,
+    currentFileNameStore,
+    projectExplorer,
+    projectAssistant,
+    editorWrapperHeightStore,
+    stopClientConnectStore,
+    errorStore,
+    overseerStore,
+  } from "./scripts/store.js";
+  import Overseer from "./AssistantOverseer/AIOverseer.svelte";
+  import closeIcon from "../../assets/svg/General-toolbar/close-iconw.svg";
+  import Assistant from "./AssistantChat/Assistant.svelte";
   import { _ } from "svelte-i18n";
   import interact from "interactjs";
   import hljs from "highlight.js/lib/core";
   import yaml from "highlight.js/lib/languages/yaml";
   import "highlight.js/styles/atom-one-light.css";
+  import SockJS from "sockjs-client";
+  import { Stomp } from "@stomp/stompjs";
+  import { validateYAML } from "./scripts/YamlChecker.js";
+  import { addToast } from "../Modal/ToastNotification/toastStore.js";
+  import {
+    markAndCheckFound,
+    handleMouseOver,
+    handleMouseOut,
+  } from "./Documentation/documentationManager.js";
 
-  let fileManager = new FileManager();
-  let codeEditor;
-  let textareaValue = writable("");
+  export let params = null;
+  export let isTemplate = false;
+
+  const backendUrl = __BACKEND_URL__;
+
   let textarea;
   let defaultWidth;
   let editorElement;
   let controllerColumn;
   let editorField;
-  const backendUrl = __BACKEND_URL__;
+  let isOverseerOpen = false;
+
+  function openOverseer() {
+    if (isOverseerOpen) {
+      document.dispatchEvent(new CustomEvent("refresh-overseer"));
+    }
+    isOverseerOpen = true;
+    overseerStore.set(true);
+  }
+
+  function closeOverseer() {
+    isOverseerOpen = false;
+    overseerStore.set(false);
+  }
+
+  let caretOffset = 0;
+  let editorWrapperHeight;
+  let structure = [];
+
+  const handleCopyToClipboard = () => {
+    addToast({ message: $_("toastNotifications.copyToClipboard") });
+    navigator.clipboard.writeText(textarea.innerText);
+  };
+
+  editorWrapperHeightStore.subscribe((value) => {
+    editorWrapperHeight = value;
+  });
 
   const handleTextareaStyle = () => {
     textarea.style.height = "auto";
     textarea.style.height = textarea.scrollHeight + "px";
+
+    if (textarea.innerText !== "") {
+      try {
+        structure = parse(textarea.innerText);
+      } catch (e) {
+        // Silence any YAML parsing errors
+      }
+    }
   };
 
   //Setting the width of the textarea to the longest line
@@ -108,9 +166,19 @@
   }
 
   function highlightSyntaxOnUpdate() {
-    let caretOffset = getCaretOffset();
-    highlightSyntax();
-    setCaretPosition(caretOffset);
+    tick().then(() => {
+      if (
+        !(
+          $currentFileNameStore.endsWith(".yml") ||
+          $currentFileNameStore.endsWith(".yaml")
+        )
+      ) {
+        return;
+      }
+      let caretOffset = getCaretOffset();
+      highlightSyntax();
+      setCaretPosition(caretOffset);
+    });
   }
 
   function highlightSyntax() {
@@ -124,46 +192,101 @@
       }).value;
       element.innerHTML = highlightedHtml;
     });
+    if (textarea.innerText !== "") {
+      try {
+        structure = parse(textarea.innerText);
+      } catch (e) {
+        // Silence any YAML parsing errors
+      }
+    }
+    addEventListeners();
   }
 
   // clears empty content to apply placeholder using css
   function clearEmptyContent() {
     if (editorField.textContent.trim() === "") {
-      editorField.innerContent = "";
+      editorField.textContent = "";
     }
   }
 
   function preserveBreaksAndHighlight() {
     editorField.innerHTML = editorField.innerHTML.replace(/<br>/g, "\n");
-    highlightSyntax();
+    tick().then(() => {
+      if (
+        !(
+          $currentFileNameStore.endsWith(".yml") ||
+          $currentFileNameStore.endsWith(".yaml")
+        )
+      ) {
+        return;
+      }
+      highlightSyntax();
+    });
+  }
+
+  function handleFileMount() {
+    // clear empty content to apply placeholder using css
+    if (
+      !params ||
+      (params.role && (params.role === "OWNER" || params.role === "EDITOR"))
+    )
+      editorField.contentEditable = true;
+    clearEmptyContent();
+    preserveBreaksAndHighlight();
+
+    tick().then(() => {
+      if (
+        !(
+          $currentFileNameStore.endsWith(".yml") ||
+          $currentFileNameStore.endsWith(".yaml")
+        )
+      ) {
+        errorStore.set("");
+        return;
+      }
+      validateYAML(textarea.innerText);
+    });
+  }
+
+  let currentErrorSubscription = null;
+
+  $: if (!$currentFileStore) {
+    tick().then(() => {
+      textarea.innerText = "";
+      textarea.contentEditable = false;
+      textareaValueStore.set("");
+    });
+
+    if (currentErrorSubscription) {
+      currentErrorSubscription.unsubscribe();
+    }
+  } else if ($stopClientConnectStore) {
+    if (currentErrorSubscription) {
+      currentErrorSubscription.unsubscribe();
+    }
+    currentErrorSubscription = $stompClientStore.subscribe(
+      `/topic/${params.id}/errors/${$currentFileStore}`,
+      function (payload) {
+        currentFileStore.set(null);
+        addToast({
+          type: "error",
+          message: $_("fileSystemToastNotifications.fileDeleted"),
+        });
+      }
+    );
   }
 
   onMount(() => {
     hljs.registerLanguage("yaml", yaml);
     editorField = document.getElementById("editor-field");
-    editorField.contentEditable = true; // only set on mount for security reasons
 
-    codeEditor = new CodeEditor(
-      "editor",
-      "editor-field",
-      "line-numbers",
-      "overlay",
-      fileManager
-    );
-
-    textareaValue.set(codeEditor.textarea.innerText);
-    textareaStore.set(codeEditor.textarea.innerText);
-    preserveBreaksAndHighlight();
-
-    // clear empty content to apply placeholder using css
-    clearEmptyContent();
+    // isOverseerOpen = localStorage.getItem("isOverseerOpen");
 
     // Set the default height of the editor wrapper
     const editorWrapperElement = document.querySelector("#editor-wrapper");
     editorWrapperHeightStore.set(editorWrapperElement.offsetHeight);
     editorElement = document.querySelector(".main-component");
     controllerColumn = document.querySelector("#controller-column");
-
     // Set the default width of the textarea
     defaultWidth = textarea.offsetWidth;
     adjustTextareaWidth();
@@ -171,17 +294,36 @@
     // adjust style on mount
     handleTextareaStyle();
 
-    // Check the syntax on mount
-    codeEditor.checkYamlSyntax(codeEditor.textarea.innerText);
-
     textarea.addEventListener("input", () => {
+      // save to database if its remote project only
+      if (params && $openedRemoteFilesStore) {
+        updateContent();
+      } else {
+        localStorage.setItem($currentFileStore, textarea.innerText);
+      }
       clearEmptyContent();
       adjustTextareaWidth();
       handleTextareaStyle();
-      highlightSyntaxOnUpdate();
-      textareaValue.set(textarea.innerText);
-      codeEditor.checkYamlSyntax(textarea.innerText);
+      if (!params) {
+        highlightSyntaxOnUpdate();
+      }
+      if (!$openedRemoteFilesStore) {
+        textareaValueStore.set(textarea.innerText);
+      }
+      tick().then(() => {
+        if (
+          !(
+            $currentFileNameStore.endsWith(".yml") ||
+            $currentFileNameStore.endsWith(".yaml")
+          )
+        ) {
+          errorStore.set("");
+          return;
+        }
+        validateYAML(textarea.innerText);
+      });
     });
+    // isOverseerOpen = localStorage.getItem("isOverseerOpen");
     textarea.addEventListener("focus", () => {
       clearEmptyContent();
     });
@@ -206,27 +348,30 @@
       //   spaceLength = spaceLength === -1 ? 0 : spaceLength;
       //   const spaces = " ".repeat(spaceLength);
       //   textarea.innerText = value.substring(0, selectionEnd + 2) + "\n" + spaces;
-      //   textareaValue.set(codeEditor.textarea.innerText);
       else if (event.ctrlKey && event.key === "/") {
         // TODO: Add comment functionality with user fake cursor and selection,
         // also multiple lines should work
       }
     });
   });
-  // function handleFormat() {
-  //   yamlChecker.yamlCode = textarea.innerText;
-  //   textarea.innerText = yamlChecker.formatYAML();
-  // }
+
   function handleSaveLocal() {
-    var file = new File([textarea.innerText], fileManager.getCurrentFile(), {
+    if (textarea.innerText === "") {
+      addToast({ message: $_("toastNotifications.emptyFile") });
+      return;
+    }
+
+    var file = new File([textarea.innerText], {
       type: "text;charset=utf-8",
     });
 
+    // Create a link to download the file
     const anchor = document.createElement("a");
     anchor.setAttribute("href", window.URL.createObjectURL(file));
-    anchor.setAttribute("download", fileManager.getCurrentFile());
+    anchor.setAttribute("download", textarea.innerText);
     anchor.click();
     URL.revokeObjectURL(anchor.href);
+    addToast({ message: $_("toastNotifications.downloadFile") });
   }
   function handleExpand() {
     if (!document.fullscreenElement) {
@@ -234,31 +379,6 @@
     } else {
       document.exitFullscreen();
     }
-  }
-  //AI control
-  async function handleAssistant() {
-    await fetch(backendUrl + "/ai/fix", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      credentials: "include",
-      body: `{"data": "${$textareaValue}"}`,
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.text();
-      })
-      .then((data) => {
-        console.log(data);
-        textareaValue.set(data);
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-      });
   }
   //Draggable containers for the sidebar
   function setWidths(target, newWidth) {
@@ -299,6 +419,129 @@
       setPointerEvents("auto");
     });
 
+  // Websocket start
+
+  $: if (
+    params &&
+    params.role &&
+    (params.role === "OWNER" || params.role === "EDITOR")
+  ) {
+    connect();
+  }
+
+  let currentSubscription = null;
+
+  $: if (
+    params &&
+    $openedRemoteFilesStore &&
+    params.role &&
+    (params.role === "OWNER" || params.role === "EDITOR")
+  ) {
+    // Unsubscribe from the previous file's updates
+    if (currentSubscription) {
+      currentSubscription.unsubscribe();
+    }
+    currentSubscription = $stompClientStore.subscribe(
+      `/topic/${params.id}/file/${$openedRemoteFilesStore}`,
+      onOnFileUpdated
+    );
+    $stompClientStore.send(
+      `/app/file.getFileContent/${params.id}/file/${$openedRemoteFilesStore}`,
+      {},
+      {},
+      {}
+    );
+  }
+
+  function connect() {
+    let socketFactory = () =>
+      new SockJS(`${backendUrl}/ws`, {
+        transports: ["websocket"],
+        withCredentials: true,
+      });
+    stompClientStore.set(Stomp.over(socketFactory));
+
+    // silence debug
+    $stompClientStore.debug = () => {};
+
+    $stompClientStore.connect({}, onConnected, onError, onDisconnect);
+
+    function onDisconnect(frame) {
+      stopClientConnectStore.set(false);
+    }
+  }
+
+  function onError(error) {
+    if (error.headers && error.headers["message"] === "Authorization failed") {
+      alert("You need to login to use this feature");
+    }
+  }
+
+  function onConnected() {
+    stopClientConnectStore.set(true);
+
+    try {
+      $stompClientStore.subscribe(
+        `/topic/${params.id}/users`,
+        onUserListReceived
+      );
+
+      $stompClientStore.subscribe(
+        `/topic/${params.id}/activeFiles`,
+        function (message) {
+          // Update the list of active files
+          const activeFiles = JSON.parse(message.body);
+          activeProjectFilesStores.set(activeFiles);
+        }
+      );
+
+      // ping activeFile lists
+      $stompClientStore.send(`/app/file.getActiveFiles/${params.id}`, {}, {});
+
+      // Tell your username to the server
+      $stompClientStore.send(`/app/chat.addUser/${params.id}`, {}, {});
+    } catch (error) {}
+  }
+
+  function onUserListReceived(payload) {
+    connectedUsersStore.set(JSON.parse(payload.body));
+  }
+
+  function onOnFileUpdated(payload) {
+    tick().then(() => {
+      if (
+        !(
+          $currentFileNameStore.endsWith(".yml") ||
+          $currentFileNameStore.endsWith(".yaml")
+        )
+      ) {
+        textarea.innerHTML = payload.body;
+        textareaValueStore.set(payload.body);
+        if (caretOffset !== 0) {
+          setCaretPosition(caretOffset);
+        }
+        return;
+      }
+      textarea.innerHTML = payload.body;
+      textareaValueStore.set(payload.body);
+      highlightSyntax();
+      if (caretOffset !== 0) {
+        setCaretPosition(caretOffset);
+      }
+    });
+  }
+
+  function updateContent() {
+    let textContent = textarea.innerText;
+    caretOffset = getCaretOffset();
+    $stompClientStore.send(
+      "/app/file.updateFile/" + params.id + "/file/" + $openedRemoteFilesStore,
+      {},
+      JSON.stringify({ content: textContent || " " })
+    );
+  }
+
+  // Websocket end
   //Sidebar toggle control
   $: {
     if (controllerColumn) {
@@ -306,53 +549,124 @@
         $projectExplorer || $projectAssistant ? "flex" : "none";
     }
   }
+  let tooltip;
+  let spanElements = [];
+
+  function addEventListeners() {
+    // Remove old event listeners
+    spanElements.forEach((span) => {
+      span.removeEventListener("mouseover", handleMouseOver);
+      span.removeEventListener("mouseout", handleMouseOut);
+    });
+
+    // Get the current span elements
+    spanElements = textarea.querySelectorAll("span");
+
+    spanElements.forEach((span) => {
+      if (span.classList.contains("hljs-attr")) {
+        const result = markAndCheckFound(
+          structure[0],
+          span.innerText.replace(/:/g, "")
+        );
+        if (result.found) {
+          span.addEventListener("mouseenter", (event) =>
+            handleMouseOver(
+              span,
+              result,
+              span.innerText.replace(/:/g, ""),
+              tooltip
+            )
+          );
+          span.addEventListener("mouseleave", handleMouseOut);
+        }
+      }
+    });
+  }
 </script>
 
 <div class="main-component">
   <div id="editor">
     <GeneralToolbar
+      isViewerOrTemplate={isTemplate || (params && params.role === "VIEWER")}
       on:saveLocal={handleSaveLocal}
       on:expand={handleExpand}
-      on:assistant={handleAssistant}
+      on:openOverseer={openOverseer}
+      on:copyToClipboard={handleCopyToClipboard}
     />
     <div class="flex-row">
-      <NavController />
+      <NavController {params} />
       <div id="controller-column">
-        {#if $projectExplorer}
-          <div id="navigator-dashboard">
-            <FileNavigator
-              {codeEditor}
-              {fileManager}
-              {textareaValue}
-              on:fileInteraction={preserveBreaksAndHighlight}
-            />
+        <div class="navigator-dashboard {$projectExplorer ? '' : 'hidden'}">
+          <FileNavigator
+            {params}
+            {textarea}
+            {isTemplate}
+            on:fileInteraction={handleFileMount}
+          />
+          {#if !isTemplate && params && params.role !== "VIEWER"}
             <Dashboard />
-          </div>
-        {/if}
+          {/if}
+        </div>
         {#if $projectAssistant}
           <Assistant />
         {/if}
       </div>
       <div class="flex-column2">
-        <div id="editor-wrapper">
-          <LineNumbers {textareaValue} />
-          <!-- svelte-ignore a11y-click-events-have-key-events -->
-          <div class="textarea-container">
-            <code
-              class="language-yaml"
-              id="editor-field"
-              cols="75"
-              rows="30"
-              placeholder={$_("editor.editorField.startTypingHere")}
-              spellcheck="false"
-              bind:this={textarea}
-              on:input={handleTextareaStyle}
-              style="overflow: hidden; height: auto;"
-            ></code>
-            <div id="overlay" class="hidden">
-              {$_("editor.editorField.dropFileHere")}
+        <div class="current-file">
+          <h4>{$currentFileStore !== null ? $currentFileNameStore : ""}</h4>
+          {#if isOverseerOpen}
+            <button
+              id="button--close-assistant"
+              title={$_("editor.editorField.closeAssitant")}
+              on:click={closeOverseer}
+            >
+              <img src={closeIcon} alt="..." width="15px" height="15px" />
+            </button>
+          {/if}
+        </div>
+        <div id="editor-row">
+          <div id="editor-wrapper">
+            {#if $currentFileStore}
+              <LineNumbers />
+            {/if}
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <div
+              id="tooltip"
+              style="position: absolute; display: none;"
+              bind:this={tooltip}
+            >
+              Tooltip
+            </div>
+            <div class="textarea-container">
+              <code
+                class="language-yaml"
+                id="editor-field"
+                cols="75"
+                rows="30"
+                placeholder={$currentFileStore
+                  ? isTemplate === false &&
+                    params &&
+                    (params.role === "OWNER" || params.role === "EDITOR")
+                    ? $_("editor.editorField.startTypingHere")
+                    : ""
+                  : ""}
+                spellcheck="false"
+                bind:this={textarea}
+                on:input={handleTextareaStyle}
+                style="overflow: hidden; height: auto;"
+              ></code>
+              <div class="overlay {$currentFileStore ? 'hidden' : ''}">
+                {#if isTemplate || (params && params.role === "VIEWER")}
+                  {$_("editor.editorField.pleaseSelectAFileToView")}
+                {:else}
+                  {$_("editor.editorField.pleaseSelectAFile")}
+                {/if}
+              </div>
             </div>
           </div>
+          {#if isOverseerOpen}
+            <Overseer />
+          {/if}
         </div>
         <Problems />
       </div>
@@ -361,7 +675,55 @@
 </div>
 
 <style>
+  #button--close-assistant {
+    right: 0;
+    bottom: 0;
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100px;
+    height: 50%;
+    border-radius: 5px;
+    background: var(--dodger-blue);
+    border: 1px solid var(--whisper);
+    cursor: pointer;
+  }
+  .current-file {
+    position: relative;
+    height: 38px;
+    width: 100%;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  h4 {
+    margin: 0;
+  }
+  .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+    color: #222222;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 32px;
+    pointer-events: none;
+    text-align: center;
+  }
+  .overlay.hidden {
+    display: none;
+  }
+  .navigator-dashboard.hidden {
+    display: none;
+  }
   .textarea-container {
+    position: relative;
     width: 100%;
     padding-top: 3px;
   }
@@ -399,7 +761,8 @@
     height: 96%;
     width: 100%;
   }
-  #navigator-dashboard {
+
+  .navigator-dashboard {
     display: flex;
     flex-direction: column;
     width: 100%;
@@ -414,20 +777,29 @@
     flex-direction: column;
     height: 100%;
   }
+  #editor-row {
+    overflow-x: hidden;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: row;
+    flex: 1;
+    height: 70%;
+    width: 100%;
+  }
   #editor-wrapper {
     background-color: var(--ghost-white);
     display: flex;
     overflow-y: scroll;
     flex: 1;
     width: 100%;
-    margin-top: 38px;
+    height: auto;
     border-top: 1px solid var(--silver);
   }
 
   #editor-field {
     flex: 0 0 auto;
     width: 100%;
-    height: 100%;
+    height: auto;
     line-height: 23px;
     font-size: 1rem;
     font-size: 18px;
@@ -452,33 +824,20 @@
     content: none;
   }
 
-  #editor-wrapper.dragover {
-    background: #eaeaea;
-    filter: blur(3px);
-  }
   #editor-field::placeholder {
     color: #000;
     opacity: 0.5;
   }
 
-  /*Container that appears when a file is dragged over the textarea. */
-  #overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: transparent;
-    color: #222222;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 32px;
-    pointer-events: none;
+  #tooltip {
+    font-family: "Montserrat", sans-serif;
+    z-index: 10;
+    padding: 5px 10px;
+    border-radius: 25px;
+    background-color: white;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
   }
-  #overlay.hidden {
-    display: none;
-  }
+
   ::-webkit-scrollbar {
     width: 10px;
     height: 10px;

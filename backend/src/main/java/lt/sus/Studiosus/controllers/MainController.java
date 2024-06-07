@@ -6,9 +6,12 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import lt.sus.Studiosus.model.Log;
 import lt.sus.Studiosus.model.User;
+import lt.sus.Studiosus.model.enums.LogLevel;
+import lt.sus.Studiosus.service.LoggingService;
 import lt.sus.Studiosus.service.UserDetailsServiceImpl;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,12 +28,17 @@ public class MainController {
   @Value("${app.frontendUrl}")
   private String frontendUrl;
 
-  @Autowired private UserDetailsServiceImpl userDetailsService;
-
   private final PasswordEncoder encoder;
+  private final UserDetailsServiceImpl userDetailsService;
+  private final LoggingService loggingService;
 
-  public MainController(PasswordEncoder passwordEncoder) {
+  public MainController(
+      PasswordEncoder passwordEncoder,
+      UserDetailsServiceImpl userDetailsService,
+      LoggingService loggingService) {
     this.encoder = passwordEncoder;
+    this.userDetailsService = userDetailsService;
+    this.loggingService = loggingService;
   }
 
   @GetMapping("/")
@@ -46,6 +54,24 @@ public class MainController {
       HttpServletRequest request,
       HttpServletResponse response)
       throws IOException {
+    if (username.length() > 64) {
+      String errorMsg = "UsernameTooLong";
+      response.sendRedirect(frontendUrl + "/register?exception=" + errorMsg);
+      return;
+    }
+
+    if (email.length() > 64) {
+      String errorMsg = "EmailTooLong";
+      response.sendRedirect(frontendUrl + "/register?exception=" + errorMsg);
+      return;
+    }
+
+    if (password.length() > 64) {
+      String errorMsg = "PasswordTooLong";
+      response.sendRedirect(frontendUrl + "/register?exception=" + errorMsg);
+      return;
+    }
+
     try {
       // Process the registration using form data
       User user = new User();
@@ -54,12 +80,26 @@ public class MainController {
       user.setPassword(encoder.encode(password));
       user.setRoles("ROLE_USER");
       userDetailsService.save(user);
+
+      loggingService.saveLogToDatabase(
+          new Log(
+              "Successful User registration: %s".formatted(user.getUsername()),
+              LogLevel.INFO,
+              LocalDateTime.now()));
+
       // Registration successful, redirect to login
       response.sendRedirect(frontendUrl + "/login");
     } catch (IllegalArgumentException e) {
       // Redirect to registration page with error message
       String exceptionType = e.getClass().getSimpleName();
       String errorMsg = "exception=" + URLEncoder.encode(exceptionType, StandardCharsets.UTF_8);
+
+      loggingService.saveLogToDatabase(
+          new Log(
+              "Unsuccessful User registration with error: %s".formatted(exceptionType),
+              LogLevel.INFO,
+              LocalDateTime.now()));
+
       response.sendRedirect(frontendUrl + "/register?" + errorMsg);
     }
   }

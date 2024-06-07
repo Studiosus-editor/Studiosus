@@ -1,16 +1,51 @@
 <script>
+  import { createEventDispatcher, onMount } from "svelte";
   import { _ } from "svelte-i18n";
+  import { writable } from "svelte/store";
   import AddByEmailBox from "./AddByEmail/AddByEmailBox.svelte";
   import AddByLinkBox from "./AddByLinkBox.svelte";
   import ToggleComponent from "./ToggleComponent.svelte";
-  import { createEventDispatcher } from "svelte";
 
   export let emailEntries = [];
   export let isUpdateComponent = false;
-  const dispatch = createEventDispatcher();
-  const firstName = $_("toggleAddLinkAndEmail.addByLink");
-  const secondName = $_("toggleAddLinkAndEmail.addByEmail");
+  export let viewerInviteLink = writable("");
+  export let editorInviteLink = writable("");
+  export let projectId;
 
+  const backendUrl = __BACKEND_URL__;
+  let loading = true;
+
+  onMount(async () => {
+    await fetch(backendUrl + "/api/project/" + projectId, {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+      },
+      credentials: "include",
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const responseJson = await response.json();
+        viewerInviteLink.set(responseJson.project.viewerLink);
+        editorInviteLink.set(responseJson.project.editorLink);
+        emailEntries = [...responseJson.emailRole];
+        emailEntries = emailEntries.filter((entry) => entry.role !== 3);
+        loading = false;
+        return responseJson;
+      })
+      .then((data) => {
+        return data;
+      })
+      .catch(() => {
+        loading = false;
+        return null;
+      });
+  });
+  const dispatch = createEventDispatcher();
+  const firstName = $_("toggleAddLinkAndEmail.addByEmail");
+  const secondName = $_("toggleAddLinkAndEmail.addByLink");
   // add by link is active by default
   let selection = 1;
 
@@ -25,17 +60,25 @@
 </script>
 
 <div class="content-wrapper">
-  <ToggleComponent on:toggle={handleToggleEvent} {firstName} {secondName} />
-  {#if selection === 1}
-    <AddByLinkBox showHeader={false} />
+  {#if loading}
+    <p>{$_("toggleAddLinkAndEmail.loading")}</p>
   {:else}
-    <AddByEmailBox bind:emailEntries showHeader={false} />
+    <ToggleComponent on:toggle={handleToggleEvent} {firstName} {secondName} />
+    {#if selection === 1}
+      <AddByEmailBox bind:emailEntries showHeader={false} {isUpdateComponent} />
+    {:else}
+      <AddByLinkBox
+        showHeader={false}
+        viewerInviteLink={$viewerInviteLink}
+        editorInviteLink={$editorInviteLink}
+      />
+    {/if}
+    <button class="button--blue" on:click={handleButtonClick}
+      >{isUpdateComponent
+        ? $_("toggleAddLinkAndEmail.update")
+        : $_("toggleAddLinkAndEmail.create")}
+    </button>
   {/if}
-  <button class="button--blue" on:click={handleButtonClick}
-    >{isUpdateComponent
-      ? $_("toggleAddLinkAndEmail.update")
-      : $_("toggleAddLinkAndEmail.create")}
-  </button>
 </div>
 
 <style lang="scss">

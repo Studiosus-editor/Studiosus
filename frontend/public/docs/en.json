@@ -1,0 +1,46 @@
+{
+  "null": {
+    "name": {
+      "description": "The name of your Ansible playbook",
+      "example": "- name: my-project"
+    },
+    "hosts": {
+      "description": "IP address or hostname of the server to run the tasks on",
+      "example": "- hosts: all<br>or<br> - hosts: webservers"
+    },
+    "become": {
+      "description": "Run the tasks as a super user",
+      "example": "become: yes"
+    },
+    "tasks": {
+      "description": "List of tasks to run on the server",
+      "example": "tasks:<br><t>&nbsp;&nbsp;- apt:<br><t>&nbsp;&nbsp;&nbsp;&nbsp;name: apache2<br><t>&nbsp;&nbsp;&nbsp;&nbsp;state: present"
+    }
+  },
+  "tasks": {
+    "apt": {
+      "description": "Install a package,<br> Most used available options are name and state<br>name: The name of the package to install<br>state: The state of the package, example: <b>install</b> or <b>present</b><br>",
+      "example": "apt:<br><t>&nbsp;&nbsp;name: apache2<br>&nbsp;&nbsp;state: present"
+    },
+    "service": {
+      "description": "Manage services,<br> Most used available options are <b>name</b> and <b>state</b><br>name: The name of the service to manage<br>state: The state of the service, example: <b>started</b> or <b>stopped</b><br>",
+      "example": "service:<br><t>&nbsp;&nbsp;name: apache2<br>&nbsp;&nbsp;state: started"
+    }
+  },
+  "apt": {
+    "state": {
+      "description": "The state of the package, example: install or present",
+      "example": "state: present"
+    }
+  },
+  "service": {
+    "state": {
+      "description": "The state of the service, example: started or stopped",
+      "example": "state: started"
+    },
+    "enabled": {
+      "description": "Enable the service to start on boot",
+      "example": "enabled: yes"
+    }
+  }
+}

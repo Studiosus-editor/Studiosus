@@ -43,10 +43,10 @@ export default {
   },
   plugins: [
     replace({
-      // Replace process.env.MY_ENV_VAR in your code with the value of MY_ENV_VAR environment variable
-      __BACKEND_URL__: JSON.stringify(
-        process.env.BACKEND_URL || "http://localhost:8080"
-      ),
+      values: {
+        __BACKEND_URL__: JSON.stringify(process.env.BACKEND_URL || "http://localhost:8080"),
+        'process.env.NODE_ENV': JSON.stringify("production")
+      },
       preventAssignment: true,
     }),
     json(),

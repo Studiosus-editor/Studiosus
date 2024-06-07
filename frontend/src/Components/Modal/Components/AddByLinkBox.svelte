@@ -1,7 +1,21 @@
 <script>
-  import copyToClipboardIcon from "../../../assets/svg/copy-to-clipboard.svg";
-  export let showHeader = true;
   import { _ } from "svelte-i18n";
+  import copyToClipboardIcon from "../../../assets/svg/copy-to-clipboard.svg";
+  import { addToast } from "../../Modal/ToastNotification/toastStore.js";
+
+  export let showHeader = true;
+  export let viewerInviteLink;
+  export let editorInviteLink;
+
+  const backendUrl = __BACKEND_URL__;
+
+  function copyToClipboard(text) {
+    navigator.clipboard.writeText(text);
+    addToast({
+      message: $_("modalAddByLinkBox.copiedToClipboard"),
+      type: "info",
+    });
+  }
 </script>
 
 <div class="link-section">
@@ -18,11 +32,22 @@
         id="vlink"
         name="vlink"
         disabled
+        value={backendUrl +
+          "/api/project/invite?viewerLink=" +
+          viewerInviteLink}
         placeholder="place for link"
       />
       <img
         src={copyToClipboardIcon}
         alt={$_("modalAddByLinkBox.altCopyToClipBoard")}
+        on:click={() =>
+          copyToClipboard(
+            backendUrl + "/api/project/invite?viewerLink=" + viewerInviteLink
+          )}
+        on:keydown={() =>
+          copyToClipboard(
+            backendUrl + "/api/project/invite?viewerLink=" + viewerInviteLink
+          )}
       />
     </div>
     <h3 class="link-section__label-wrapper">
@@ -34,11 +59,22 @@
         id="elink"
         name="elink"
         disabled
+        value={backendUrl +
+          "/api/project/invite?editorLink=" +
+          editorInviteLink}
         placeholder="place for link"
       />
       <img
         src={copyToClipboardIcon}
         alt={$_("modalAddByLinkBox.altCopyToClipBoard")}
+        on:click={() =>
+          copyToClipboard(
+            backendUrl + "/api/project/invite?editorLink=" + editorInviteLink
+          )}
+        on:keydown={() =>
+          copyToClipboard(
+            backendUrl + "/api/project/invite?editorLink=" + editorInviteLink
+          )}
       />
     </div>
   </form>

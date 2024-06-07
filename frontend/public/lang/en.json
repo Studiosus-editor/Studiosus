@@ -15,14 +15,37 @@
     "loginWithGitLab": "Log in with GitLab",
     "register": "Register",
     "login": "Login",
+    "repeatPassword": "Repeat password",
     "email": "Email",
     "password": "Password",
+    "forgotPassword": "Forgot password?",
     "errorMessages": {
       "invalidCredentials": "Invalid username or password",
       "accountLocked": "Your account is locked. Please contact support",
       "accountDisabled": "Your account is disabled. Please contact support",
       "accountExpired": "Your account has expired. Please contact support",
       "undefinedError": "An undefined error occurred. Please contact support"
+    },
+    "toastNotifications": {
+      "notAuthenticated": "In order to join the project, you need to authenticate first",
+      "forgotPassword": "Password reset link sent to your email"
+    }
+  },
+  "forgotPassword": {
+    "resetPassword": "Reset password",
+    "goBack": "Go back",
+    "toastNotifications": {
+      "error": "Account with this email does not exist",
+      "emptyEmail": "Email cannot be empty",
+      "success": "Password reset link sent to your email"
+    }
+  },
+  "resetPassword": {
+    "goBack": "Grįžti atgal",
+    "toastNotifications": {
+      "error": "Invalid or expired reset password link",
+      "emptyPassword": "Password cannot be empty",
+      "success": "Password changed successfully"
     }
   },
   "notFound": {
@@ -37,6 +60,9 @@
     "login": "Login",
     "errorMessages": {
       "emailAlreadyInUse": "Email already in use",
+      "usernameTooLong": "Username can be up to 64 characters long",
+      "emailTooLong": "Email can be up to 64 characters long",
+      "passwordTooLong": "Password can be up to 64 characters long",
       "undefinedError": "An undefined error occurred. Please contact support"
     }
   },
@@ -48,10 +74,18 @@
     "noProjectsFirstLine": "Currently no one is sharing projects with you...",
     "noProjectsSecondLine": "Go make some friends!",
     "addNew": "Add New",
-    "next": "Next",
-    "previous": "Previous",
     "loadingProjects": "Loading projects...",
-    "errorLoadingProjects": "Error loading projects"
+    "errorLoadingProjects": "Error loading projects",
+    "toastNotifications": {
+      "addedToProjectSuccessfully": "Project joined successfully",
+      "hasHigherAuthority": "You already joined the project",
+      "invalidLink": "Invalid or expired invitation link",
+      "NoLinkProvided": "No project invitation link provided"
+    }
+  },
+  "paggination": {
+    "next": "Next",
+    "previous": "Previous"
   },
   "footer": {
     "LT": "Lithuanian",
@@ -64,7 +98,8 @@
     "addByLink": "Add by link",
     "viewerLink": "Viewer link",
     "editorLink": "Editor link",
-    "altCopyToClipBoard": "Copy to clipboard"
+    "altCopyToClipBoard": "Copy to clipboard",
+    "copiedToClipboard": "Copied to clipboard!"
   },
   "modalNameOrRenameProject": {
     "renameProject": "Rename project",
@@ -83,7 +118,11 @@
     "addByEmail": "Add by email",
     "addByLink": "Add by link",
     "create": "Create",
-    "update": "Update"
+    "update": "Update",
+    "loading": "Loading..."
+  },
+  "toggleComponent": {
+    "invited": "Invited"
   },
   "modalEmailComponents": {
     "viewer": "Viewer",
@@ -106,6 +145,19 @@
     "leave": "Leave",
     "warningLeaveText": "Leaving a project will remove it from the list and you will no longer be able to access it"
   },
+  "modalCreateTemplate": {
+    "createTemplate": "Create template",
+    "create": "Create",
+    "placeholderMyTemplate": "My template",
+    "templateName": "Template name",
+    "provideAshortDescription": "Provide a short description",
+    "description": "Description",
+    "yourDescriptionIsAutomaticllySaved": "Your description is automatically saved",
+    "note": "Note: ",
+    "noteText": "Creating a template will make it public for all Studiosus users",
+    "alertSuccess": "Template created successfully!",
+    "alertError": "Sorry, an error occured during template creation"
+  },
   "projectsLeftSideNav": {
     "open": "Open",
     "save": "Save",
@@ -115,7 +167,8 @@
     "leave": "Leave",
     "inviteTitle": "Invite members",
     "altOpen": "Open",
-    "altClose": "Close"
+    "altClose": "Close",
+    "share": "Share"
   },
   "editor":{
     "generalToolbar": {
@@ -132,16 +185,23 @@
       "createFile": "Create File",
       "createFolder": "Create Folder"
     },
+    "fileNavigator": {
+      "loadingProjectStructure": "Loading project structure...",
+      "errorLoadingProjectStructure": "Error loading project structure"
+    },
     "navigatorController":{
       "explorer": "Explorer",
-      "assistant": "Assistant"
+      "assistant": "Assistant",
+      "shareTemplate": "Share as template"
     },
     "editorDashboard": {
       "dashboard": "Active Users"
     },
     "editorField": {
       "startTypingHere": "Start typing here...",
-      "dropFileHere": "Drop file here..."
+      "pleaseSelectAFile": "Please select a file to start editing",
+      "pleaseSelectAFileToView": "Please select a file to view content",
+      "closeAssitant": "Close Assistant"
     },
     "terminal":{
       "terminal": "Terminal",
@@ -156,7 +216,170 @@
       "Chat" : "CHAT",
       "Question" : "Input your question here...",
       "Send":"Send",
-      "Assistant": "Assistant"
+      "Assistant": "Assistant",
+      "newChat": "New Chat",
+      "logInToUseAssistant": "Login in to use the Studiosus assistant",
+      "signIn": "Sign in"
     }
+  },
+  "modalPromptFolderDelete": {
+    "confirmFolderDeletion": "Confirm deletion",
+    "warning": "Warning!",
+    "firstTextPrompt": "Are you sure you want to delete folder ",
+    "secondTextPrompt": "? Doing so will also delete all of the content inside",
+    "cancel": "Cancel",
+    "delete": "Delete"
+  },
+  "contextMenu": {
+    "rename": "Rename",
+    "delete": "Delete"
+  },
+  "createOrRenameFileOrFolder": {
+    "folderName": "Folder name",
+    "yamlFile": "File.yml"
+  },
+  "folder": {
+    "altExpandFolder": "Expand folder"
+  },
+  "fileSystemToastNotifications": {
+    "errorFetchingProjectStructure": "Sorry, an error has occured while fetching the project structure",
+    "errorCreatingFolder": "Sorry, an error has occured while creating the folder",
+    "errorCreatingFile": "Sorry, an error has occured while creating the file",
+    "errorFetchingFileData": "Sorry, an error has occured while fetching the file data",
+    "errorDeletingFile": "Sorry, an error has occured while deleting the file",
+    "errorDeletingFolder": "Sorry, an error has occured while deleting the folder",
+    "errorRenamingFile": "Sorry, an error has occured while renaming the file",
+    "errorRenamingFolder": "Sorry, an error has occured while renaming the folder",
+    "errorMovingFile": "Sorry, an error has occured while moving the file",
+    "errorMovingFolder": "Sorry, an error has occured while moving the folder",
+    "errorFolderAlreadyExists": "Folder with this name already exists",
+    "errorFileAlreadyExists": "File with this name already exists",
+    "errrorFileWithSameNameExists": "Sorry, cannot move file. File with the same name already exists in the destination",
+    "errrorFolderWithSameNameExists": "Sorry, cannot move folder. Folder with the same name already exists in the destination",
+    "fileDeleted": "Sorry, the file you were editing was deleted"
+  },
+  "templatesSearchField": {
+    "search": "Search",
+    "byTitle": "By title",
+    "byUsername": "By username",
+    "altSearch": "Search",
+    "errorSearching": "Sorry, an error occured while searching for templates"
+  },
+  "toastNotifications": {
+    "copyToClipboard": "Copied to clipboard",
+    "downloadFile": "File downloading...",
+    "emptyFile": "Sorry, cannot download an empty file"
+  },
+  "templates": {
+    "templates": "Templates",
+    "publicTemplates": "Public Templates",
+    "yourTemplates": "Your Templates",
+    "pendingTemplates": "Pending Templates",
+    "loadingTemplates": "Loading templates...",
+    "errorLoadingTemplates": "Error loading templates",
+    "noYourTemplatesFirstLine": "Currently you have no templatess shared",
+    "noYourTemplatesSecondLine": "Go create some!",
+    "noPendingTemplates": "No currently pending templates",
+    "pleaseLogInToViewYourTemplates": "Please log in or register to create or view your templates",
+    "errorLoadingTemplatesToast": "Sorry, an error occured while fetching templates",
+    "templateAddedToProjects": "Template added to projects successfully!",
+    "errorAddingTemplateToProjects": "Sorry, an error occured while adding template to your projects",
+    "emptySearchResults": "No search results found"
+  },
+  "templateViewOrReview": {
+    "templateDescription": "Template description",
+    "templateReview": "Template review",
+    "createdBy": "Created by",
+    "noDescriptionProvided": "No description provided",
+    "deny": "Deny",
+    "denyDescriptionPlaceholder": "Please provide a reason for denying the template",
+    "approve": "Approve",
+    "close": "Close",
+    "submit": "Submit",
+    "reviewSubmittedSuccessfully": "Review submitted successfully!"
+  },
+  "templateEntry": {
+    "deleteTemplate": "Delete template",
+    "checkReviewComments": "Check review comments",
+    "createdBy": "Created by",
+    "viewDetailedInformation": "View detailed information",
+    "reviewTemplate": "Review template",
+    "addToYourProjects": "Add to your projects",
+    "previewTemplate": "Preview template"
+  },
+  "deleteTemplateModal": {
+    "modalTitle": "Delete template",
+    "alertSuccessfulDeletion": "Template deleted successfully!",
+    "promptConfirmation": "Are you sure you want to delete template ",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "alertFailedDeletion": "Sorry, an error occured while deleting the template",
+    "pendingWarning": "Doing so will remove the template from the pending templates list",
+    "approvedWarning": "Doing so will remove the template from the public template list"
+  },
+  "responseCommentModal": {
+    "modalTitle": "Review response",
+    "sorryYourTemplateWasDenied": "Sorry, your template was denied",
+    "reviewPlaceholder": "No comment provided",
+    "close": "Close"
+  },
+  "profileTab":{
+    "errors":{
+      "emptyPassword":"Password cannot be empty",	
+      "matchPassword":"Passwords do not match",
+      "emptyUsername":"Username cannot be empty",	
+      "errorDeleteAccount":"Error deleting account",
+      "errorChangePassword":"Error changing password",
+      "errorChangeUsername":"Error changing username"
+    },
+    "accountDeleted":"Account deleted successfully",
+    "passwordChanged":"Password changed successfully",
+    "usernameChanged":"Username changed successfully",
+    "profile":"Profile",
+    "admin":"Admin",
+    "passwordContainer":{
+      "changePassword":"Change Password",
+      "passwordDescription":"Enter both fields to change your password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm Password",
+      "confirmButton": "Confirm",
+      "confirmPasswordModal":{
+        "passwordQuestion": "Are you sure you want to change your password?",
+        "cancelButton":"Cancel",
+        "changeButton":"Change"
+      }
+    },
+    "usernameContainer":{
+      "changeUsername":"Change Username",
+      "usernameDescription":"Current username: ",
+      "newUsername":"New username",
+      "confirmButton":"Confirm",
+      "confirmUsernameModal":{
+        "usernameQuestion":"Are you sure you want to change your username",
+        "currentUsername": "Current username: ",
+        "newUsername":"New username: ", 
+        "cancelButton":"Cancel",
+        "changeButton":"Change"
+      }
+    },
+    "accountContainer":{
+      "deleteAccount":"Delete Account",
+      "deleteDescription":"Deleting your account will remove all your projects, templates and other data from Studiosus servers.",
+      "deleteButton":"Delete account",
+      "deleteAccountModal":{
+        "accountQuestion":"Are you sure you want to delete your account? ",
+        "accountQuestion2":"Any data associated with ",
+        "accountQuestion3":"will be erased.",
+        "cancelButton":"Cancel",
+        "deleteButton":"Delete",
+        "inputEmail": "Enter your email and click confirm to delete your account",
+        "emailNotMatch":"Email does not match",
+        "emailPlaceholder":"Enter your email"
+      }
+    }
+  },
+  "assistantOverseer":{
+    "noFileToFix": "No file to fix. Please open a file first.",
+    "noContentToFix": "No content to fix. Please write some code first."
   }
 }

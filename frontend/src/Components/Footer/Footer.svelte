@@ -1,37 +1,20 @@
 <script>
-  import { onMount } from 'svelte';
-  import LanguageBox from './LanguageBox.svelte';
-  import LtFlag from "../../assets/svg/lithuania-flag-icon.svg";
-  import EnFlag from "../../assets/svg/united-kingdom-flag-icon.svg";
-  import { _, locale }  from 'svelte-i18n';
-  import { changeLocale } from '../../services/i18n.js';
+  import { onMount } from "svelte";
 
   let currentYear = new Date().getFullYear();
 
   onMount(() => {
     // Updates the current year in the footer
-    const yearElement = document.getElementById('copyright');
+    const yearElement = document.getElementById("copyright");
     if (yearElement) {
       yearElement.textContent = currentYear + " © Studiosus";
     }
   });
-
-  function handleLanguageSelect(language) {
-    changeLocale(language);
-  }
 </script>
 
 <footer>
   <div class="footer-container">
     <p id="copyright">{currentYear}</p>
-  </div>
-  <div class="language-container">
-    {#if $locale !== 'lt'}
-      <LanguageBox flagIcon={LtFlag} languageName={$_('footer.LT')} onClick={() => handleLanguageSelect('lt')}/>
-    {/if}
-    {#if $locale !== 'en'}
-      <LanguageBox flagIcon={EnFlag} languageName={$_('footer.EN')} onClick={() => handleLanguageSelect('en')}/>
-    {/if}
   </div>
 </footer>
 
@@ -52,10 +35,5 @@
       font-family: "Rubik", sans-serif;
       margin-right: 25px;
     }
-  }
-
-  .language-container {
-    display: flex;
-    justify-content: center;
   }
 </style>
