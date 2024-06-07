@@ -15,8 +15,12 @@ public class UserProjectRole {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @ManyToOne private User user;
-  @ManyToOne private Project project;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "user_id")
+  private User user;
+
+  @ManyToOne(cascade = CascadeType.REMOVE)
+  private Project project;
 
   @Column(nullable = false)
   private String role;

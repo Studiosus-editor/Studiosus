@@ -11,9 +11,17 @@
   import { onMount } from "svelte";
   import { _ } from "svelte-i18n";
 
-  const dispatch = createEventDispatcher();
-  let isDropdownExtended = false;
+  // export let isTemplate = false;
+  export let isViewerOrTemplate = false;
 
+  const dispatch = createEventDispatcher();
+  let isLoggedIn = false;
+  let isDropdownExtended = false;
+  let isAssistantClickable = true;
+
+  function isUserLoggedIn() {
+    isLoggedIn = document.cookie.includes("JSESSIONID=");
+  }
   function handleClick() {
     dispatch("format");
   }
@@ -24,9 +32,21 @@
     dispatch("expand");
   }
   function handleAssistant() {
-    console.log("Assistant");
+    if (isAssistantClickable) {
+      dispatch("openOverseer");
+      isAssistantClickable = false;
+      setTimeout(() => {
+        isAssistantClickable = true;
+      }, 10000);
+    }
   }
+
+  function handleCopyToClipboard() {
+    dispatch("copyToClipboard");
+  }
+
   onMount(() => {
+    isUserLoggedIn();
     const dropbtn = document.querySelector(".dropbtn");
     const dropdownContent = document.querySelector(".dropdown-content");
 
@@ -50,49 +70,52 @@
 
 <div id="top-toolbar">
   <div class="menu">
-    <button
-      id="Assistant-button"
-      class="top-button"
-      title={$_("editor.generalToolbar.assistant")}
-      on:click={handleAssistant}
-    >
-      <div class="title">{$_("editor.generalToolbar.assistant")}</div>
-      <img src={AssistantIcon} alt="Assistant" width="25px" height="25px" />
-    </button>
-    <button
-      id="run-button"
-      class="top-button"
-      title={$_("editor.generalToolbar.runScript")}
-    >
-      <div class="title">{$_("editor.generalToolbar.runScript")}</div>
-      <img src={RunProjectIcon} alt="Run Script" width="20px" height="20px" />
-    </button>
-    <button
-      id="save-button"
-      class="top-button"
-      title={$_("editor.generalToolbar.saveProject")}
-    >
-      <div class="title">{$_("editor.generalToolbar.saveProject")}</div>
-      <img
-        src={SaveFileIcon}
-        alt="Save File"
-        fill="white"
-        width="20px"
-        height="20px"
-      />
-    </button>
-    <button
-      id="format-button"
-      class="top-button"
-      title={$_("editor.generalToolbar.format")}
-    >
-      <div class="title">{$_("editor.generalToolbar.format")}</div>
-      <img src={FormatCodeIcon} alt="Format Code" width="20px" height="20px" />
-    </button>
+    {#if isLoggedIn && !isViewerOrTemplate}
+      <button
+        id="Assistant-button"
+        class="top-button {isAssistantClickable ? 'enabled' : 'disabled'}"
+        title={$_("editor.generalToolbar.assistant")}
+        on:click={handleAssistant}
+      >
+        <div class="title">{$_("editor.generalToolbar.assistant")}</div>
+        <img src={AssistantIcon} alt="Assistant" width="25px" height="25px" />
+      </button>
+    {/if}
+    <!--    <button-->
+    <!--      id="run-button"-->
+    <!--      class="top-button"-->
+    <!--      title={$_("editor.generalToolbar.runScript")}-->
+    <!--    >-->
+    <!--      <div class="title">{$_("editor.generalToolbar.runScript")}</div>-->
+    <!--      <img src={RunProjectIcon} alt="Run Script" width="20px" height="20px" />-->
+    <!--    </button>-->
+    <!--    <button-->
+    <!--      id="save-button"-->
+    <!--      class="top-button"-->
+    <!--      title={$_("editor.generalToolbar.saveProject")}-->
+    <!--    >-->
+    <!--      <div class="title">{$_("editor.generalToolbar.saveProject")}</div>-->
+    <!--      <img-->
+    <!--        src={SaveFileIcon}-->
+    <!--        alt="Save File"-->
+    <!--        fill="white"-->
+    <!--        width="20px"-->
+    <!--        height="20px"-->
+    <!--      />-->
+    <!--    </button>-->
+    <!--    <button-->
+    <!--      id="format-button"-->
+    <!--      class="top-button"-->
+    <!--      title={$_("editor.generalToolbar.format")}-->
+    <!--    >-->
+    <!--      <div class="title">{$_("editor.generalToolbar.format")}</div>-->
+    <!--      <img src={FormatCodeIcon} alt="Format Code" width="20px" height="20px" />-->
+    <!--    </button>-->
     <button
       id="clipboard-button"
       class="top-button"
       title={$_("editor.generalToolbar.copyToClipboard")}
+      on:click={handleCopyToClipboard}
     >
       <div class="title">{$_("editor.generalToolbar.copyToClipboard")}</div>
       <img
@@ -132,39 +155,45 @@
       />
     </button>
     <div class="dropdown-content">
+      {#if isLoggedIn && !isViewerOrTemplate}
+        <button
+          id="Assistant-button"
+          class="top-button {isAssistantClickable ? 'enabled' : 'disabled'}"
+          title={$_("editor.generalToolbar.assistant")}
+          on:click={handleAssistant}
+        >
+          <div class="title">{$_("editor.generalToolbar.assistant")}</div>
+          <img src={AssistantIcon} alt="Assistant" width="25px" height="25px" />
+        </button>
+      {/if}
+      <!--      <button id="run-button" class="top-button">-->
+      <!--        <div class="title">{$_("editor.generalToolbar.runScript")}</div>-->
+      <!--        <img src={RunProjectIcon} alt="Run Script" width="20px" height="20px" />-->
+      <!--      </button>-->
+      <!--      <button id="save-button" class="top-button">-->
+      <!--        <div class="title">{$_("editor.generalToolbar.saveProject")}</div>-->
+      <!--        <img-->
+      <!--          src={SaveFileIcon}-->
+      <!--          alt="Save File"-->
+      <!--          fill="white"-->
+      <!--          width="20px"-->
+      <!--          height="20px"-->
+      <!--        />-->
+      <!--      </button>-->
+      <!--      <button id="format-button" class="top-button">-->
+      <!--        <div class="title">{$_("editor.generalToolbar.format")}</div>-->
+      <!--        <img-->
+      <!--          src={FormatCodeIcon}-->
+      <!--          alt="Format Code"-->
+      <!--          width="20px"-->
+      <!--          height="20px"-->
+      <!--        />-->
+      <!--      </button>-->
       <button
-        id="Assistant-button"
+        id="clipboard-button"
         class="top-button"
-        disabled
-        on:click={handleAssistant}
+        on:click={handleCopyToClipboard}
       >
-        <div class="title">{$_("editor.generalToolbar.assistant")}</div>
-        <img src={AssistantIcon} alt="Assistant" width="25px" height="25px" />
-      </button>
-      <button id="run-button" class="top-button">
-        <div class="title">{$_("editor.generalToolbar.runScript")}</div>
-        <img src={RunProjectIcon} alt="Run Script" width="20px" height="20px" />
-      </button>
-      <button id="save-button" class="top-button">
-        <div class="title">{$_("editor.generalToolbar.saveProject")}</div>
-        <img
-          src={SaveFileIcon}
-          alt="Save File"
-          fill="white"
-          width="20px"
-          height="20px"
-        />
-      </button>
-      <button id="format-button" class="top-button">
-        <div class="title">{$_("editor.generalToolbar.format")}</div>
-        <img
-          src={FormatCodeIcon}
-          alt="Format Code"
-          width="20px"
-          height="20px"
-        />
-      </button>
-      <button id="clipboard-button" class="top-button">
         <div class="title">{$_("editor.generalToolbar.copyToClipboard")}</div>
         <img
           src={CopyToClipboardIcon}
@@ -220,7 +249,13 @@
     right: 0;
     z-index: 1;
   }
-
+  .enabled {
+    background-color: var(--dodger-blue);
+  }
+  .disabled {
+    background-color: rgb(147, 147, 165);
+    pointer-events: none;
+  }
   .dropdown-content button {
     color: var(--white);
     background-color: var(--dodger-blue);

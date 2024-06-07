@@ -1,31 +1,37 @@
 <script>
-  import { createEventDispatcher, onMount, onDestroy } from "svelte";
+  import { createEventDispatcher, onDestroy, onMount } from "svelte";
   import { _ } from "svelte-i18n";
   import saveIcon from "../../assets/svg/General-toolbar/save-as-icon.svg";
+  import ArrowLeft from "../../assets/svg/arrow-left-icon.svg";
+  import ArrowRight from "../../assets/svg/arrow-right-icon.svg";
+  import leaveIcon from "../../assets/svg/leave-project-icon.svg";
   import manageTeamIcon from "../../assets/svg/manage-team-icon.svg";
   import openIcon from "../../assets/svg/open-project-icon.svg";
   import renameIcon from "../../assets/svg/rename-icon.svg";
   import deleteIcon from "../../assets/svg/trash-icon.svg";
-  import leaveIcon from "../../assets/svg/leave-project-icon.svg";
   import DeleteOrLeave from "../Modal/Components/DeleteOrLeave.svelte";
-  import ArrowLeft from "../../assets/svg/arrow-left-icon.svg";
-  import ArrowRight from "../../assets/svg/arrow-right-icon.svg";
   import RenameProject from "../Modal/Components/NameOrRenameProject.svelte";
   import ToggleAddByLinkAndEmail from "../Modal/Components/ToggleAddByLinkAndEmail.svelte";
+  import CreateTemplateIcon from "../../assets/svg/create-template-icon.svg";
+  import CreateTemplate from "../Modal/Components/CreateTemplate.svelte";
   import Modal from "../Modal/Modal.svelte";
 
   export let isOwner;
   export let project;
 
+  const backendUrl = __BACKEND_URL__;
+
   const dispatch = createEventDispatcher();
-  const BREAKPOINT_WIDTH_FOR_MENU_CLOSE = 840;
+  const BREAKPOINT_WIDTH_FOR_MENU_CLOSE = 820;
 
   let width;
   let showTeamModal = false;
   let showDeleteModal = false;
   let showRenameModal = false;
+  let showTemplateModal = false;
   let showLeaveModal = false;
   let isMenuOpen = true;
+  let emailEntries = [];
 
   $: isMenuOpen = width >= BREAKPOINT_WIDTH_FOR_MENU_CLOSE;
 
@@ -49,6 +55,9 @@
   function toggleRenameModal() {
     showRenameModal = !showRenameModal;
   }
+  function toggleTemplateModal() {
+    showTemplateModal = !showTemplateModal;
+  }
   function toggleLeaveModal() {
     showLeaveModal = !showLeaveModal;
   }
@@ -66,10 +75,31 @@
     toggleLeaveModal();
   }
 
-  function handleProjectTeamUpdate() {
-    // TODO: Implement project collaborators editing functionality
+  async function handleProjectTeamUpdate() {
     updateProjectsPage();
     toggleTeamModal();
+    await fetch(backendUrl + "/api/project/" + project.id + ":update", {
+      method: "PUT",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(emailEntries),
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        return data;
+      })
+      .catch(() => {
+        loading = false;
+        return null;
+      });
   }
 
   function updateProjectsPage() {
@@ -77,8 +107,7 @@
   }
 
   function openProject() {
-    // TODO: Implement open project functionality
-    console.log("Open project");
+    window.location.href = `/project/${project.id}/${project.role}`;
   }
   function saveProject() {
     // TODO: Implement save project functionality
@@ -168,6 +197,16 @@
       <li>
         <button
           class="button--default {isMenuOpen ? '' : 'disabled'}"
+          on:click={toggleTemplateModal}
+          ><img class="nav-panel__icon" src={CreateTemplateIcon} alt="" />
+          <h3 class="transition {isMenuOpen ? 'show' : 'hide'}">
+            {$_("projectsLeftSideNav.share")}
+          </h3></button
+        >
+      </li>
+      <li>
+        <button
+          class="button--default {isMenuOpen ? '' : 'disabled'}"
           on:click={toggleDeleteModal}
           ><img class="nav-panel__icon" src={deleteIcon} alt="" />
           <h3 class="transition {isMenuOpen ? 'show' : 'hide'}">
@@ -196,7 +235,9 @@
     width="500px"
     on:closeModal={toggleTeamModal}
     ><ToggleAddByLinkAndEmail
+      bind:emailEntries
       isUpdateComponent={true}
+      projectId={project.id}
       on:confirm={handleProjectTeamUpdate}
     />
   </Modal>
@@ -236,6 +277,18 @@
       projectId={project.id}
       on:closeModal={toggleLeaveModal}
       on:projectLeft={handleLeaveProject}
+    /></Modal
+  >
+{/if}
+{#if showTemplateModal}
+  <Modal
+    panelName={$_("modalCreateTemplate.createTemplate")}
+    width="500px"
+    on:closeModal={toggleTemplateModal}
+    ><CreateTemplate
+      projectName={project.name}
+      projectId={project.id}
+      on:closeTemplateModal={toggleTemplateModal}
     /></Modal
   >
 {/if}
@@ -352,9 +405,14 @@
     left: -110px;
   }
 
-  @media (max-height: 750px) {
+  @media (max-height: 820px) {
     .nav-panel {
       top: 20%;
+    }
+  }
+  @media (max-height: 730px) {
+    .nav-panel {
+      top: 15%;
     }
   }
 </style>

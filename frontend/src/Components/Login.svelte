@@ -3,18 +3,24 @@
   import { _ } from "svelte-i18n";
   import GitHubIcon from "../assets/svg/github-logo.svg";
   import GitLabIcon from "../assets/svg/gitlab-logo.svg";
+  import { addToast } from "./Modal/ToastNotification/toastStore.js";
 
   const backendUrl = __BACKEND_URL__;
   let showGithubOAuth;
   let showGitlabOAuth;
   let errorMessage = "";
   let errorMessageKey = "undefinedError";
-  let isLoggedIn = false;
+
+  let status = "";
 
   onMount(async () => {
     const params = new URLSearchParams(window.location.search);
     errorMessage = params.get("exception");
+    status = params.get("status");
 
+    if (status === "NotAuthenticated") {
+      addToast({ message: $_("login.toastNotifications.notAuthenticated") });
+    }
     switch (errorMessage) {
       case "LockedException":
         errorMessageKey = "accountLocked";
@@ -47,6 +53,40 @@
       console.error(e.message);
     }
   });
+
+  const handleForgotPassword = () => {
+    console.log("Forgot password clicked");
+    addToast({ message: $_("login.toastNotifications.forgotPassword") });
+
+    return fetch(backendUrl + `/api/user/forgotPassword`, {
+      method: "PUT",
+      headers: {
+        Accept: "application/json",
+      },
+      credentials: "include",
+      body: "email@address",
+    })
+      .then((response) => {
+        if (!response.ok) {
+          addToast({
+            message: message,
+            type: "error",
+          });
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        return data;
+      })
+      .catch(() => {
+        addToast({
+          message: message,
+          type: "error",
+        });
+        return null;
+      });
+  };
 </script>
 
 <div class="main-component">
@@ -94,6 +134,9 @@
           >
         </div>
       </form>
+      <a href="/forgot-password" class="forgot_password"
+        >{$_("login.forgotPassword")}</a
+      >
       <a href="/register">{$_("login.register")}</a>
     </div>
   </div>
@@ -186,5 +229,18 @@
     font-weight: 600;
     align-self: flex-end;
     font-family: "Montserrat", sans-serif;
+  }
+
+  .forgot_password {
+    margin: 0 auto;
+    font-size: 1rem;
+    text-decoration: none;
+    color: black;
+    font-weight: 600;
+    font-family: "Montserrat", sans-serif;
+    outline: none;
+    background: none;
+    padding: 0;
+    border: none;
   }
 </style>

@@ -1,11 +1,7 @@
 package lt.sus.Studiosus.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -50,9 +46,25 @@ public class User {
   @Column(name = "gitlab_id")
   private String gitlabId;
 
+  @Column(name = "reset_token", unique = true)
+  private String resetToken;
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<UserProjectRole> userProjectRoles;
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<UserTemplate> userTemplates;
+
   public User(String username, String email, String avatar) {
     this.username = username;
     this.email = email;
     this.avatar = avatar;
+  }
+
+  public User(String username, String email, String password, String roles) {
+    this.username = username;
+    this.email = email;
+    this.password = password;
+    this.roles = roles;
   }
 }

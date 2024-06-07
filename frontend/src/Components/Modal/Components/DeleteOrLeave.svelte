@@ -33,12 +33,23 @@
       }
       return response.json();
     });
+    localStorage.removeItem("templateDesc-" + projectId);
     dispatch("projectDeleted");
   }
 
   async function handleLeave() {
-    // TODO: Implement handleLeave function
-    console.log("Leave project");
+    await fetch(backendUrl + `/api/project/${projectId}:leave`, {
+      method: "PUT",
+      headers: {
+        Accept: "application/json",
+      },
+      credentials: "include",
+    }).then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    });
     dispatch("projectLeft");
   }
 </script>

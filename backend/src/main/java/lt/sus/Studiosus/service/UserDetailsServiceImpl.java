@@ -8,11 +8,13 @@ import lt.sus.Studiosus.model.AuthenticatedUser;
 import lt.sus.Studiosus.model.User;
 import lt.sus.Studiosus.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -48,5 +50,23 @@ public class UserDetailsServiceImpl implements UserDetailsService {
           userRepository.save(existingUser);
         },
         () -> userRepository.save(user));
+  }
+
+  public User getUser(String email) throws IllegalArgumentException {
+    return userRepository
+        .findUserByEmail(email)
+        .orElseThrow(() -> new IllegalArgumentException("User not found"));
+  }
+
+  public static String getEmail(Authentication authentication) throws IllegalArgumentException {
+    if (authentication == null || !authentication.isAuthenticated()) {
+      throw new IllegalArgumentException("User is not authenticated");
+    }
+    if (authentication.getPrincipal() instanceof OAuth2User oauth2User) {
+      return oauth2User.getAttribute("email");
+    } else if (authentication.getPrincipal() instanceof AuthenticatedUser authenticatedUser) {
+      return authenticatedUser.getEmail();
+    }
+    return "";
   }
 }

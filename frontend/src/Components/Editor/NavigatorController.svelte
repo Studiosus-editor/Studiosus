@@ -2,7 +2,15 @@
   import Projects from "../../assets/svg/Nav-controller/explorerw-icon.svg";
   import Assistant from "../../assets/svg/Nav-controller/chatw.svg";
   import { projectAssistant, projectExplorer } from "./scripts/store.js";
+  import CreateTemplateIcon from "../../assets/svg/create-template-icon-white.svg";
+  import CreateTemplate from "../Modal/Components/CreateTemplate.svelte";
+  import Modal from "../Modal/Modal.svelte";
+  import { projectNameStore } from "./scripts/store.js";
   import { _ } from "svelte-i18n";
+
+  export let params = null;
+
+  let showTemplateModal = false;
 
   function handleExplorerBtn() {
     projectExplorer.update((value) => !value);
@@ -13,8 +21,24 @@
     projectExplorer.set(false);
     projectAssistant.update((value) => !value);
   }
+
+  function toggleTemplateModal() {
+    showTemplateModal = !showTemplateModal;
+  }
 </script>
 
+{#if showTemplateModal}
+  <Modal
+    panelName={$_("modalCreateTemplate.createTemplate")}
+    width="500px"
+    on:closeModal={toggleTemplateModal}
+    ><CreateTemplate
+      projectName={$projectNameStore}
+      projectId={params.id}
+      on:closeTemplateModal={toggleTemplateModal}
+    /></Modal
+  >
+{/if}
 <div id="nav-controller">
   <button
     title={$_("editor.navigatorController.explorer")}
@@ -22,7 +46,12 @@
     class="nav-buttons"
     on:click={handleExplorerBtn}
   >
-    <img src={Projects} alt="Projects" width="30px" height="30px" />
+    <img
+      src={Projects}
+      alt={$_("editor.navigatorController.explorer")}
+      width="30px"
+      height="30px"
+    />
   </button>
   <button
     title={$_("editor.navigatorController.assistant")}
@@ -30,14 +59,33 @@
     class="nav-buttons"
     on:click={handleAssistantBtn}
   >
-    <img src={Assistant} alt="Projects" width="30px" height="30px" />
+    <img
+      src={Assistant}
+      alt={$_("editor.navigatorController.assistant")}
+      width="30px"
+      height="30px"
+    />
   </button>
+  {#if params != null && params.role && params.role === "OWNER"}
+    <button
+      title={$_("editor.navigatorController.shareTemplate")}
+      id="projectAssistant-btn"
+      class="nav-buttons"
+      on:click={toggleTemplateModal}
+    >
+      <img
+        src={CreateTemplateIcon}
+        alt={$_("editor.navigatorController.shareTemplate")}
+        width="30px"
+        height="30px"
+      />
+    </button>
+  {/if}
 </div>
 
 <style>
   #nav-controller {
     position: relative;
-    z-index: 3;
     display: flex;
     flex-direction: column;
     align-items: flex-start;

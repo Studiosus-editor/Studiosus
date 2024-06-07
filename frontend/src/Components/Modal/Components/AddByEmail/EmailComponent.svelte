@@ -6,10 +6,12 @@
 
   export let email;
   export let role;
+  export let pending = true;
   // Default is false, set to true if its the last email entry
   // used to check if it is the last element, if so bottom border
   // should be removed
   export let last = false;
+  export let isUpdateComponent = false;
 
   let firstActive = role === 1;
   let secondActive = !firstActive;
@@ -27,7 +29,7 @@
 
 <div class="entry-wrapper {last ? 'last' : ''}">
   <div class="entry-wrapper__email-wrapper">
-    <input placeholder={email} disabled />
+    <input class:pending placeholder={email} disabled />
     <div class="entry-wrapper__icon-wrapper">
       <img
         src={trashIcon}
@@ -44,6 +46,8 @@
       secondName={$_("modalEmailComponents.editor")}
       {firstActive}
       {secondActive}
+      {pending}
+      {isUpdateComponent}
     />
   </div>
 </div>

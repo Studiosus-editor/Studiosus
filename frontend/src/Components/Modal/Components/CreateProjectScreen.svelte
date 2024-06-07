@@ -1,9 +1,14 @@
 <script>
   import { createEventDispatcher } from "svelte";
   import { _ } from "svelte-i18n";
+  import { writable } from "svelte/store";
   import ArrowBack from "../../../assets/svg/arrow-left-icon.svg";
   import NameProject from "./NameOrRenameProject.svelte";
   import ToggleAddByLinkAndEmail from "./ToggleAddByLinkAndEmail.svelte";
+
+  let viewerInviteLink = writable("");
+  let editorInviteLink = writable("");
+  let projectId = writable("");
 
   const backendUrl = __BACKEND_URL__;
   const MAX_PNAME_LENGTH = 22;
@@ -31,17 +36,49 @@
   // dispatches an event that signals that the page switched meaning
   // the title must be changed to second page, also uses it's parent
   // component to set the modal title
-  function handleNext() {
+  async function handleNext() {
+    await fetch(backendUrl + "/api/project/" + projectName, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+      },
+      credentials: "include",
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const responseJson = await response.json();
+        viewerInviteLink.set(
+          backendUrl +
+            "/api/project/invite?viewerLink=" +
+            responseJson.viewerLink
+        );
+        editorInviteLink.set(
+          backendUrl +
+            "/api/project/invite?viewerLink=" +
+            responseJson.editorLink
+        );
+        projectId = responseJson.id;
+        return responseJson;
+      })
+      .catch((error) => {
+        console.error(error.message);
+      });
     dispatch("titleChange", { inviteTitle });
     currentIndex += 1;
   }
 
   async function handleSubmitProject() {
-    await fetch(backendUrl + "/api/project/create/" + projectName, {
-      method: "GET",
+    dispatch("closeModal");
+    dispatch("projectCreated");
+    await fetch(backendUrl + "/api/project/" + projectId + ":finalize", {
+      method: "PUT",
       headers: {
-        Accept: "application/json",
+        Accept: "application/json, text/plain, */*",
+        "Content-Type": "application/json",
       },
+      body: JSON.stringify(emailEntries),
       credentials: "include",
     })
       .then((response) => {
@@ -53,8 +90,6 @@
       .catch((error) => {
         console.error(error.message);
       });
-    dispatch("closeModal");
-    dispatch("projectCreated");
   }
 </script>
 
@@ -74,6 +109,9 @@
     {:else if currentIndex === 1}
       <ToggleAddByLinkAndEmail
         bind:emailEntries
+        bind:editorInviteLink
+        bind:viewerInviteLink
+        bind:projectId
         on:confirm={handleSubmitProject}
       />
     {/if}

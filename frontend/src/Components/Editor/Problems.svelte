@@ -4,7 +4,7 @@
   import MinimizeIcon from "../../assets/svg/Problem-toolbar/minimize-icon.svg";
   import ExpandIcon from "../../assets/svg/Problem-toolbar/expand-icon.svg";
   import { _ } from "svelte-i18n";
-  import { writable } from "svelte/store";
+
   let isMinimized = false;
   let originalHeight = "27%";
 
@@ -31,8 +31,8 @@
       var target = event.target;
       target.style.borderTop = "2px solid blue";
 
-      // Make #editor-wrapper unclickable
-      var editorWrapper = document.querySelector("#editor-wrapper");
+      // Make #editor-row unclickable
+      var editorWrapper = document.querySelector("#editor-row");
       if (editorWrapper) {
         editorWrapper.style.pointerEvents = "none";
       }
@@ -41,8 +41,8 @@
       var target = event.target;
       target.style.borderTop = "";
 
-      // Make #editor-wrapper clickable again
-      var editorWrapper = document.querySelector("#editor-wrapper");
+      // Make #editor-row clickable again
+      var editorWrapper = document.querySelector("#editor-row");
       if (editorWrapper) {
         editorWrapper.style.pointerEvents = "auto";
       }

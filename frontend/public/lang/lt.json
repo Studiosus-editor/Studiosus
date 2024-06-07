@@ -17,12 +17,35 @@
     "login": "Prisijungti",
     "email": "El. paštas",
     "password": "Slaptažodis",
+    "repeatPassword": "Pakartokite slaptažodį",
+    "forgotPassword": "Pamiršai slaptažodį?",
     "errorMessages": {
       "invalidCredentials": "Neteisingas vartotojo vardas arba slaptažodis",
       "accountLocked": "Jūsų paskyra užrakinta. Prašome susisiekti su klientų aptarnavimu",
       "accountDisabled": "Jūsų paskyra išjungta. Prašome susisiekti su klientų aptarnavimu",
       "accountExpired": "Jūsų paskyra baigė galioti. Prašome susisiekti su klientų aptarnavimu",
       "undefinedError": "Įvyko klaida. Prašome susisiekti su klientų aptarnavimu"
+    },
+    "toastNotifications": {
+      "notAuthenticated": "Norint prisijungti prie projekto, reikia prisijungti prie paskyros",
+      "forgotPassword": "Nuoroda su slaptažodžio atstatymo instrukcijomis išsiųsta į jūsų el. paštą"
+    }
+  },
+  "forgotPassword": {
+    "resetPassword": "Pakeisti slaptažodį",
+    "goBack": "Grįžti atgal",
+    "toastNotifications": {
+      "error": "Paskyra su tokiu el. paštu neegzistuoja",
+      "emptyEmail": "El. paštas negali būti tuščias",
+      "success": "Nuoroda su slaptažodžio atstatymo instrukcijomis išsiųsta į jūsų el. paštą"
+    }
+  },
+  "resetPassword": {
+    "goBack": "Grįžti atgal",
+    "toastNotifications": {
+      "error": "Neteisinga arba pasibaigusi nuoroda",
+      "emptyPassword": "Slaptažodis negali būti tuščias",
+      "success": "Slaptažodis sėkmingai pakeistas"
     }
   },
   "notFound": {
@@ -37,6 +60,9 @@
     "login": "Prisijungti",
     "errorMessages": {
       "emailAlreadyInUse": "Vartotojas su tokiu el. paštu jau egzistuoja",
+      "usernameTooLong": "Slapyvardis gali būti iki 64 simbolių ilgio",
+      "emailTooLong": "El. paštas gali būti iki 64 simbolių ilgio",
+      "passwordTooLong": "Slaptažodis gali būti iki 64 simbolių ilgio",
       "undefinedError": "Įvyko klaida. Prašome susisiekti su klientų aptarnavimu"
     }
   },
@@ -48,10 +74,18 @@
     "noProjectsFirstLine": "Šiuo metu su jumis nėra bendrinami jokie projektai",
     "noProjectsSecondLine": "Lėk ieškot draugų!",
     "addNew": "Pridėti naują",
-    "next": "Sekantis",
-    "previous": "Ankstesnis",
     "loadingProjects": "Kraunami projektai...",
-    "errorLoadingProjects": "Įvyko klaida kraunant projektus"
+    "errorLoadingProjects": "Įvyko klaida kraunant projektus",
+    "toastNotifications": {
+      "addedToProjectSuccessfully": "Sėkmingai prisijungėte prie projekto",
+      "hasHigherAuthority": "Jau esate projekto narys",
+      "invalidLink": "Neteisinga arba pasibaigusi projekto nuoroda",
+      "NoLinkProvided": "Nenurodyta projekto nuoroda"
+    }
+  },
+  "paggination": {
+    "next": "Sekantis",
+    "previous": "Ankstesnis"
   },
   "footer": {
     "LT": "Lietuvių",
@@ -64,7 +98,8 @@
     "addByLink": "Pridėti per nuorodą",
     "viewerLink": "Peržiūros nuoroda",
     "editorLink": "Redagavimo nuoroda",
-    "altCopyToClipBoard": "Nukopijuoti į iškarpinę"
+    "altCopyToClipBoard": "Nukopijuoti į iškarpinę",
+    "copiedToClipboard": "Nukopijuota į iškarpinę!"
   },
   "modalNameOrRenameProject": {
     "renameProject": "Pervadinti projektą",
@@ -83,7 +118,11 @@
     "addByEmail": "Pridėti per paštą",
     "addByLink": "Pridėti per nuorodą",
     "create": "Sukurti",
-    "update": "Atnaujinti"
+    "update": "Atnaujinti",
+    "loading": "Kraunama..."
+  },
+  "toggleComponent": {
+    "invited": "Pakviestas"
   },
   "modalEmailComponents": {
     "viewer": "Peržiūrėti",
@@ -106,6 +145,19 @@
     "leave": "Palikti",
     "warningLeaveText": "Palikus projektą jis bus pašalintas iš sąrašo ir nebegalėsite jo pasiekti"
   },
+  "modalCreateTemplate": {
+    "createTemplate": "Sukurti šabloną",
+    "create": "Sukurti",
+    "placeholderMyTemplate": "Mano Šablonas",
+    "templateName": "Šablono pavadinimas",
+    "provideAshortDescription": "Pateikite trumpą aprašymą",
+    "description": "Aprašymas",
+    "yourDescriptionIsAutomaticllySaved": "Jūsų aprašymas yra automatiškai išsaugojamas",
+    "note": "Pastaba: ",
+    "noteText": "Sukūrus šabloną, jis bus matomas visiems Studiosus vartotojams",
+    "alertSuccess": "Šablonas sėkmingai sukurtas!",
+    "alertError": "Atsiprašome, įvyko klaida kuriant šabloną"
+  },
   "projectsLeftSideNav": {
     "open": "Atidaryti",
     "save": "Išsaugoti",
@@ -115,7 +167,8 @@
     "leave": "Palikti",
     "inviteTitle": "Pridėti narius",
     "altOpen": "Atidaryti",
-    "altClose": "Uždaryti"
+    "altClose": "Uždaryti",
+    "share": "Bendrinti"
   },
   "editor":{
     "generalToolbar": {
@@ -132,16 +185,23 @@
       "createFile": "Sukurti dokumentą",
       "createFolder": "Sukurti aplanką"
     },
+    "fileNavigator": {
+      "loadingProjectStructure": "Kraunama projekto struktūra...",
+      "errorLoadingProjectStructure": "Įvyko klaida kraunant projekto struktūrą"
+    },
     "navigatorController":{
       "explorer": "Naršyklė",
-      "assistant": "Asistentas"
+      "assistant": "Asistentas",
+      "shareTemplate": "Bendrinti kaip šabloną"
     },
     "editorDashboard": {
       "dashboard": "Aktyvūs naudotojai"
     },
     "editorField": {
       "startTypingHere": "Pradėkite rašyti čia...",
-      "dropFileHere": "Nutempti failą čia..."
+      "pleaseSelectAFile": "Pasirinkite failą, kad galėtumėte pradėti redagavimą",
+      "pleaseSelectAFileToView": "Pasirinkite failą, kad galėtumėte jį peržiūrėti",
+      "closeAssitant": "Uždaryti asistentą"
     },
     "terminal":{
       "terminal": "Terminalas",
@@ -156,7 +216,170 @@
       "Chat" : "POKALBIS",
       "Question" : "Įveskite klausimą...",
       "Send":"Išsiųsti",
-      "Assistant": "Asistentas"
+      "Assistant": "Asistentas",
+      "newChat": "Naujas pokalbis",
+      "logInToUseAssistant": "Prisijunkite, kad galėtumėte naudotis Studiosus asistentu",
+      "signIn": "Prisijungti"
     }
+  },
+  "modalPromptFolderDelete": {
+    "confirmFolderDeletion": "Patvirtinkite ištrynimą",
+    "warning": "Įspėjimas!",
+    "firstTextPrompt": "Ar tikrai norite ištrinti ",
+    "secondTextPrompt": "? Ištrinus aplanką, visas jo turinys bus taip pat pašalintas",
+    "cancel": "Atšaukti",
+    "delete": "Ištrinti"
+  },
+  "contextMenu": {
+    "rename": "Pervadinti",
+    "delete": "Ištrinti"
+  },
+  "createOrRenameFileOrFolder": {
+    "folderName": "Aplanko pavadinimas",
+    "yamlFile": "Failas.yml"
+  },
+  "folder": {
+    "altExpandFolder": "Išplėsti aplanką"
+  },
+  "fileSystemToastNotifications": {
+    "errorFetchingProjectStructure": "Atsiprašome, įvyko klaida kraunant projekto struktūrą",
+    "errorCreatingFolder": "Atsiprašome, įvyko klaida kuriant aplanką",
+    "errorCreatingFile": "Atsiprašome, įvyko klaida kuriant failą",
+    "errorFetchingFileData": "Atsiprašome, įvyko klaida kraunant failo turinį",
+    "errorDeletingFile": "Atsiprašome, įvyko klaida trinant failą",
+    "errorDeletingFolder": "Atsiprašome, įvyko klaida trinant aplanką",
+    "errorRenamingFile": "Atsiprašome, įvyko klaida keičiant failo pavadinimą",
+    "errorRenamingFolder": "Atsiprašome, įvyko klaida keičiant aplanko pavadinimą",
+    "errorMovingFile": "Atsiprašome, įvyko klaida perkeliant failą",
+    "errorMovingFolder": "Atsiprašome, įvyko klaida perkeliant aplanką",
+    "errorFolderAlreadyExists": "Aplankas su tokiu pavadinimu jau egzistuoja",
+    "errorFileAlreadyExists": "Failas su tokiu pavadinimu jau egzistuoja",
+    "errrorFileWithSameNameExists": "Atsiprašome, failo perkėlimas negalimas. Failas su tokiu pavadinimu jau egzistuoja paskirties vietoje",
+    "errrorFolderWithSameNameExists": "Atsiprašome, aplanko perkėlimas negalimas. Aplankas su tokiu pavadinimu jau egzistuoja paskirties vietoje",
+    "fileDeleted": "Atsiprašome, failas kurį redagavote buvo ištrintas"
+  },
+  "templatesSearchField": {
+    "search": "Paieška",
+    "byTitle": "Pagal pavadinimą",
+    "byUsername": "Pagal slapyvardį",
+    "altSearch": "Pradėti paiešką",
+    "errorSearching": "Atsiprašome, įvyko klaida ieškant šablonų"
+  },
+  "toastNotifications": {
+    "copyToClipboard": "Nukopijuota į iškarpinę",
+    "downloadFile": "Failas atsiunčiamas...",
+    "emptyFile": "Pasirinktas failas yra tuščias"
+  },
+  "templates": {
+    "templates": "Šablonai",
+    "publicTemplates": "Vieši šablonai",
+    "yourTemplates": "Jūsų šablonai",
+    "pendingTemplates": "Laukiantys patvirtinimo",
+    "loadingTemplates": "Kraunami šablonai...",
+    "errorLoadingTemplates": "Įvyko klaida kraunant šablonus",
+    "noYourTemplatesFirstLine": "Šiuo metu jūs nesidalinate jokiais šablonais",
+    "noYourTemplatesSecondLine": "Pasidalinkite savo pirmuoju šablonu!",
+    "noPendingTemplates": "Šiuo metu nėra šablonų laukiančių patvirtinimo",
+    "pleaseLogInToViewYourTemplates": "Prašome prisijungti, kad galėtumėte peržiūrėti ar sukurti savo šablonus",
+    "errorLoadingTemplatesToast": "Atsiprašome, įvyko klaida kraunant šablonus",
+    "templateAddedToProjects": "Šablonas sėkmingai pridėtas prie jūsų projektų!",
+    "errorAddingTemplateToProjects": "Atsiprašome, įvyko klaida pridedant šabloną prie jūsų projektų",
+    "emptySearchResults": "Paieškos rezultatų nėra"
+  },
+  "templateViewOrReview": {
+    "templateDescription": "Šablono aprašymas",
+    "templateReview": "Šablono peržiūra",
+    "createdBy": "Sukurė",
+    "noDescriptionProvided": "Aprašymas tuščias",
+    "deny": "Atmesti",
+    "denyDescriptionPlaceholder": "Pateikite šablono atmetimo priežastį",
+    "approve": "Patvirtinti",
+    "close": "Uždaryti",
+    "submit": "Pateikti",
+    "reviewSubmittedSuccessfully": "Atsiliepimas sėkmingai pateiktas!"
+  },
+  "templateEntry": {
+    "deleteTemplate": "Ištrinti šabloną",
+    "checkReviewComments": "Peržiūrėti atsiliepimą",
+    "createdBy": "Sukurė",
+    "viewDetailedInformation": "Peržiūrėti išsamesnę informaciją",
+    "reviewTemplate": "Peržiūrėti šabloną",
+    "addToYourProjects": "Pridėti prie savo projektų",
+    "previewTemplate": "Atidaryti šabloną peržiūrai"
+  },
+  "deleteTemplateModal": {
+    "modalTitle": "Ištrinti šabloną",
+    "alertSuccessfulDeletion": "Šablonas sėkmingai ištrintas!",
+    "promptConfirmation": "Ar tikrai norite ištrinti šabloną ",
+    "cancel": "Atšaukti",
+    "delete": "Ištrinti",
+    "alertFailedDeletion": "Atsiprašome, įvyko klaida trinant šabloną",
+    "pendingWarning": "Ištrynus šabloną, jis bus pašalintas iš laukiančių patvirtinimo šablonų sąrašo",
+    "approvedWarning": "Ištrynus šabloną, jis bus pašalintas iš viešų šablonų sąrašo"
+  },
+  "responseCommentModal": {
+    "modalTitle": "Atsiliepimas",
+    "sorryYourTemplateWasDenied": "Atsiprašome, jūsų šablonas buvo atmestas",
+    "noCommnentProvided": "Komentaras tuščias",
+    "close": "Uždaryti"
+  },
+  "profileTab":{
+    "errors":{
+     "emptyPassword":"Slaptažodis negali būti tuščias",	
+     "matchPassword":"Slaptažodžiai nesutampa",
+     "emptyUsername":"Slapyvardis negali būti tuščias",
+     "errorDeleteAccount":"Įvyko klaida trinant paskyrą",
+     "errorChangePassword":"Įvyko klaida keičiant slaptažodį",
+      "errorChangeUsername":"Įvyko klaida keičiant slapyvardį"
+    },
+    "accountDeleted":"Paskyra sėkmingai ištrinta",
+    "passwordChanged":"Slaptažodis sėkmingai pakeistas",
+    "usernameChanged":"Slapyvardis sėkmingai pakeistas",
+    "profile":"Paskyra",
+    "admin":"Administratorius",
+    "passwordContainer":{
+      "changePassword":"Pakeisti slaptažodį",
+      "passwordDescription":"Užpildykite abu laukelius, jei norite pakeisti slaptažodį",
+      "newPassword": "Naujas slaptažodis",
+      "confirmPassword": "Patvirtinti slaptažodį",
+      "confirmButton": "Patvirtinti",
+      "confirmPasswordModal":{
+        "passwordQuestion": "Ar tikrai norite pakeisti slaptažodį?",
+        "cancelButton":"Grįžti",
+        "changeButton":"Pakeisti"
+      }
+    },
+    "usernameContainer":{
+      "changeUsername":"Pakeisti slapyvardį",
+      "usernameDescription":"Dabartinis slapyvardis: ",
+      "newUsername":"Naujas slapyvardis",
+      "confirmButton":"Patvirtinti",
+      "confirmUsernameModal":{
+        "usernameQuestion":"Ar tikrai norite pakeisti slapyvardį? ",
+        "currentUsername": "Dabartinis slapyvardis: ",
+        "newUsername":"Naujas slapyvardis: ", 
+        "cancelButton":"Grįžti",
+        "changeButton":"Pakeisti"
+      }
+    },
+    "accountContainer":{
+      "deleteAccount":"Ištrinti paskyrą",
+      "deleteDescription":"Ištrindami paskyrą pašalinsite savo projektus, šablonus ir kitus duomenis iš Studiosus serverių",
+      "deleteButton":"Ištrinti paskyrą",
+      "deleteAccountModal":{
+        "accountQuestion":"Ar tikrai norite ištrinti savo paskyrą?",
+        "accountQuestion2":"Visi duomenys susieti su",
+        "accountQuestion3":"bus ištrinti.",
+        "cancelButton":"Grįžti",
+        "deleteButton":"Ištrinti",
+        "inputEmail": "Įveskite savo el. paštą ir paspauskite ištrinti, kad patvirtintumėte paskyros ištrynimą",
+        "emailNotMatch":"Neteisingas el. pašto adresas",
+        "emailPlaceholder": "Įveskite el. pašto adresą"
+      }
+    }
+  },
+  "assistantOverseer":{
+    "noFileToFix": "Nepasirinktas joks failas. Prašome pasirinkti failą, kurį norite taisyti.",
+    "noContentToFix": "Nepasirinktas failo turinys. Prašome pridėti turinį, kurį norite taisyti."
   }
 }

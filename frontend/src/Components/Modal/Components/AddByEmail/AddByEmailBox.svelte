@@ -1,8 +1,8 @@
 <script>
-  import ToggleComponent from "../ToggleComponent.svelte";
-  import { clearableInput } from "../../../../utils/clearableInput.js";
-  import EmailComponent from "./EmailComponent.svelte";
   import { _ } from "svelte-i18n";
+  import { clearableInput } from "../../../../utils/clearableInput.js";
+  import ToggleComponent from "../ToggleComponent.svelte";
+  import EmailComponent from "./EmailComponent.svelte";
 
   export let showHeader = true;
   export let emailEntries;
@@ -12,7 +12,10 @@
   const invalidEmail = $_("modalEmailComponents.invalidEmail");
   const emailAlreadyAdded = $_("modalEmailComponents.emailAlreadyAdded");
 
-  const EMAIL_VALIDATION_REGEX = /^\b[\w.-]+@[\w-]+\.[A-Za-z]{2,}\b$/;
+  export let isUpdateComponent = false;
+
+  const EMAIL_VALIDATION_REGEX =
+    /^[A-Za-z0-9.-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$/;
   let email = "";
   let role = 1;
   let placeholder = placeholderEmail;
@@ -79,7 +82,7 @@
       return;
     }
     // Push a new entry into the emails array
-    emailEntries = [...emailEntries, { email, role }];
+    emailEntries = [...emailEntries, { email, role, pending: true }];
   }
 </script>
 
@@ -117,11 +120,13 @@
         <h3>{$_("modalEmailComponents.emptyEmailList")}</h3>
       </div>
     {/if}
-    {#each emailEntries as { email, role }, index (email)}
+    {#each emailEntries as { email, role, pending }, index (email)}
       <EmailComponent
         {email}
         {role}
+        {pending}
         last={index === emailEntries.length - 1}
+        {isUpdateComponent}
         on:remove={() => removeEmail(email)}
         on:roleChange={({ detail: { role } }) => handleRoleChange(email, role)}
       />

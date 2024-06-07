@@ -1,0 +1,46 @@
+{
+  "null": {
+    "name": {
+      "description": "Ansible playbook pavadinimas",
+      "example": "- name: my-project"
+    },
+    "hosts": {
+      "description": "IP arba domenas, kuriam vykdyti playbook",
+      "example": "- hosts: all<br>arba<br> - hosts: webservers"
+    },
+    "become": {
+      "description": "Prisijungti kaip root vartotojas",
+      "example": "become: yes"
+    },
+    "tasks": {
+      "description": "Sąrašas užduočių, kurias vykdyti",
+      "example": "tasks:<br><t>&nbsp;&nbsp;- apt:<br><t>&nbsp;&nbsp;&nbsp;&nbsp;name: apache2<br><t>&nbsp;&nbsp;&nbsp;&nbsp;state: present"
+    }
+  },
+  "tasks": {
+    "apt": {
+      "description": "Instaliuoti arba valdyti apt paketus,<br> Dažniausiai naudojami pasirinkimai yra name and state<br>name: Paketo vardas, kurį norima valdyti<br>state: Būsena, kurią norima patikrinti, <br>pavyzdžiui: <b>install</b> arba <b>present</b><br>",
+      "example": "apt:<br><t>&nbsp;&nbsp;name: apache2<br>&nbsp;&nbsp;state: present"
+    },
+    "service": {
+      "description": "Valdyti paslaugas,<br> Labiausiai naudojami pasirinkimai yra <b>name</b> ir <b>state</b><br>name: Paslaugos vardas, kurią norima valdyti<br>state: Būsena norimos paslaugos, pavyzdžiui: <b>started</b> arba <b>stopped</b><br>",
+      "example": "service:<br><t>&nbsp;&nbsp;name: apache2<br>&nbsp;&nbsp;state: started"
+    }
+  },
+  "apt": {
+    "state": {
+      "description": "Paketo būsena, pavyzdžiui: install arba present",
+      "example": "state: present"
+    }
+  },
+  "service": {
+    "state": {
+      "description": "Paslaugos būsena, pavyzdžiui: started arba stopped",
+      "example": "state: started"
+    },
+    "enabled": {
+      "description": "Paleisti paslaugą paleidus sistemą",
+      "example": "enabled: yes"
+    }
+  }
+}

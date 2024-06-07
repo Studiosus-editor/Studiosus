@@ -1,20 +1,31 @@
 <script>
-  import { onMount } from "svelte";
-  import { _, locale } from "svelte-i18n";
-  import ArrowDown from "../assets/svg/dropdown-arrow-icon-white.svg";
+  import { onMount, tick } from "svelte";
+  import { _ } from "svelte-i18n";
   import CloseIcon from "../assets/svg/exit-cross-white.svg";
   import HamburgerIcon from "../assets/svg/hamburger-menu-white.svg";
-  import { AVAILABLE_LOCALES, changeLocale } from "../services/i18n.js";
+  import LanguageDropdown from "./UtilComponents/LanguageDropdown.svelte";
 
   const backendUrl = __BACKEND_URL__;
   let isLoggedIn = false;
-  let langDropdownVisible = false;
   let hamburgerDropdownVisible = false;
-  let dropdownContainer;
   let dropdownTopMenu;
   let hamburgerButton;
-  let langDropdownButtonText;
   let dropdownMenuClass;
+  let windowWidth = window.innerWidth;
+
+  // reactive statment that closes the dropdown menu when the window is resized & changes icons (hamburger/exit)
+  $: if (windowWidth > 920) {
+    document.dispatchEvent(new CustomEvent("close-dropdown"));
+    tick().then(() => {
+      hamburgerDropdownVisible = false;
+      if (dropdownTopMenu.classList.contains(dropdownMenuClass)) {
+        dropdownTopMenu.classList.remove(dropdownMenuClass);
+      }
+      if (dropdownTopMenu.classList.contains("hide-menu")) {
+        dropdownTopMenu.classList.remove("hide-menu");
+      }
+    });
+  }
 
   // checks if user is logged to differently render the navigation by
   // checking if a specific cookie exists, on logout the backend takes
@@ -28,43 +39,18 @@
     isLoggedIn
       ? (dropdownMenuClass = "show-menu-logged-in")
       : (dropdownMenuClass = "show-menu");
-    dropdownContainer = document.querySelector(".dropdown");
     dropdownTopMenu = document.querySelector(".top-nav__list");
     hamburgerButton = document.querySelector(".hamburger--btn");
-    langDropdownButtonText = document.querySelector(".dropdown--btn h3");
     document.addEventListener("click", handleDocumentClick);
-    window.addEventListener("resize", handleWindowResize);
+    window.addEventListener("resize", handleResize);
   });
 
-  // closes the dropdown menu when the window is resized & changes icons (hamburger/exit)
-  function handleWindowResize() {
-    if (window.innerWidth > 920) {
-      hamburgerDropdownVisible = false;
-      if (dropdownTopMenu.classList.contains(dropdownMenuClass)) {
-        dropdownTopMenu.classList.remove(dropdownMenuClass);
-      }
-      if (dropdownTopMenu.classList.contains("hide-menu")) {
-        dropdownTopMenu.classList.remove("hide-menu");
-      }
-      // closes the language dropdown menu when window is resized
-      if (langDropdownVisible) {
-        langDropdownVisible = false;
-      }
-    }
-  }
+  const handleResize = () => {
+    windowWidth = window.innerWidth;
+  };
 
-  // toggles the display of the language dropdown menu + arrow rotation on user click
-  function handleLangDropdownClick() {
-    isUserLoggedIn();
-    langDropdownVisible = !langDropdownVisible;
-  }
-
-  // Closes the dropdown menus when user clicks outside of the dropdown container
+  // Toggles the transition of the hamburger dropdown menu
   function handleDocumentClick(event) {
-    if (!dropdownContainer.contains(event.target)) {
-      langDropdownVisible = false;
-    }
-    // toggles the transition of the hamburger dropdown menu
     if (
       !hamburgerButton.contains(event.target) &&
       dropdownTopMenu.classList.contains(dropdownMenuClass)
@@ -85,12 +71,6 @@
       dropdownTopMenu.classList.add(dropdownMenuClass);
     }
   }
-  // Changes the language displayed in the language dropdown button
-  function handleLanguageSelect(event) {
-    const selectedLanguage = event.target.textContent;
-    langDropdownButtonText.textContent = selectedLanguage;
-    changeLocale(selectedLanguage);
-  }
   // Changes background color if page is active
   function isActivePage(page) {
     return window.location.pathname === page;
@@ -108,6 +88,7 @@
     </div>
   </div>
   <div class="top-nav__button-container">
+    <LanguageDropdown />
     <button
       type="button"
       class="hamburger--btn button--default"
@@ -174,43 +155,8 @@
         </a>
       </li>
     {/if}
-    <li
-      class="dropdown"
-      on:click={handleLangDropdownClick}
-      on:keydown={handleLangDropdownClick}
-    >
-      <button
-        type="button"
-        class="dropdown--btn button--default"
-        class:active={langDropdownVisible}
-      >
-        {#if $locale !== "lt"}
-          <h3>{$locale}</h3>
-        {/if}
-        {#if $locale !== "en"}
-          <h3>{$locale}</h3>
-        {/if}
-        <img
-          id="dropdown__arrow-icon"
-          src={ArrowDown}
-          class:active={langDropdownVisible}
-          alt="toggle language select"
-        />
-      </button>
-      <div
-        class="dropdown__dropdown-content"
-        class:visible={langDropdownVisible}
-      >
-        {#each Object.values(AVAILABLE_LOCALES) as item}
-          <div
-            class="dropdown__item-container"
-            on:click={handleLanguageSelect}
-            on:keydown={handleLanguageSelect}
-          >
-            <h3>{item}</h3>
-          </div>
-        {/each}
-      </div>
+    <li class="dropdown">
+      <LanguageDropdown />
     </li>
   </menu>
 </header>
@@ -366,77 +312,8 @@
       }
     }
   }
-
   .dropdown {
     margin-right: 25px;
-    &--btn {
-      display: flex;
-      align-items: center;
-      padding: 18px 15px 17px 15px;
-      width: 80px;
-      text-transform: uppercase;
-
-      h3 {
-        margin: 0;
-      }
-
-      &:hover {
-        background-color: var(--maastricht-blue);
-        box-shadow:
-          rgba(0, 0, 0, 0.05) 0 5px 30px,
-          rgba(0, 0, 0, 0.05) 0 1px 4px;
-        opacity: 1;
-        transform: translateY(0);
-        transition-duration: 0.35s;
-      }
-
-      &.active {
-        background-color: var(--maastricht-blue) !important;
-      }
-
-      img {
-        width: 35px;
-        transition: transform 0.3s ease;
-
-        &.active {
-          transform: rotate(90deg);
-        }
-      }
-    }
-
-    &__dropdown-content {
-      display: none;
-      position: absolute;
-      background-color: var(--maastricht-blue);
-      min-width: 75px;
-      box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.5);
-      z-index: 10;
-
-      &.visible {
-        display: block;
-      }
-    }
-
-    &__item-container {
-      text-align: center;
-
-      :hover {
-        background-color: var(--hippie-blue);
-        box-shadow:
-          rgba(0, 0, 0, 0.05) 0 5px 30px,
-          rgba(0, 0, 0, 0.05) 0 1px 4px;
-        opacity: 1;
-        transform: translateY(0);
-        transition-duration: 0.35s;
-        cursor: pointer;
-      }
-
-      h3 {
-        text-transform: uppercase;
-        margin: 0;
-        padding: 24.5px;
-      }
-    }
   }
 
   @media (max-width: 920px) {

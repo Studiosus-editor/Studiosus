@@ -3,8 +3,9 @@
   import { _ } from "svelte-i18n";
   import CreateProject from "./CreateProject.svelte";
   import LeftNavigation from "./LeftNavigation.svelte";
-  import Pagination from "./Pagination.svelte";
+  import Pagination from "../UtilComponents/Pagination.svelte";
   import ProjectEntry from "./ProjectEntry.svelte";
+  import { addToast } from "../Modal/ToastNotification/toastStore.js";
 
   const backendUrl = __BACKEND_URL__;
   let errorLoadingProjects = false;
@@ -16,9 +17,10 @@
 
   // tracks if projects are loading, used for conditional rendering
   let isLoading = true;
-
   let yourProjects = [];
   let sharedProjects = [];
+
+  let status = "";
 
   // reactive statments to conditinonally pass the current active
   // project to left side navigation component on project entry click
@@ -62,7 +64,7 @@
     }
 
     fetchedProjects.forEach((project) => {
-      if (project.role === "Owner") {
+      if (project.role === "OWNER") {
         yourProjects.push(project);
       } else {
         sharedProjects.push(project);
@@ -142,6 +144,37 @@
   }
 
   onMount(() => {
+    const params = new URLSearchParams(window.location.search);
+    status = params.get("status");
+    switch (status) {
+      case "addedToProjectSuccessfully":
+        addToast({
+          message: $_("projects.toastNotifications.addedToProjectSuccessfully"),
+          type: "success",
+        });
+        break;
+      case "hasHigherAuthority":
+        addToast({
+          message: $_("projects.toastNotifications.hasHigherAuthority"),
+        });
+        break;
+      case "invalidLink":
+        addToast({
+          message: $_("projects.toastNotifications.invalidLink"),
+          type: "error",
+        });
+        break;
+      case "NoLinkProvided":
+        addToast({
+          message: $_("projects.toastNotifications.NoLinkProvided"),
+          type: "error",
+        });
+        break;
+    }
+
+    // Remove URL search parameters after displaying toast,
+    // so if user refresh page another toast won't be displayed
+    window.history.replaceState({}, document.title, window.location.pathname);
     loadAndDisplayProjects();
   });
 </script>
@@ -185,13 +218,13 @@
       <div>{$_("projects.errorLoadingProjects")}</div>
     {:else if projectsActive}
       <Pagination
-        projectPerPage={PROJECTS_PER_PAGE}
+        itemsPerPage={PROJECTS_PER_PAGE}
         itemArray={yourProjects}
         on:pageChange={handlePaginationChange}
       />
     {:else if sharedProjectsActive}
       <Pagination
-        projectPerPage={PROJECTS_PER_PAGE}
+        itemsPerPage={PROJECTS_PER_PAGE}
         itemArray={sharedProjects}
         on:pageChange={handlePaginationChange}
       />
@@ -204,6 +237,7 @@
         <ProjectEntry
           projectName={project.name}
           isActive={project.isActive}
+          projectId={yourActiveProject.id}
           toggleActive={() => {
             currentlyDisplayedYourProjects = toggleProjectActive(
               project.id,
@@ -221,6 +255,7 @@
           <ProjectEntry
             projectName={project.name}
             isActive={project.isActive}
+            projectId={sharedActiveProject.id}
             toggleActive={() => {
               currentlyDisplayedSharedProjects = toggleProjectActive(
                 project.id,
@@ -264,7 +299,7 @@
     }
 
     & h1 {
-      margin: 0 0 20px 0;
+      margin: 0px;
     }
 
     &__nav-wrapper {

@@ -11,6 +11,7 @@ backend/bin/*
 backend/src/main/resources/static
 backend/src/main/resources/templates
 backend/src/main/resources/secrets.properties
+backend/src/main/resources/secrets.properties-prod
 backend/src/main/resources/gemini-api.json
 # Ignore IDE specific settings
 .vscode
@@ -44,3 +45,7 @@ out/
 /dist/
 /nbdist/
 /.nb-gradle/
+
+### Frontend ###
+frontend/node_modules/
+frontend/public/build/

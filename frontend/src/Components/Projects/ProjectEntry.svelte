@@ -2,8 +2,13 @@
   export let projectName;
   export let isActive;
   export let toggleActive;
+  export let projectId;
 
   import PlayIcon from "../../assets/svg/play-icon.svg";
+
+  function openProject() {
+    window.location.href = `/project/${projectId}`;
+  }
 </script>
 
 <div
@@ -16,7 +21,9 @@
     <p>{projectName}</p>
   </div>
   <div class="project-wrapper__play">
-    <img src={PlayIcon} alt="Launch" />
+    <button class="button--default" on:click={openProject}>
+      <img src={PlayIcon} alt="Launch" />
+    </button>
   </div>
 </div>
 
@@ -32,6 +39,10 @@
     padding: 5px 10px;
     box-shadow: 0px 8px 8px 0px rgba(0, 0, 0, 0.3);
     border: 1px solid transparent;
+
+    button {
+      padding: 0;
+    }
 
     &__name p {
       margin: 0;
