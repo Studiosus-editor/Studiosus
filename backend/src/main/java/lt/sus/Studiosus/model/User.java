@@ -53,7 +53,7 @@ public class User {
   private List<UserProjectRole> userProjectRoles;
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<UserTemplate> userTemplates;
+  private List<Template> templates;
 
   public User(String username, String email, String avatar) {
     this.username = username;

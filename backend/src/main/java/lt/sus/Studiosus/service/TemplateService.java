@@ -4,7 +4,6 @@ import static java.util.stream.Collectors.toList;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import lt.sus.Studiosus.dto.FileDTO;
 import lt.sus.Studiosus.dto.FolderDTO;
@@ -16,7 +15,6 @@ import lt.sus.Studiosus.model.Project;
 import lt.sus.Studiosus.model.Template;
 import lt.sus.Studiosus.model.User;
 import lt.sus.Studiosus.model.UserProjectRole;
-import lt.sus.Studiosus.model.UserTemplate;
 import lt.sus.Studiosus.model.enums.Role;
 import lt.sus.Studiosus.model.enums.TemplatePhase;
 import lt.sus.Studiosus.repository.FileRepository;
@@ -25,7 +23,6 @@ import lt.sus.Studiosus.repository.ProjectRepository;
 import lt.sus.Studiosus.repository.TemplateRepository;
 import lt.sus.Studiosus.repository.UserProjectRoleRepository;
 import lt.sus.Studiosus.repository.UserRepository;
-import lt.sus.Studiosus.repository.UserTemplateRepository;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -34,7 +31,6 @@ public class TemplateService {
   private final TemplateRepository templateRepository;
   private final FolderRepository folderRepository;
   private final FileRepository fileRepository;
-  private final UserTemplateRepository userTemplateRepository;
   private final ProjectRepository projectRepository;
   private final UserRepository userRepository;
   private final UserProjectRoleRepository userProjectRoleRepository;
@@ -43,14 +39,12 @@ public class TemplateService {
       TemplateRepository templateRepository,
       FolderRepository folderRepository,
       FileRepository fileRepository,
-      UserTemplateRepository userTemplateRepository,
       ProjectRepository projectRepository,
       UserRepository userRepository,
       UserProjectRoleRepository userProjectRoleRepository) {
     this.templateRepository = templateRepository;
     this.folderRepository = folderRepository;
     this.fileRepository = fileRepository;
-    this.userTemplateRepository = userTemplateRepository;
     this.projectRepository = projectRepository;
     this.userRepository = userRepository;
     this.userProjectRoleRepository = userProjectRoleRepository;
@@ -99,15 +93,13 @@ public class TemplateService {
     template.setName(name);
     template.setDescription(description);
     template.setPhase(TemplatePhase.PENDING.name());
+    template.setUser(user);
 
     // Duplicate the project's parent folder into the template
     Folder templateParentFolder = duplicateFolder(project.getParentFolder());
     template.setParentFolder(templateParentFolder);
 
     templateRepository.save(template);
-
-    UserTemplate userTemplate = new UserTemplate(template, user);
-    userTemplateRepository.save(userTemplate);
 
     return template;
   }
@@ -215,15 +207,12 @@ public class TemplateService {
 
     List<TemplateDTO> templateDTOs =
         templates.stream()
-            .map(userTemplateRepository::findUserTemplateByTemplate)
-            .filter(Optional::isPresent)
-            .map(Optional::get)
             .map(
                 template ->
                     new TemplateDTO(
-                        template.getTemplate().getId(),
-                        template.getTemplate().getName(),
-                        template.getTemplate().getDescription(),
+                        template.getId(),
+                        template.getName(),
+                        template.getDescription(),
                         template.getUser().getUsername()))
             .toList();
 
