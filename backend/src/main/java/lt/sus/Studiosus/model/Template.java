@@ -30,4 +30,8 @@ public class Template {
   @OneToOne(cascade = CascadeType.ALL)
   @JoinColumn(name = "folder_id")
   private Folder parentFolder;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "user_id")
+  private User user;
 }

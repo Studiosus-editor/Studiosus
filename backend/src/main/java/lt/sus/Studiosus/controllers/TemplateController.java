@@ -10,7 +10,6 @@ import lt.sus.Studiosus.model.enums.LogLevel;
 import lt.sus.Studiosus.model.enums.TemplatePhase;
 import lt.sus.Studiosus.repository.TemplateRepository;
 import lt.sus.Studiosus.repository.UserRepository;
-import lt.sus.Studiosus.repository.UserTemplateRepository;
 import lt.sus.Studiosus.service.LoggingService;
 import lt.sus.Studiosus.service.TemplateService;
 import lt.sus.Studiosus.service.UserDetailsServiceImpl;
@@ -36,7 +35,6 @@ public class TemplateController {
   private final UserDetailsServiceImpl userDetailsService;
   private final TemplateRepository templateRepository;
   private final UserRepository userRepository;
-  private final UserTemplateRepository userTemplateRepository;
   private final TemplateService templateService;
   private final LoggingService loggingService;
 
@@ -44,13 +42,11 @@ public class TemplateController {
       UserDetailsServiceImpl userDetailsService,
       TemplateRepository templateRepository,
       UserRepository userRepository,
-      UserTemplateRepository userTemplateRepository,
       TemplateService templateService,
       LoggingService loggingService) {
     this.userDetailsService = userDetailsService;
     this.templateRepository = templateRepository;
     this.userRepository = userRepository;
-    this.userTemplateRepository = userTemplateRepository;
     this.templateService = templateService;
     this.loggingService = loggingService;
   }
@@ -60,33 +56,31 @@ public class TemplateController {
     try {
       User user = userDetailsService.getUser(getEmail(authentication));
       List<TemplateDTO> templatesNotOwnedByCurrentUser =
-          userTemplateRepository.findAllByUserNot(user).stream()
-              .filter(
-                  userTemplate ->
-                      userTemplate.getTemplate().getPhase().equals(TemplatePhase.APPROVED.name()))
+          templateRepository.findAllByUserNot(user).stream()
+              .filter(template -> template.getPhase().equals(TemplatePhase.APPROVED.name()))
               .map(
-                  userTemplate ->
+                  template ->
                       new TemplateDTO(
-                          userTemplate.getTemplate().getId(),
-                          userTemplate.getTemplate().getName(),
-                          userTemplate.getTemplate().getDescription(),
-                          userTemplate.getUser().getUsername()))
+                          template.getId(),
+                          template.getName(),
+                          template.getDescription(),
+                          template.getUser().getUsername()))
               .toList();
 
       return ResponseEntity.status(HttpStatus.OK).body(templatesNotOwnedByCurrentUser);
     } catch (IllegalArgumentException e) {
-      List<UserTemplate> pendingUserTemplates =
-          userTemplateRepository.findAllByTemplatePhase(TemplatePhase.APPROVED.name());
+      List<Template> approvedTemplates =
+          templateRepository.findAllByPhase(TemplatePhase.APPROVED.name());
 
       List<TemplateDTO> templateDetails =
-          pendingUserTemplates.stream()
+          approvedTemplates.stream()
               .map(
-                  userTemplate ->
+                  template ->
                       new TemplateDTO(
-                          userTemplate.getTemplate().getId(),
-                          userTemplate.getTemplate().getName(),
-                          userTemplate.getTemplate().getDescription(),
-                          userTemplate.getUser().getUsername()))
+                          template.getId(),
+                          template.getName(),
+                          template.getDescription(),
+                          template.getUser().getUsername()))
               .toList();
 
       return ResponseEntity.status(HttpStatus.OK).body(templateDetails);
@@ -115,18 +109,18 @@ public class TemplateController {
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
-    List<UserTemplate> pendingUserTemplates =
-        userTemplateRepository.findAllByTemplatePhase(TemplatePhase.PENDING.name());
+    List<Template> pendingTemplates =
+        templateRepository.findAllByPhase(TemplatePhase.PENDING.name());
 
     List<TemplateDTO> templateDetails =
-        pendingUserTemplates.stream()
+        pendingTemplates.stream()
             .map(
-                userTemplate ->
+                template ->
                     new TemplateDTO(
-                        userTemplate.getTemplate().getId(),
-                        userTemplate.getTemplate().getName(),
-                        userTemplate.getTemplate().getDescription(),
-                        userTemplate.getUser().getUsername()))
+                        template.getId(),
+                        template.getName(),
+                        template.getDescription(),
+                        template.getUser().getUsername()))
             .toList();
 
     return ResponseEntity.status(HttpStatus.OK).body(templateDetails);
@@ -143,8 +137,7 @@ public class TemplateController {
 
     return ResponseEntity.status(HttpStatus.OK)
         .body(
-            userTemplateRepository.findAllByUser(user).stream()
-                .map(UserTemplate::getTemplate)
+            templateRepository.findAllByUser(user).stream()
                 .map(
                     template ->
                         new TemplateDetailsDTO(
@@ -230,14 +223,11 @@ public class TemplateController {
     try {
       User user = userRepository.findUserByEmail(getEmail(authentication)).orElseThrow();
       Template template = templateRepository.findById(id).orElseThrow();
-      UserTemplate userTemplate =
-          userTemplateRepository.findUserTemplateByTemplate(template).orElseThrow();
 
-      if (!userTemplate.getUser().equals(user)) {
+      if (!template.getUser().equals(user)) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
             .body("User does not have permission to delete the template");
       }
-      userTemplateRepository.delete(userTemplate);
       templateRepository.delete(template);
 
       return ResponseEntity.status(HttpStatus.OK).body("Deleted template successfully");

@@ -1,5 +1,6 @@
 package lt.sus.Studiosus.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,8 +17,7 @@ public class ProjectInvitedMembers {
 
   @ManyToOne private InvitedMembers invitedMembers;
 
-  @ManyToOne(cascade = CascadeType.ALL)
-  private Project project;
+  @JsonIgnore @ManyToOne private Project project;
 
   @Column(name = "invite_link", unique = true)
   private String inviteLink;
