@@ -238,6 +238,7 @@
           projectName={project.name}
           isActive={project.isActive}
           projectId={yourActiveProject.id}
+          role={project.role}
           toggleActive={() => {
             currentlyDisplayedYourProjects = toggleProjectActive(
               project.id,
@@ -256,6 +257,7 @@
             projectName={project.name}
             isActive={project.isActive}
             projectId={sharedActiveProject.id}
+            role={project.role}
             toggleActive={() => {
               currentlyDisplayedSharedProjects = toggleProjectActive(
                 project.id,
