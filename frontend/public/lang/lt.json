@@ -83,6 +83,11 @@
       "NoLinkProvided": "Nenurodyta projekto nuoroda"
     }
   },
+  "projectEntry": {
+    "editor": "Redagavimo prieiga",
+    "viewer": "Peržiūros prieiga",
+    "open": "Atidaryti"
+  },
   "paggination": {
     "next": "Sekantis",
     "previous": "Ankstesnis"

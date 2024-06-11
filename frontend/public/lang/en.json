@@ -83,6 +83,11 @@
       "NoLinkProvided": "No project invitation link provided"
     }
   },
+  "projectEntry": {
+    "editor": "Editor role",
+    "viewer": "Viewer role",
+    "open": "Open"
+  },
   "paggination": {
     "next": "Next",
     "previous": "Previous"
