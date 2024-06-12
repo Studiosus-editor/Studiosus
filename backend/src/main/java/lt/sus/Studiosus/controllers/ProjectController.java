@@ -735,16 +735,19 @@ public class ProjectController {
   }
 
   private void checkRoleAndAddUserToProject(
-      Optional<UserProjectRole> userProjectRole, String email, String link, Role role)
+      Optional<UserProjectRole> userProjectRoleOptional, String email, String link, Role role)
       throws IllegalArgumentException {
-    if (userProjectRole.isPresent()) {
-      Role userRole = Role.valueOf(userProjectRole.get().getRole().toUpperCase());
+    if (userProjectRoleOptional.isPresent()) {
+      Role userRole = Role.valueOf(userProjectRoleOptional.get().getRole().toUpperCase());
 
       if (userRole.getValue() >= role.getValue()) {
         throw new IllegalArgumentException("User already has higher or same authority");
       }
-    }
-    if (role == Role.VIEWER) {
+
+      UserProjectRole userProjectRole = userProjectRoleOptional.get();
+      userProjectRole.setRole(role.name());
+      userProjectRoleRepository.save(userProjectRole);
+    } else if (role == Role.VIEWER) {
       projectService.addViewerToProjectByLink(email, link);
     } else {
       projectService.addEditorToProjectByLink(email, link);
