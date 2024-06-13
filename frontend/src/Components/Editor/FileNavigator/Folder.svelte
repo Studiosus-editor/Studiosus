@@ -113,7 +113,7 @@
     deleteFolderFolderIdStore.set(nestedFolderIds);
 
     deleteFolderStore.set([id, promptDeletion, folderName]);
-    if (currentlyOpenedFolderStore.includes(storeFolderId)) {
+    if ($currentlyOpenedFolderStore.includes(storeFolderId)) {
       currentlyOpenedFolderStore.update((store) => {
         return store.filter((id) => id !== storeFolderId);
       });
