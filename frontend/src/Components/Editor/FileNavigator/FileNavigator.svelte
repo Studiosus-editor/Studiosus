@@ -238,6 +238,7 @@
       saveAndRefreshStructure();
       currentFileStore.set(newFileId);
       textarea.innerText = "";
+      textareaValueStore.set("");
       currentHighlightedItemStore.set("file-" + newFileId);
       dispatch("fileInteraction");
     }
