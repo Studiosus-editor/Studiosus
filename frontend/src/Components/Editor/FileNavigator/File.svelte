@@ -56,7 +56,8 @@
   // keep hover effect if context menu is visible
   $: isHovered = contextMenuVisible;
 
-  function selectFile() {
+  function selectFile(event) {
+    event.stopPropagation();
     currentFileNameStore.set(name);
     currentFileStore.set(id);
     currentFolderStore.set(parentFolderId);
@@ -147,8 +148,8 @@
     class:root-style={isNested}
     class:hovered={isHovered}
     on:contextmenu={handleRightClick}
-    on:click={() => selectFile()}
-    on:keydown={() => selectFile()}
+    on:click={selectFile}
+    on:keydown={selectFile}
     on:mouseenter={() => {
       if ($currentContextMenuStore || $currentlyDraggedItemId) {
         return;
@@ -171,7 +172,11 @@
     {#if name.endsWith(".yml") || name.endsWith(".yaml")}
       <img src={AnsibleIcon} alt="Ansible File icon" />
     {:else if name.endsWith(".ini")}
-      <img src={GearIcon} alt="Config File Icon" style="transform: scale(1.5)"/>
+      <img
+        src={GearIcon}
+        alt="Config File Icon"
+        style="transform: scale(1.5)"
+      />
     {:else}
       <img src={DocumentIcon} alt="Document File icon" />
     {/if}
@@ -212,11 +217,11 @@
     }
 
     &.hovered {
-      background-color: #d9e1ff;
+      background-color: var(--pale-navy);
       cursor: pointer;
     }
     &.active {
-      background-color: rgb(154, 174, 255);
+      background-color: var(--jordy-blue);
       transition:
         background-color 0.3s ease,
         color 0.3s ease;

@@ -752,7 +752,7 @@
     max-width: 600px;
 
     height: 100%;
-    width: 15%;
+    width: 20%;
     border-right: 1px solid var(--silver);
   }
   .flex-row {

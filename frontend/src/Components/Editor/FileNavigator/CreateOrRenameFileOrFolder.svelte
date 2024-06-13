@@ -93,7 +93,7 @@
   <input
     bind:this={inputElement}
     type="text"
-    on:keydown={handleKeydown}
+    on:keydown|stopPropagation={handleKeydown}
     placeholder={currentName
       ? currentName
       : isForFile
@@ -110,7 +110,7 @@
     white-space: nowrap;
     align-items: center;
     height: 30px;
-    background-color: var(--silver-dark);
+    background-color: var(--jordy-blue);
 
     & .file-img {
       width: 20px;
@@ -147,7 +147,7 @@
       border-color: var(--grey43);
       border-width: 2px;
       outline: none;
-      background-color: var(--mercury);
+      background-color: var(--white);
       flex-grow: 1;
     }
   }
