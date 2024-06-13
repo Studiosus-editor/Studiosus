@@ -79,7 +79,8 @@
     $itemIsDraggedOver_ParentIdStore === id &&
     !$forbbidenDragIdArrayStore.includes(id);
 
-  function handleFolderClick() {
+  function handleFolderClick(event) {
+    event.stopPropagation();
     isFolderActive = !isFolderActive;
     if (isFolderActive) {
       currentlyOpenedFolderStore.update((store) => {

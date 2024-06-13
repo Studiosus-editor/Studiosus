@@ -120,6 +120,7 @@
     $currentFolderStore === projectStructure.id;
 
   $: if ($stopClientConnectStore === true) {
+    stopClientConnectStore.set(false);
     // timeout is needed to wait for stompClient to be initialized
     setTimeout(() => {
       $stompClientStore.subscribe(
@@ -521,6 +522,12 @@
       return false;
     }
   }
+
+  function setCurrentFolderToRoot(event) {
+    event.stopPropagation();
+    currentHighlightedItemStore.set(null);
+    currentFolderStore.set(projectStructure.id);
+  }
 </script>
 
 <svelte:window on:click={hideContextMenu} />
@@ -578,6 +585,8 @@
       on:dragover={handleDragOver}
       on:dragleave={handleDragLeave}
       on:drop={handleDropOnRootFolder}
+      on:click={setCurrentFolderToRoot}
+      on:keydown={setCurrentFolderToRoot}
       class:drag-over={isRootFolderDraggedOver}
     >
       {#if isLoading && params}
@@ -702,6 +711,7 @@
     border: none;
     margin-top: 5px;
     min-width: 200px;
+    padding-bottom: 100px;
   }
 
   .drag-over {
