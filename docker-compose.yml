@@ -11,6 +11,9 @@ services:
     environment:
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:80}
       - PREFILL_DATABASE=true
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-dev}
+    depends_on:
+      - db
   frontend:
     build:
       context: ./frontend
@@ -19,3 +22,13 @@ services:
         - BACKEND_URL=${BACKEND_URL:-http://localhost:8080}
     ports:
       - 80:80
+  db:
+    image: postgres:latest
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=studiosus
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+volumes:
+  postgres_data:

@@ -182,7 +182,8 @@
       "saveProject": "Save",
       "format": "Format code",
       "copyToClipboard": "Copy",
-      "saveAs": "Save To PC",
+      "downloadFile": "Download File",
+      "uploadFile": "Upload File",
       "expand": "Expand editor"
     },
     "projectToolbar": {
@@ -261,7 +262,9 @@
     "errorFileAlreadyExists": "File with this name already exists",
     "errrorFileWithSameNameExists": "Sorry, cannot move file. File with the same name already exists in the destination",
     "errrorFolderWithSameNameExists": "Sorry, cannot move folder. Folder with the same name already exists in the destination",
-    "fileDeleted": "Sorry, the file you were editing was deleted"
+    "fileDeleted": "Sorry, the file you were editing was deleted",
+    "errorDuplicatesExistOnUpload": "Cannot upload duplicate file names to root folder:",
+    "errorReadingFile": "Sorry, an error has occured while reading the file"
   },
   "templatesSearchField": {
     "search": "Search",

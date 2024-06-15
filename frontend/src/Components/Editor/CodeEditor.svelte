@@ -205,7 +205,8 @@
   // clears empty content to apply placeholder using css
   function clearEmptyContent() {
     if (editorField.textContent.trim() === "") {
-      editorField.textContent = "";
+      editorField.innerText = "";
+      textareaValueStore.set("");
     }
   }
 
@@ -225,7 +226,6 @@
   }
 
   function handleFileMount() {
-    // clear empty content to apply placeholder using css
     if (
       !params ||
       (params.role && (params.role === "OWNER" || params.role === "EDITOR"))
@@ -233,7 +233,6 @@
       editorField.contentEditable = true;
     clearEmptyContent();
     preserveBreaksAndHighlight();
-
     tick().then(() => {
       if (
         !(
@@ -301,7 +300,6 @@
       } else {
         localStorage.setItem($currentFileStore, textarea.innerText);
       }
-      clearEmptyContent();
       adjustTextareaWidth();
       handleTextareaStyle();
       if (!params) {
@@ -323,7 +321,6 @@
         validateYAML(textarea.innerText);
       });
     });
-    // isOverseerOpen = localStorage.getItem("isOverseerOpen");
     textarea.addEventListener("focus", () => {
       clearEmptyContent();
     });
@@ -365,14 +362,14 @@
       type: "text;charset=utf-8",
     });
 
-    // Create a link to download the file
     const anchor = document.createElement("a");
     anchor.setAttribute("href", window.URL.createObjectURL(file));
-    anchor.setAttribute("download", textarea.innerText);
+    anchor.setAttribute("download", $currentFileNameStore);
     anchor.click();
     URL.revokeObjectURL(anchor.href);
     addToast({ message: $_("toastNotifications.downloadFile") });
   }
+
   function handleExpand() {
     if (!document.fullscreenElement) {
       editorElement.requestFullscreen();
@@ -587,7 +584,8 @@
 <div class="main-component">
   <div id="editor">
     <GeneralToolbar
-      isViewerOrTemplate={isTemplate || (params && params.role === "VIEWER")}
+      {isTemplate}
+      isViewer={params && params.role === "VIEWER"}
       on:saveLocal={handleSaveLocal}
       on:expand={handleExpand}
       on:openOverseer={openOverseer}
@@ -646,7 +644,7 @@
                 placeholder={$currentFileStore
                   ? isTemplate === false &&
                     params &&
-                    (params.role === "OWNER" || params.role === "EDITOR")
+                    (params.role === "EDITOR" || params.role === "OWNER")
                     ? $_("editor.editorField.startTypingHere")
                     : ""
                   : ""}

@@ -96,20 +96,24 @@ export async function createFolder(projectId, message, folderName, selectedFolde
       });
   }
 
-export async function createFile(projectId, message, filename, selectedFolderId) {
+export async function createFile(projectId, message, filename, selectedFolderId, content = null) {
+    const fetchOptions = {
+      method: "POST",
+      headers: {
+        Accept: "application/json"
+      },
+      credentials: "include",
+    };
+
+    if (content !== null) {
+      fetchOptions.body = content;
+    }
+
     return fetch(
-      backendUrl +
-        `/api/project/${projectId}/folder/${selectedFolderId}/file`,
-      {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-        },
-        credentials: "include",
-        body: filename,
-      }
+      `${backendUrl}/api/project/${projectId}/folder/${selectedFolderId}/file/${filename}`,
+      fetchOptions
     )
-      .then((response) => {
+    .then((response) => {
         if (!response.ok) {
           addToast({
             message: message,
@@ -129,7 +133,7 @@ export async function createFile(projectId, message, filename, selectedFolderId)
         });
         return null;
       });
-  }
+}
 
 export async function fetchFileData(projectId, message, currentFile, isTemplate = false) {
     const templateOrFolder = isTemplate ? "template" : "project";

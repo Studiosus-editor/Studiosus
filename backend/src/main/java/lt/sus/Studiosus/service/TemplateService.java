@@ -141,25 +141,32 @@ public class TemplateService {
     return newFile;
   }
 
-  public FolderDTO getTemplateFolders(Long projectId) throws RuntimeException {
+  public FolderDTO getTemplateFolders(Long projectId, boolean fetchContent)
+      throws RuntimeException {
     Template template = templateRepository.findById(projectId).orElseThrow();
     Folder rootFolder = template.getParentFolder();
 
-    return getFilesAndFolders(rootFolder);
+    return getFilesAndFolders(rootFolder, fetchContent);
   }
 
-  public FolderDTO getFilesAndFolders(Folder folder) {
+  public FolderDTO getFilesAndFolders(Folder folder, boolean fetchContent) {
     List<File> files = fileRepository.findAllByFolder(folder);
     List<FileDTO> fileDTOs =
         files.stream()
             .map(
                 file ->
-                    new FileDTO(file.getId(), file.getName(), file.getContent(), folder.getId()))
+                    new FileDTO(
+                        file.getId(),
+                        file.getName(),
+                        fetchContent ? file.getContent() : "",
+                        folder.getId()))
             .collect(toList());
 
     List<Folder> childFolders = folderRepository.findAllByParentFolder(folder);
     List<FolderDTO> childFolderDTOs =
-        childFolders.stream().map(this::getFilesAndFolders).collect(toList());
+        childFolders.stream()
+            .map(childFolder -> this.getFilesAndFolders(childFolder, fetchContent))
+            .collect(toList());
 
     return new FolderDTO(
         folder.getId(),

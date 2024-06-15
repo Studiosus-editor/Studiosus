@@ -1,18 +1,16 @@
 <script>
-  import RunProjectIcon from "../../assets/svg/General-toolbar/run-project-iconw.svg";
-  import SaveFileIcon from "../../assets/svg/General-toolbar/save-file-iconw.svg";
-  import FormatCodeIcon from "../../assets/svg/General-toolbar/format-code-iconw.svg";
   import CopyToClipboardIcon from "../../assets/svg/General-toolbar/copy-to-clipboard-iconw.svg";
   import AssistantIcon from "../../assets/svg/General-toolbar/Assistant-iconw.svg";
   import SaveAsIcon from "../../assets/svg/General-toolbar/save-as-iconw.svg";
   import ExpandIcon from "../../assets/svg/General-toolbar/expand-iconw.svg";
   import ToolsIcon from "../../assets/svg/General-toolbar/Tools-icon.svg";
+  import UploadFileIcon from "../../assets/svg/General-toolbar/upload-file-icon.svg";
   import { createEventDispatcher } from "svelte";
   import { onMount } from "svelte";
   import { _ } from "svelte-i18n";
 
-  // export let isTemplate = false;
-  export let isViewerOrTemplate = false;
+  export let isTemplate = false;
+  export let isViewer = false;
 
   const dispatch = createEventDispatcher();
   let isLoggedIn = false;
@@ -21,9 +19,6 @@
 
   function isUserLoggedIn() {
     isLoggedIn = document.cookie.includes("JSESSIONID=");
-  }
-  function handleClick() {
-    dispatch("format");
   }
   function handleSaveLocal() {
     dispatch("saveLocal");
@@ -43,6 +38,10 @@
 
   function handleCopyToClipboard() {
     dispatch("copyToClipboard");
+  }
+
+  function handleFileUpload() {
+    document.dispatchEvent(new CustomEvent("file-upload"));
   }
 
   onMount(() => {
@@ -70,7 +69,7 @@
 
 <div id="top-toolbar">
   <div class="menu">
-    {#if isLoggedIn && !isViewerOrTemplate}
+    {#if isLoggedIn && !isViewer && !isTemplate}
       <button
         id="Assistant-button"
         class="top-button {isAssistantClickable ? 'enabled' : 'disabled'}"
@@ -81,36 +80,6 @@
         <img src={AssistantIcon} alt="Assistant" width="25px" height="25px" />
       </button>
     {/if}
-    <!--    <button-->
-    <!--      id="run-button"-->
-    <!--      class="top-button"-->
-    <!--      title={$_("editor.generalToolbar.runScript")}-->
-    <!--    >-->
-    <!--      <div class="title">{$_("editor.generalToolbar.runScript")}</div>-->
-    <!--      <img src={RunProjectIcon} alt="Run Script" width="20px" height="20px" />-->
-    <!--    </button>-->
-    <!--    <button-->
-    <!--      id="save-button"-->
-    <!--      class="top-button"-->
-    <!--      title={$_("editor.generalToolbar.saveProject")}-->
-    <!--    >-->
-    <!--      <div class="title">{$_("editor.generalToolbar.saveProject")}</div>-->
-    <!--      <img-->
-    <!--        src={SaveFileIcon}-->
-    <!--        alt="Save File"-->
-    <!--        fill="white"-->
-    <!--        width="20px"-->
-    <!--        height="20px"-->
-    <!--      />-->
-    <!--    </button>-->
-    <!--    <button-->
-    <!--      id="format-button"-->
-    <!--      class="top-button"-->
-    <!--      title={$_("editor.generalToolbar.format")}-->
-    <!--    >-->
-    <!--      <div class="title">{$_("editor.generalToolbar.format")}</div>-->
-    <!--      <img src={FormatCodeIcon} alt="Format Code" width="20px" height="20px" />-->
-    <!--    </button>-->
     <button
       id="clipboard-button"
       class="top-button"
@@ -125,14 +94,35 @@
         height="20px"
       />
     </button>
+    {#if !isViewer && !isTemplate}
+      <button
+        id="upload-file-button"
+        class="top-button"
+        title={$_("editor.generalToolbar.uploadFile")}
+        on:click={handleFileUpload}
+      >
+        <div class="title">{$_("editor.generalToolbar.uploadFile")}</div>
+        <img
+          src={UploadFileIcon}
+          alt={$_("editor.generalToolbar.uploadFile")}
+          width="25px"
+          height="25px"
+        />
+      </button>
+    {/if}
     <button
       class="top-button"
       id="save-as-button"
       on:click={handleSaveLocal}
-      title={$_("editor.generalToolbar.saveAs")}
+      title={$_("editor.generalToolbar.downloadFile")}
     >
-      <div class="title">{$_("editor.generalToolbar.saveAs")}</div>
-      <img src={SaveAsIcon} alt="Save As" width="20px" height="20px" />
+      <div class="title">{$_("editor.generalToolbar.downloadFile")}</div>
+      <img
+        src={SaveAsIcon}
+        alt={$_("editor.generalToolbar.downloadFile")}
+        width="20px"
+        height="20px"
+      />
     </button>
     <button
       class="top-button"
@@ -155,7 +145,7 @@
       />
     </button>
     <div class="dropdown-content">
-      {#if isLoggedIn && !isViewerOrTemplate}
+      {#if isLoggedIn && !isViewer && !isTemplate}
         <button
           id="Assistant-button"
           class="top-button {isAssistantClickable ? 'enabled' : 'disabled'}"
@@ -166,29 +156,6 @@
           <img src={AssistantIcon} alt="Assistant" width="25px" height="25px" />
         </button>
       {/if}
-      <!--      <button id="run-button" class="top-button">-->
-      <!--        <div class="title">{$_("editor.generalToolbar.runScript")}</div>-->
-      <!--        <img src={RunProjectIcon} alt="Run Script" width="20px" height="20px" />-->
-      <!--      </button>-->
-      <!--      <button id="save-button" class="top-button">-->
-      <!--        <div class="title">{$_("editor.generalToolbar.saveProject")}</div>-->
-      <!--        <img-->
-      <!--          src={SaveFileIcon}-->
-      <!--          alt="Save File"-->
-      <!--          fill="white"-->
-      <!--          width="20px"-->
-      <!--          height="20px"-->
-      <!--        />-->
-      <!--      </button>-->
-      <!--      <button id="format-button" class="top-button">-->
-      <!--        <div class="title">{$_("editor.generalToolbar.format")}</div>-->
-      <!--        <img-->
-      <!--          src={FormatCodeIcon}-->
-      <!--          alt="Format Code"-->
-      <!--          width="20px"-->
-      <!--          height="20px"-->
-      <!--        />-->
-      <!--      </button>-->
       <button
         id="clipboard-button"
         class="top-button"
@@ -202,9 +169,30 @@
           height="20px"
         />
       </button>
+      {#if !isViewer && !isTemplate}
+        <button
+          id="upload-file-button"
+          class="top-button"
+          title={$_("editor.generalToolbar.uploadFile")}
+          on:click={handleFileUpload}
+        >
+          <div class="title">{$_("editor.generalToolbar.uploadFile")}</div>
+          <img
+            src={UploadFileIcon}
+            alt={$_("editor.generalToolbar.uploadFile")}
+            width="20px"
+            height="20px"
+          />
+        </button>
+      {/if}
       <button class="top-button" id="save-as-button" on:click={handleSaveLocal}>
-        <div class="title">{$_("editor.generalToolbar.saveAs")}</div>
-        <img src={SaveAsIcon} alt="Save As" width="20px" height="20px" />
+        <div class="title">{$_("editor.generalToolbar.downloadFile")}</div>
+        <img
+          src={SaveAsIcon}
+          alt={$_("editor.generalToolbar.downloadFile")}
+          width="20px"
+          height="20px"
+        />
       </button>
       <button class="top-button" id="expand-button" on:click={handleExpand}>
         <div class="title">{$_("editor.generalToolbar.expand")}</div>

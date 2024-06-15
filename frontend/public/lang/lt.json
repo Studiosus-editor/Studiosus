@@ -182,7 +182,8 @@
       "saveProject": "Išsaugoti",
       "format": "Formatuoti kodą",
       "copyToClipboard": "Kopijuoti",
-      "saveAs": "Išsaugoti įrenginyje",
+      "downloadFile": "Atsisiųsti failą",
+      "uploadFile": "Įkelti failą",
       "expand": "Išplėsti ekraną"
     },
     "projectToolbar": {
@@ -261,7 +262,9 @@
     "errorFileAlreadyExists": "Failas su tokiu pavadinimu jau egzistuoja",
     "errrorFileWithSameNameExists": "Atsiprašome, failo perkėlimas negalimas. Failas su tokiu pavadinimu jau egzistuoja paskirties vietoje",
     "errrorFolderWithSameNameExists": "Atsiprašome, aplanko perkėlimas negalimas. Aplankas su tokiu pavadinimu jau egzistuoja paskirties vietoje",
-    "fileDeleted": "Atsiprašome, failas kurį redagavote buvo ištrintas"
+    "fileDeleted": "Atsiprašome, failas kurį redagavote buvo ištrintas",
+    "errorDuplicatesExistOnUpload": "Atsiprašome, failas su tokiu pavadinimu jau egzistuoja pagrindiniame aplankale:",
+    "errorReadingFile": "Atsiprašome, įvyko klaida įkeliant failą"
   },
   "templatesSearchField": {
     "search": "Paieška",

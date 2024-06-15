@@ -8,7 +8,9 @@
 
   $: {
     const currentHref = window.location.href;
-    showFooter = !/\/editor|\/project\/[^/]+|\/$/.test(currentHref);
+    showFooter = !/\/editor|\/project\/[^/]+|\/template\/[^/]+|\/$/.test(
+      currentHref
+    );
     pageClass = /\/editor/.test(currentHref) ? "editor" : "other";
     if (/\/$/.test(currentHref)) {
       pageClass = "home";

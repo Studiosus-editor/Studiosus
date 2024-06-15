@@ -4,8 +4,16 @@ import static lt.sus.Studiosus.service.UserDetailsServiceImpl.getEmail;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import lt.sus.Studiosus.dto.*;
-import lt.sus.Studiosus.model.*;
+import lt.sus.Studiosus.dto.FolderDTO;
+import lt.sus.Studiosus.dto.TemplateDTO;
+import lt.sus.Studiosus.dto.TemplateDetailsDTO;
+import lt.sus.Studiosus.dto.TemplateReview;
+import lt.sus.Studiosus.dto.TemplateSearchRequest;
+import lt.sus.Studiosus.model.File;
+import lt.sus.Studiosus.model.Log;
+import lt.sus.Studiosus.model.Project;
+import lt.sus.Studiosus.model.Template;
+import lt.sus.Studiosus.model.User;
 import lt.sus.Studiosus.model.enums.LogLevel;
 import lt.sus.Studiosus.model.enums.TemplatePhase;
 import lt.sus.Studiosus.repository.TemplateRepository;
@@ -16,7 +24,17 @@ import lt.sus.Studiosus.service.UserDetailsServiceImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @CrossOrigin(
     allowCredentials = "true",
@@ -242,8 +260,10 @@ public class TemplateController {
   }
 
   @GetMapping("/template/{id}/folders")
-  public ResponseEntity<FolderDTO> getTemplateFolders(@PathVariable Long id) {
-    return ResponseEntity.status(HttpStatus.OK).body(templateService.getTemplateFolders(id));
+  public ResponseEntity<FolderDTO> getTemplateFolders(
+      @PathVariable Long id, @RequestParam(defaultValue = "false") boolean fetchContent) {
+    return ResponseEntity.status(HttpStatus.OK)
+        .body(templateService.getTemplateFolders(id, fetchContent));
   }
 
   @GetMapping("/template/{id}/file/{fileId}")

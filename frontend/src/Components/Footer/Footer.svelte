@@ -27,7 +27,7 @@
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    height: 86px;
+    height: 70px;
     background-color: var(--dark-cerulean);
 
     & p {
