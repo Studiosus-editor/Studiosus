@@ -173,7 +173,8 @@
     "inviteTitle": "Invite members",
     "altOpen": "Open",
     "altClose": "Close",
-    "share": "Share"
+    "share": "Share",
+    "toastStartingProjectDownloading": "Starting project download..."
   },
   "editor":{
     "generalToolbar": {
@@ -184,7 +185,8 @@
       "copyToClipboard": "Copy",
       "downloadFile": "Download File",
       "uploadFile": "Upload File",
-      "expand": "Expand editor"
+      "expand": "Expand editor",
+      "downloadProject": "Download Project"
     },
     "projectToolbar": {
       "nameProject": "Name Project",

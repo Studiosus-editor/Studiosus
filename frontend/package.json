@@ -30,6 +30,7 @@
     "highlight.js": "^11.9.0",
     "interactjs": "^1.10.27",
     "js-yaml": "^4.1.0",
+    "jszip": "^3.10.1",
     "marked": "^12.0.2",
     "sirv-cli": "^2.0.2",
     "sockjs-client": "^1.6.1",

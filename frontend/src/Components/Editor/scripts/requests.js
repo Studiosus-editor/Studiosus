@@ -2,38 +2,41 @@ import { addToast } from "../../Modal/ToastNotification/toastStore.js";
 
 const backendUrl = __BACKEND_URL__;
 
-export async function fetchProjectStructure(projectId, message) {
-    return fetch(backendUrl + `/api/project/${projectId}/folders`, {
+export async function fetchProjectStructure(projectId, message, fetchContent = false) {
+    const urlSuffix = fetchContent ? "?fetchContent=true" : "";
+    return fetch(backendUrl + `/api/project/${projectId}/folders${urlSuffix}`, {
       method: "GET",
       headers: {
         Accept: "application/json",
       },
       credentials: "include",
     })
-      .then((response) => {
-        if (!response.ok) {
-          addToast({
-            message: message,
-            type: "error",
-          });
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then((data) => {
-        return data;
-      })
-      .catch(() => {
+    .then((response) => {
+      if (!response.ok) {
         addToast({
           message: message,
           type: "error",
         });
-        return null;
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then((data) => {
+      return data;
+    })
+    .catch(() => {
+      addToast({
+        message: message,
+        type: "error",
       });
-  }
+      return null;
+    });
+}
 
-export async function fetchTemplateStructure(projectId, message) {
-  return fetch(backendUrl + `/api/template/${projectId}/folders`, {
+
+export async function fetchTemplateStructure(projectId, message, fetchContent = false) {
+  const urlSuffix = fetchContent ? "?fetchContent=true" : "";
+  return fetch(backendUrl + `/api/template/${projectId}/folders${urlSuffix}`, {
     method: "GET",
     headers: {
       Accept: "application/json",

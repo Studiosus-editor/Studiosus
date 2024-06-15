@@ -5,6 +5,8 @@
   import ExpandIcon from "../../assets/svg/General-toolbar/expand-iconw.svg";
   import ToolsIcon from "../../assets/svg/General-toolbar/Tools-icon.svg";
   import UploadFileIcon from "../../assets/svg/General-toolbar/upload-file-icon.svg";
+  import DownloadProjectIcon from "../../assets/svg/General-toolbar/download-project-icon.svg";
+  import { currentFileNameStore } from "./scripts/store";
   import { createEventDispatcher } from "svelte";
   import { onMount } from "svelte";
   import { _ } from "svelte-i18n";
@@ -44,6 +46,10 @@
     document.dispatchEvent(new CustomEvent("file-upload"));
   }
 
+  function handleSaveProject() {
+    document.dispatchEvent(new CustomEvent("download-project"));
+  }
+
   onMount(() => {
     isUserLoggedIn();
     const dropbtn = document.querySelector(".dropbtn");
@@ -69,7 +75,7 @@
 
 <div id="top-toolbar">
   <div class="menu">
-    {#if isLoggedIn && !isViewer && !isTemplate}
+    {#if isLoggedIn && !isViewer && !isTemplate && $currentFileNameStore && ($currentFileNameStore.endsWith(".yml") || $currentFileNameStore.endsWith(".yaml"))}
       <button
         id="Assistant-button"
         class="top-button {isAssistantClickable ? 'enabled' : 'disabled'}"
@@ -120,6 +126,20 @@
       <img
         src={SaveAsIcon}
         alt={$_("editor.generalToolbar.downloadFile")}
+        width="20px"
+        height="20px"
+      />
+    </button>
+    <button
+      class="top-button"
+      id="save-as-button"
+      on:click={handleSaveProject}
+      title={$_("editor.generalToolbar.downloadProject")}
+    >
+      <div class="title">{$_("editor.generalToolbar.downloadProject")}</div>
+      <img
+        src={DownloadProjectIcon}
+        alt={$_("editor.generalToolbar.downloadProject")}
         width="20px"
         height="20px"
       />
@@ -190,6 +210,20 @@
         <img
           src={SaveAsIcon}
           alt={$_("editor.generalToolbar.downloadFile")}
+          width="20px"
+          height="20px"
+        />
+      </button>
+      <button
+        class="top-button"
+        id="save-as-button"
+        on:click={handleSaveProject}
+        title={$_("editor.generalToolbar.downloadProject")}
+      >
+        <div class="title">{$_("editor.generalToolbar.downloadProject")}</div>
+        <img
+          src={DownloadProjectIcon}
+          alt={$_("editor.generalToolbar.downloadProject")}
           width="20px"
           height="20px"
         />
