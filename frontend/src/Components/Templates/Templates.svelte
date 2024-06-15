@@ -214,6 +214,7 @@
   }
 
   function applyGridStyle(itemArray) {
+    gridStyle = "";
     if (itemArray.length < 2) {
       gridStyle = "grid-template-columns: minmax(auto, 300px);";
     } else if (itemArray.length === 2) {

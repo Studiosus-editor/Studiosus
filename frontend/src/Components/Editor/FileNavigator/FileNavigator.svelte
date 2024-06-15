@@ -1,67 +1,67 @@
 <script>
-  import {
-    currentFileStore,
-    currentFolderStore,
-    showCreateFileStore,
-    showCreateFolderStore,
-    currentContextMenuStore,
-    deleteFileStore,
-    deleteFolderStore,
-    renameFileStore,
-    renameFolderStore,
-    createFileStore,
-    createFolderStore,
-    currentlyDraggedItemId,
-    forbbidenDragIdArrayStore,
-    itemIsDraggedOver_ParentIdStore,
-    moveToItemIdStore,
-    currentlyDraggedItemNameStore,
-    textareaValueStore,
-    openedRemoteFilesStore,
-    stompClientStore,
-    deleteFolderFileIdStore,
-    deleteFolderFolderIdStore,
-    currentHighlightedItemStore,
-    projectNameStore,
-    stopClientConnectStore,
-    isViewerOrTemplateStore,
-    currentlyOpenedFolderStore,
-    currentFileNameStore,
-  } from "./../scripts/store.js";
+  import { createEventDispatcher, onMount } from "svelte";
+  import { _ } from "svelte-i18n";
   import AddFileIcon from "../../../assets/svg/add-file-icon.svg";
   import AddFolderIcon from "../../../assets/svg/add-folder-icon.svg";
-  import File from "./File.svelte";
-  import Folder from "./Folder.svelte";
-  import { _ } from "svelte-i18n";
-  import { createEventDispatcher, onMount } from "svelte";
-  import CreateFileOrFolder from "./CreateOrRenameFileOrFolder.svelte";
-  import Modal from "../../Modal/Modal.svelte";
   import RepromptFolderDelete from "../../Modal/Components/RepromptFolderDelete.svelte";
+  import Modal from "../../Modal/Modal.svelte";
   import { addToast } from "../../Modal/ToastNotification/toastStore.js";
   import {
-    fetchProjectStructure,
-    createFolder,
-    createFile,
-    fetchFileData,
-    handleDeleteFile,
-    deleteFolder,
-    renameFile,
-    moveFile,
-    moveFolder,
-    renameFolder,
-    fetchTemplateStructure,
-  } from "./requests.js";
+    createFileStore,
+    createFolderStore,
+    currentContextMenuStore,
+    currentFileNameStore,
+    currentFileStore,
+    currentFolderStore,
+    currentHighlightedItemStore,
+    currentlyDraggedItemId,
+    currentlyDraggedItemNameStore,
+    currentlyOpenedFolderStore,
+    deleteFileStore,
+    deleteFolderFileIdStore,
+    deleteFolderFolderIdStore,
+    deleteFolderStore,
+    forbbidenDragIdArrayStore,
+    isViewerOrTemplateStore,
+    itemIsDraggedOver_ParentIdStore,
+    moveToItemIdStore,
+    openedRemoteFilesStore,
+    projectNameStore,
+    renameFileStore,
+    renameFolderStore,
+    showCreateFileStore,
+    showCreateFolderStore,
+    stompClientStore,
+    stopClientConnectStore,
+    textareaValueStore,
+  } from "./../scripts/store.js";
+  import CreateFileOrFolder from "./CreateOrRenameFileOrFolder.svelte";
+  import File from "./File.svelte";
+  import Folder from "./Folder.svelte";
   import {
     createFileForArray,
     createFolderForArray,
     deleteFileForArray,
     deleteFolderForArray,
-    renameFileForArray,
-    renameFolderForArray,
     moveFileForArray,
     moveFolderForArray,
     removeFilesFromLocalStorage,
+    renameFileForArray,
+    renameFolderForArray,
   } from "./fileSystemOperations.js";
+  import {
+    createFile,
+    createFolder,
+    deleteFolder,
+    fetchFileData,
+    fetchProjectStructure,
+    fetchTemplateStructure,
+    handleDeleteFile,
+    moveFile,
+    moveFolder,
+    renameFile,
+    renameFolder,
+  } from "./requests.js";
 
   export let params;
   export let textarea;
@@ -104,6 +104,8 @@
     // set the current folder to the root folder,
     // so when a user creates a file, it will be created in the root folder
     currentFolderStore.set(projectStructure.id);
+    //event listener from GeneralToolbar to listen if file uploading is called
+    document.addEventListener("file-upload", handleFileUpload);
   });
 
   // highlights root directory if it is not forbidden to drop items there
@@ -449,6 +451,134 @@
     dispatch("fileInteraction");
   }
 
+  function handleFileUpload() {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.multiple = true;
+
+    input.onchange = (event) => {
+      const files = event.target.files;
+      // TODO: check if file amount does not exceed file all file upload LIMIT and add toast if it does
+      if (files.length > 0) {
+        const fileNames = Array.from(files).map((file) => file.name);
+
+        const existingRootFileNames = projectStructure.files.map(
+          (file) => file.name
+        );
+
+        const duplicates = fileNames.filter((name) =>
+          existingRootFileNames.includes(name)
+        );
+
+        if (duplicates.length > 0) {
+          addToast({
+            type: "error",
+            message:
+              $_("fileSystemToastNotifications.errorDuplicatesExistOnUpload") +
+              " " +
+              duplicates,
+          });
+        } else {
+          createUploadedFiles(files);
+        }
+      }
+    };
+    input.click();
+  }
+
+  async function createUploadedFiles(files) {
+    let lastFileid = null;
+    let lastFileName = "";
+    let errorIndex = -1;
+
+    const filesArray = Array.from(files);
+
+    try {
+      for (let i = 0; i < filesArray.length; i++) {
+        let file = filesArray[i];
+        if (params) {
+          try {
+            let content = await getFileContent(filesArray[i]);
+            let details = await createFile(
+              params.id,
+              $_("fileSystemToastNotifications.errorCreatingFile"),
+              file.name,
+              projectStructure.id,
+              content
+            );
+            lastFileid = details.id;
+            lastFileName = details.name;
+          } catch (fileName) {
+            addToast({
+              type: "error",
+              message:
+                $_("fileSystemToastNotifications.errorReadingFile") +
+                " " +
+                fileName,
+            });
+            errorIndex = i;
+            throw new Error(); // throw error to stop the loop
+          }
+        } else {
+          try {
+            let content = await getFileContent(filesArray[i]);
+            let newFileId = createFileForArray(projectStructure, file.name, 1);
+            localStorage.setItem(newFileId, content);
+            lastFileid = newFileId;
+            lastFileName = file.name;
+          } catch (fileName) {
+            addToast({
+              type: "error",
+              message:
+                $_("fileSystemToastNotifications.errorReadingFile") +
+                " " +
+                fileName,
+            });
+            errorIndex = i;
+            throw new Error();
+          }
+        }
+      }
+    } catch {} // do nothing since error is already handled using errorIndex
+
+    if (errorIndex !== 0) {
+      if (params) {
+        $stompClientStore.send(
+          `/app/chat.structureChange/${params.id}`,
+          {},
+          {}
+        );
+        currentFileStore.set(lastFileid);
+        currentFileNameStore.set(lastFileName);
+        currentHighlightedItemStore.set("file-" + lastFileid);
+        dispatch("fileInteraction");
+      } else {
+        saveAndRefreshStructure();
+        currentFileStore.set(lastFileid);
+        currentFileNameStore.set(lastFileName);
+        textareaValueStore.set("");
+        currentHighlightedItemStore.set("file-" + lastFileid);
+        dispatch("fileInteraction");
+      }
+    }
+  }
+
+  async function getFileContent(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onload = (e) => {
+        resolve(e.target.result);
+      };
+
+      reader.onerror = () => {
+        reject(file.name);
+      };
+
+      reader.readAsText(file);
+    });
+  }
+
   function closeFolderDeleteModal() {
     isFolderDeleteModalOpen = false;
     deleteFolderStore.set(null);
@@ -704,7 +834,6 @@
     padding: 0;
     margin: 0;
     width: 100%;
-    height: 98%;
     max-width: 100%;
     white-space: nowrap;
     list-style-type: none;

@@ -37,6 +37,7 @@ dependencies {
 	implementation platform("org.springframework.ai:spring-ai-bom:0.8.1-SNAPSHOT")
 	implementation 'org.springframework.ai:spring-ai-vertex-ai-gemini'
 	implementation 'com.h2database:h2'
+	implementation 'org.postgresql:postgresql'
     compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'

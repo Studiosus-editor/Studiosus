@@ -8,15 +8,31 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import lt.sus.Studiosus.dto.EmailRole;
 import lt.sus.Studiosus.dto.FolderDTO;
 import lt.sus.Studiosus.dto.ProjectDetailsResponse;
 import lt.sus.Studiosus.dto.TemplateRequest;
-import lt.sus.Studiosus.model.*;
+import lt.sus.Studiosus.model.File;
+import lt.sus.Studiosus.model.Folder;
+import lt.sus.Studiosus.model.InvitedMembers;
+import lt.sus.Studiosus.model.Log;
+import lt.sus.Studiosus.model.Project;
+import lt.sus.Studiosus.model.ProjectInvitedMembers;
+import lt.sus.Studiosus.model.Template;
+import lt.sus.Studiosus.model.User;
+import lt.sus.Studiosus.model.UserProjectRole;
 import lt.sus.Studiosus.model.enums.LogLevel;
 import lt.sus.Studiosus.model.enums.Role;
-import lt.sus.Studiosus.repository.*;
+import lt.sus.Studiosus.repository.InvitedMembersRepository;
+import lt.sus.Studiosus.repository.ProjectInvitedMembersRepository;
+import lt.sus.Studiosus.repository.ProjectRepository;
+import lt.sus.Studiosus.repository.UserProjectRoleRepository;
+import lt.sus.Studiosus.repository.UserRepository;
 import lt.sus.Studiosus.service.LoggingService;
 import lt.sus.Studiosus.service.ProjectService;
 import lt.sus.Studiosus.service.TemplateService;
@@ -26,7 +42,17 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @CrossOrigin(
     allowCredentials = "true",
@@ -112,14 +138,17 @@ public class ProjectController {
 
   @GetMapping("/project/{id}/folders")
   public ResponseEntity<FolderDTO> getProjectFolders(
-      @PathVariable Long id, Authentication authentication) {
+      @PathVariable Long id,
+      @RequestParam(defaultValue = "false") boolean fetchContent,
+      Authentication authentication) {
     if (authentication == null || !authentication.isAuthenticated()) {
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
     try {
       String email = getEmail(authentication);
-      return ResponseEntity.status(HttpStatus.OK).body(projectService.getProjectFolders(email, id));
+      return ResponseEntity.status(HttpStatus.OK)
+          .body(projectService.getProjectFolders(email, id, fetchContent));
     } catch (Exception e) {
       return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
@@ -356,11 +385,12 @@ public class ProjectController {
     }
   }
 
-  @PostMapping("/project/{projectId}/folder/{parentFolderId}/file")
+  @PostMapping("/project/{projectId}/folder/{parentFolderId}/file/{fileName}")
   public ResponseEntity<File> createFile(
       @PathVariable Long projectId,
       @PathVariable Long parentFolderId,
-      @RequestBody String fileName,
+      @PathVariable String fileName,
+      @RequestBody(required = false) String fileContent,
       Authentication authentication) {
     if (authentication == null || !authentication.isAuthenticated()) {
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -369,7 +399,8 @@ public class ProjectController {
     String email = getEmail(authentication);
     try {
       File newFile =
-          projectService.createFileForProject(email, projectId, parentFolderId, fileName);
+          projectService.createFileForProject(
+              email, projectId, parentFolderId, fileName, fileContent);
       return ResponseEntity.status(HttpStatus.CREATED).body(newFile);
     } catch (Exception e) {
       return ResponseEntity.status(HttpStatus.FORBIDDEN).build();

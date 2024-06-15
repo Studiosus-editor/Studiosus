@@ -4,15 +4,37 @@ import static lt.sus.Studiosus.service.MailSenderService.inviteLinkHtml;
 
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import lt.sus.Studiosus.controllers.exception.NoPermissionException;
-import lt.sus.Studiosus.dto.*;
-import lt.sus.Studiosus.model.*;
+import lt.sus.Studiosus.dto.EmailRole;
+import lt.sus.Studiosus.dto.FileDTO;
+import lt.sus.Studiosus.dto.FolderDTO;
+import lt.sus.Studiosus.dto.ProjectDetailsResponse;
+import lt.sus.Studiosus.dto.ProjectRole;
+import lt.sus.Studiosus.model.File;
+import lt.sus.Studiosus.model.Folder;
+import lt.sus.Studiosus.model.InvitedMembers;
+import lt.sus.Studiosus.model.Log;
+import lt.sus.Studiosus.model.Project;
+import lt.sus.Studiosus.model.ProjectInvitedMembers;
+import lt.sus.Studiosus.model.User;
+import lt.sus.Studiosus.model.UserProjectRole;
 import lt.sus.Studiosus.model.enums.LogLevel;
 import lt.sus.Studiosus.model.enums.ResourceType;
 import lt.sus.Studiosus.model.enums.Role;
-import lt.sus.Studiosus.repository.*;
+import lt.sus.Studiosus.repository.FileRepository;
+import lt.sus.Studiosus.repository.FolderRepository;
+import lt.sus.Studiosus.repository.InvitedMembersRepository;
+import lt.sus.Studiosus.repository.ProjectInvitedMembersRepository;
+import lt.sus.Studiosus.repository.ProjectRepository;
+import lt.sus.Studiosus.repository.UserProjectRoleRepository;
+import lt.sus.Studiosus.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -191,7 +213,8 @@ public class ProjectService {
     return projectDetailsResponse;
   }
 
-  public FolderDTO getProjectFolders(String email, Long projectId) throws RuntimeException {
+  public FolderDTO getProjectFolders(String email, Long projectId, boolean fetchContent)
+      throws RuntimeException {
 
     User user = userRepository.findUserByEmail(email).orElseThrow();
     Project project = projectRepository.findById(projectId).orElseThrow();
@@ -211,7 +234,7 @@ public class ProjectService {
 
     logger.info("retrieving all files and folders for project: {}", project.getName());
 
-    return getFilesAndFolders(rootFolder);
+    return getFilesAndFolders(rootFolder, fetchContent);
   }
 
   public Folder createFolderForProject(
@@ -246,7 +269,7 @@ public class ProjectService {
   }
 
   public File createFileForProject(
-      String email, Long projectId, Long parentFolderId, String fileName) {
+      String email, Long projectId, Long parentFolderId, String fileName, String fileContent) {
     User user = userRepository.findUserByEmail(email).orElseThrow();
     Project project = projectRepository.findById(projectId).orElseThrow();
     Folder parentFolder = folderRepository.findById(parentFolderId).orElseThrow();
@@ -260,7 +283,7 @@ public class ProjectService {
       throw new RuntimeException("User does not have permission to create a file in the project");
     }
 
-    File newFile = new File(fileName, "", parentFolder);
+    File newFile = new File(fileName, Optional.ofNullable(fileContent).orElse(""), parentFolder);
     fileRepository.save(newFile);
     return newFile;
   }
@@ -449,18 +472,24 @@ public class ProjectService {
     }
   }
 
-  public FolderDTO getFilesAndFolders(Folder folder) {
+  public FolderDTO getFilesAndFolders(Folder folder, boolean fetchContent) {
     List<File> files = fileRepository.findAllByFolder(folder);
     List<FileDTO> fileDTOs =
         files.stream()
             .map(
                 file ->
-                    new FileDTO(file.getId(), file.getName(), file.getContent(), folder.getId()))
+                    new FileDTO(
+                        file.getId(),
+                        file.getName(),
+                        fetchContent ? file.getContent() : "",
+                        folder.getId()))
             .collect(Collectors.toList());
 
     List<Folder> childFolders = folderRepository.findAllByParentFolder(folder);
     List<FolderDTO> childFolderDTOs =
-        childFolders.stream().map(this::getFilesAndFolders).collect(Collectors.toList());
+        childFolders.stream()
+            .map(childFolder -> this.getFilesAndFolders(childFolder, fetchContent))
+            .collect(Collectors.toList());
 
     return new FolderDTO(
         folder.getId(),
@@ -614,7 +643,8 @@ public class ProjectService {
       throw new RuntimeException("The folder does not belong to the project");
     }
 
-    // check if newParentFolder is part of the project and it's also not child of folder
+    // check if newParentFolder is part of the project and it's also not child of
+    // folder
     rootFolder = newParentFolder;
     while (rootFolder.getParentFolder() != null) {
       if (rootFolder.getParentFolder().getId().equals(folder.getId())) {
@@ -629,7 +659,7 @@ public class ProjectService {
 
     folder.setParentFolder(newParentFolder);
     folderRepository.save(folder);
-    return getFilesAndFolders(project.getParentFolder());
+    return getFilesAndFolders(project.getParentFolder(), false);
   }
 
   public FolderDTO moveFileForProject(
@@ -657,7 +687,7 @@ public class ProjectService {
     file.setFolder(newParentFolder);
     fileRepository.save(file);
 
-    return getFilesAndFolders(project.getParentFolder());
+    return getFilesAndFolders(project.getParentFolder(), false);
   }
 
   private void deleteFolderAndContents(Folder folder) {

@@ -1,6 +1,6 @@
 // uses fetch to load locale files on demand
 export async function loadDocumentation() {
-  const cachedLocale = localStorage.getItem('cachedLocale');
+  const cachedLocale = localStorage.getItem('cachedLocale') || 'en';
   const response = await fetch(`/docs/${cachedLocale}.json`);
   const data = await response.text();
   if (!data) {
