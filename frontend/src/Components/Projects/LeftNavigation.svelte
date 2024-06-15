@@ -15,6 +15,9 @@
   import CreateTemplateIcon from "../../assets/svg/create-template-icon.svg";
   import CreateTemplate from "../Modal/Components/CreateTemplate.svelte";
   import Modal from "../Modal/Modal.svelte";
+  import ProjectZipper from "../Editor/scripts/ProjectZipper";
+  import { fetchProjectStructure } from "../Editor/scripts/requests.js";
+  import { addToast } from "../Modal/ToastNotification/toastStore";
 
   export let isOwner;
   export let project;
@@ -109,9 +112,23 @@
   function openProject() {
     window.location.href = `/project/${project.id}/${project.role}`;
   }
-  function saveProject() {
-    // TODO: Implement save project functionality
-    console.log("Save project");
+  async function saveProject() {
+    addToast({
+      message: $_("projectsLeftSideNav.toastStartingProjectDownloading"),
+    });
+    let projectZipper = new ProjectZipper();
+    let projectStructure = {};
+
+    projectStructure = await fetchProjectStructure(
+      project.id,
+      $_("fileSystemToastNotifications.errorFetchingProjectStructure"),
+      true
+    );
+    if (projectStructure) {
+      projectZipper.addItemsToZip(projectStructure);
+      projectZipper.setZipName(projectStructure.name);
+      projectZipper.downloadProject();
+    }
   }
 
   function toggleMenu() {

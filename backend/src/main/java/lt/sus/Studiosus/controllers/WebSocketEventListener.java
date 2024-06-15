@@ -12,7 +12,6 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
-import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 @Component
@@ -31,15 +30,6 @@ public class WebSocketEventListener {
     this.messagingTemplate = messagingTemplate;
     this.activeUserRegistry = activeUserRegistry;
     this.activeFileRegistry = activeFileRegistry;
-  }
-
-  @EventListener
-  public void handleWebSocketConnectListener(SessionConnectedEvent event) {
-    StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
-    String projectId = (String) headerAccessor.getSessionAttributes().get("projectId");
-    if (projectId != null) {
-      logger.info("User Connected to Project : " + projectId);
-    }
   }
 
   @EventListener

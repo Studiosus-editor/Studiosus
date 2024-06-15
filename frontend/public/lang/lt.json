@@ -173,7 +173,8 @@
     "inviteTitle": "Pridėti narius",
     "altOpen": "Atidaryti",
     "altClose": "Uždaryti",
-    "share": "Bendrinti"
+    "share": "Bendrinti",
+    "toastStartingProjectDownloading": "Projektas atsiunčiamas..."
   },
   "editor":{
     "generalToolbar": {
@@ -184,7 +185,8 @@
       "copyToClipboard": "Kopijuoti",
       "downloadFile": "Atsisiųsti failą",
       "uploadFile": "Įkelti failą",
-      "expand": "Išplėsti ekraną"
+      "expand": "Išplėsti ekraną",
+      "downloadProject": "Atsisiųsti projektą"
     },
     "projectToolbar": {
       "nameProject": "Pavadinti Projektą",

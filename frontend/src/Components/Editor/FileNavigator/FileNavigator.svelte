@@ -1,6 +1,7 @@
 <script>
   import { createEventDispatcher, onMount } from "svelte";
   import { _ } from "svelte-i18n";
+  import ProjectZipper from "../scripts/ProjectZipper.js";
   import AddFileIcon from "../../../assets/svg/add-file-icon.svg";
   import AddFolderIcon from "../../../assets/svg/add-folder-icon.svg";
   import RepromptFolderDelete from "../../Modal/Components/RepromptFolderDelete.svelte";
@@ -48,7 +49,7 @@
     removeFilesFromLocalStorage,
     renameFileForArray,
     renameFolderForArray,
-  } from "./fileSystemOperations.js";
+  } from "../scripts/fileSystemOperations.js";
   import {
     createFile,
     createFolder,
@@ -61,7 +62,7 @@
     moveFolder,
     renameFile,
     renameFolder,
-  } from "./requests.js";
+  } from "../scripts/requests.js";
 
   export let params;
   export let textarea;
@@ -106,6 +107,7 @@
     currentFolderStore.set(projectStructure.id);
     //event listener from GeneralToolbar to listen if file uploading is called
     document.addEventListener("file-upload", handleFileUpload);
+    document.addEventListener("download-project", handleProjectDownload);
   });
 
   // highlights root directory if it is not forbidden to drop items there
@@ -657,6 +659,40 @@
     event.stopPropagation();
     currentHighlightedItemStore.set(null);
     currentFolderStore.set(projectStructure.id);
+  }
+
+  async function handleProjectDownload() {
+    let projectZipper = new ProjectZipper();
+
+    if (params && isTemplate) {
+      projectStructure = await fetchTemplateStructure(
+        params.id,
+        $_("fileSystemToastNotifications.errorFetchingProjectStructure"),
+        true
+      );
+      if (projectStructure) {
+        projectZipper.addItemsToZip(projectStructure);
+        projectZipper.setZipName(projectStructure.name);
+        projectZipper.downloadProject();
+      }
+    } else if (params && !isTemplate) {
+      projectStructure = await fetchProjectStructure(
+        params.id,
+        $_("fileSystemToastNotifications.errorFetchingProjectStructure"),
+        true
+      );
+      if (projectStructure) {
+        projectZipper.addItemsToZip(projectStructure);
+        projectZipper.setZipName(projectStructure.name);
+        projectZipper.downloadProject();
+      }
+    } else {
+      projectStructure =
+        projectZipper.updateFileContentFromLocalStorage(projectStructure);
+      projectZipper.addItemsToZip(projectStructure);
+      projectZipper.setZipName(projectStructure.name);
+      projectZipper.downloadProject();
+    }
   }
 </script>
 

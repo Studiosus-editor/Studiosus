@@ -561,6 +561,9 @@
 
     spanElements.forEach((span) => {
       if (span.classList.contains("hljs-attr")) {
+        if (!structure) {
+          return;
+        }
         const result = markAndCheckFound(
           structure[0],
           span.innerText.replace(/:/g, "")
