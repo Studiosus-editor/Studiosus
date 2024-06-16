@@ -186,7 +186,8 @@
       "downloadFile": "Download File",
       "uploadFile": "Upload File",
       "expand": "Expand editor",
-      "downloadProject": "Download Project"
+      "downloadProject": "Download Project",
+      "addToProjects": "Add to projects"
     },
     "projectToolbar": {
       "nameProject": "Name Project",
@@ -194,6 +195,7 @@
       "createFolder": "Create Folder"
     },
     "fileNavigator": {
+      "defaultProjectName": "My project",
       "loadingProjectStructure": "Loading project structure...",
       "errorLoadingProjectStructure": "Error loading project structure"
     },
@@ -283,7 +285,8 @@
   "toastNotifications": {
     "copyToClipboard": "Copied to clipboard",
     "downloadFile": "File downloading...",
-    "emptyFile": "Sorry, cannot download an empty file"
+    "emptyFile": "Sorry, cannot download an empty file",
+    "errorCopyingToClipboard": "Error copying to clipboard, try manually copying the link"
   },
   "templates": {
     "templates": "Templates",

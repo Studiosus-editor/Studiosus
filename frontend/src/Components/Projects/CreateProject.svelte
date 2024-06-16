@@ -22,7 +22,9 @@
   }
 
   function updateProjectsPage() {
-    dispatch("updateProjectsPage");
+    setTimeout(() => {
+      dispatch("updateProjectsPage");
+    }, 100);
   }
 </script>
 

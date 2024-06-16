@@ -69,10 +69,33 @@
   let editorWrapperHeight;
   let structure = [];
 
-  const handleCopyToClipboard = () => {
-    addToast({ message: $_("toastNotifications.copyToClipboard") });
-    navigator.clipboard.writeText(textarea.innerText);
-  };
+  function handleCopyToClipboard() {
+    const textArea = document.createElement("textarea");
+    textArea.value = textarea.innerText;
+    textArea.style.position = "fixed";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+
+    try {
+      const successful = document.execCommand("copy");
+      if (successful) {
+        addToast({ message: $_("toastNotifications.copyToClipboard") });
+      } else {
+        addToast({
+          message: $_("toastNotifications.errorCopyingToClipboard"),
+          type: "error",
+        });
+      }
+    } catch (e) {
+      addToast({
+        message: $_("toastNotifications.errorCopyingToClipboard"),
+        type: "error",
+      });
+    }
+
+    document.body.removeChild(textArea);
+  }
 
   editorWrapperHeightStore.subscribe((value) => {
     editorWrapperHeight = value;
@@ -567,15 +590,21 @@
           span.innerText.replace(/:/g, "")
         );
         if (result.found) {
-          span.addEventListener("mouseenter", (event) =>
-            handleMouseOver(
-              span,
-              result,
-              span.innerText.replace(/:/g, ""),
-              tooltip
-            )
-          );
-          span.addEventListener("mouseleave", handleMouseOut);
+          let timeoutId;
+          span.addEventListener("mouseenter", () => {
+            timeoutId = setTimeout(() => {
+              handleMouseOver(
+                span,
+                result,
+                span.innerText.replace(/:/g, ""),
+                tooltip
+              );
+            }, 500);
+          });
+          span.addEventListener("mouseleave", () => {
+            clearTimeout(timeoutId);
+            handleMouseOut();
+          });
         }
       }
     });

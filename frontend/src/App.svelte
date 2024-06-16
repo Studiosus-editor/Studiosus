@@ -14,6 +14,30 @@
   import Templates from "./Components/Templates/Templates.svelte";
   import ForgotPassword from "./Components/ForgotPassword.svelte";
   import ResetPassword from "./Components/ResetPassword.svelte";
+  import { onMount } from "svelte";
+
+  function isProtectedRoute(path) {
+    const protectedRoutes = ["/profile", "/projects"];
+    if (protectedRoutes.includes(path)) {
+      return true;
+    }
+    if (path.startsWith("/project/")) {
+      const parts = path.split("/");
+      return parts.length === 4;
+    }
+    return false;
+  }
+
+  onMount(() => {
+    const currentPath = window.location.pathname;
+    if (isProtectedRoute(currentPath) && !hasSessionCookie()) {
+      window.location.href = "/login";
+    }
+  });
+
+  function hasSessionCookie() {
+    return document.cookie.includes("JSESSIONID=");
+  }
 </script>
 
 {#if $isLoading}

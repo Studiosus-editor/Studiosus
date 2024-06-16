@@ -16,9 +16,6 @@ export default class ProjectZipper {
         }
 
         folder.files.forEach((file) => {
-            if (!/\.[0-9a-zA-Z]{1,5}$/.test(file.name)) {
-                file.name += ".txt";
-            }
             currentZip.file(file.name, file.content);
         });
 

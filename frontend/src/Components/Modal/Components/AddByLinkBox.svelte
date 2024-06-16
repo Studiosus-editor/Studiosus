@@ -10,11 +10,33 @@
   const backendUrl = __BACKEND_URL__;
 
   function copyToClipboard(text) {
-    navigator.clipboard.writeText(text);
-    addToast({
-      message: $_("modalAddByLinkBox.copiedToClipboard"),
-      type: "info",
-    });
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+
+    try {
+      const successful = document.execCommand("copy");
+      if (successful) {
+        addToast({
+          message: $_("toastNotifications.copyToClipboard"),
+        });
+      } else {
+        addToast({
+          message: $_("toastNotifications.errorCopyingToClipboard"),
+          type: "error",
+        });
+      }
+    } catch (e) {
+      addToast({
+        message: $_("toastNotifications.errorCopyingToClipboard"),
+        type: "error",
+      });
+    }
+
+    document.body.removeChild(textArea);
   }
 </script>
 
@@ -27,7 +49,7 @@
       <label for="vlink">{$_("modalAddByLinkBox.viewerLink")}</label>
     </h3>
     <div class="link-section__link-wrapper">
-      <input
+      <textarea
         type="text"
         id="vlink"
         name="vlink"
@@ -54,7 +76,7 @@
       <label for="elink">{$_("modalAddByLinkBox.editorLink")}</label>
     </h3>
     <div class="link-section__link-wrapper">
-      <input
+      <textarea
         type="text"
         id="elink"
         name="elink"
@@ -87,7 +109,7 @@
     text-align: left;
     margin-bottom: 24px;
 
-    input {
+    textarea {
       background-color: var(--white);
       width: 85%;
       margin-right: 20px;
@@ -113,15 +135,33 @@
       }
     }
   }
-  input {
+  textarea {
     height: 40px;
     text-align: center;
     font-family: "Rubik", sans-serif;
     font-weight: 400;
     font-size: 24px;
     box-shadow: 0px 4px 8px 0px rgba(0, 0, 0, 0.3);
-    border-radius: 5px;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
     border: 1px solid;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    resize: none;
+    &::-webkit-scrollbar {
+      height: 5px;
+    }
+    &::-webkit-scrollbar-track {
+      background: var(--grey85);
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background-color: var(--periwinkle);
+      border-radius: 5px;
+      border: 1px solid var(--black);
+      border-right: none;
+    }
   }
 
   h3 {

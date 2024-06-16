@@ -28,6 +28,9 @@ export const handleMouseOver = async function(span, structure, value, tooltip) {
         createTooltip(item, span, tooltip);
       }
     } else {
+      if(!data[structure.parentKey]) {
+        return;
+      }
       item = data[structure.parentKey][value];
       if (item) {
         createTooltip(item, span, tooltip);

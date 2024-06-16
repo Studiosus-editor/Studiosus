@@ -6,6 +6,7 @@
   import ToolsIcon from "../../assets/svg/General-toolbar/Tools-icon.svg";
   import UploadFileIcon from "../../assets/svg/General-toolbar/upload-file-icon.svg";
   import DownloadProjectIcon from "../../assets/svg/General-toolbar/download-project-icon.svg";
+  import AddTemplateIcon from "../../assets/svg/General-toolbar/add-plus-white.svg";
   import { currentFileNameStore } from "./scripts/store";
   import { createEventDispatcher } from "svelte";
   import { onMount } from "svelte";
@@ -54,6 +55,10 @@
     document.dispatchEvent(new CustomEvent("download-project"));
   }
 
+  function handleAddToProject() {
+    document.dispatchEvent(new CustomEvent("add-to-projects"));
+  }
+
   onMount(() => {
     isUserLoggedIn();
     const dropbtn = document.querySelector(".dropbtn");
@@ -79,6 +84,22 @@
 
 <div id="top-toolbar">
   <div class="menu">
+    {#if isLoggedIn && isTemplate}
+      <button
+        id="Add-to-Project-button"
+        class="top-button"
+        title={$_("editor.generalToolbar.addToProjects")}
+        on:click={handleAddToProject}
+      >
+        <div class="title">{$_("editor.generalToolbar.addToProjects")}</div>
+        <img
+          src={AddTemplateIcon}
+          alt={$_("editor.generalToolbar.addToProjects")}
+          width="25px"
+          height="25px"
+        />
+      </button>
+    {/if}
     {#if isLoggedIn && !isViewer && !isTemplate && $currentFileNameStore && ($currentFileNameStore.endsWith(".yml") || $currentFileNameStore.endsWith(".yaml"))}
       <button
         id="Assistant-button"
