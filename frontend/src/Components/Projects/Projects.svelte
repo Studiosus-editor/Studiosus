@@ -237,7 +237,7 @@
         <ProjectEntry
           projectName={project.name}
           isActive={project.isActive}
-          projectId={yourActiveProject.id}
+          projectId={project.id}
           role={project.role}
           toggleActive={() => {
             currentlyDisplayedYourProjects = toggleProjectActive(
@@ -256,7 +256,7 @@
           <ProjectEntry
             projectName={project.name}
             isActive={project.isActive}
-            projectId={sharedActiveProject.id}
+            projectId={project.id}
             role={project.role}
             toggleActive={() => {
               currentlyDisplayedSharedProjects = toggleProjectActive(
