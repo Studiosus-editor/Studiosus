@@ -22,27 +22,29 @@
   };
   //Check if textarea has content
   function checkTextareaContent() {
-    if ($textareaValueStore==null) {
+    if ($textareaValueStore == null) {
       addToast({
         message: $_("assistantOverseer.noFileToFix"),
         type: "error",
       });
       return false;
-    }
-    else if ($textareaValueStore=="") {
+    } else if ($textareaValueStore == "") {
       addToast({
         message: $_("assistantOverseer.noContentToFix"),
         type: "error",
       });
       return false;
-    }
-    else {
+    } else {
       return true;
     }
   }
 
   async function handleAssistant() {
     let message = $textareaValueStore;
+    addToast({
+      message: $_("assistantOverseer.fileIsBeingFixed"),
+      type: "info",
+    });
     await fetch(backendUrl + "/ai/fix", {
       method: "POST",
       headers: {
@@ -54,6 +56,10 @@
     })
       .then((response) => {
         if (!response.ok) {
+          addToast({
+            message: $_("assistantOverseer.errorFixingFile"),
+            type: "error",
+          });
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         return response.text();
@@ -88,18 +94,18 @@
   }
   function handleStartOverseer() {
     if (checkTextareaContent() && isLoggedIn) {
-       handleAssistant();
+      handleAssistant();
     }
     return;
   }
   onMount(() => {
     isUserLoggedIn(); //check if user is logged and assign to variable
     document.addEventListener("refresh-overseer", handleStartOverseer);
-      if (overseerStore){
+    if (overseerStore) {
       handleStartOverseer(); //start overseer if there is content in the textarea
-      }
-      else {
-    handleStartOverseer();} 
+    } else {
+      handleStartOverseer();
+    }
   });
   onDestroy(() => {
     document.removeEventListener("refresh-overseer", handleStartOverseer);
@@ -150,6 +156,7 @@
   }
   .textarea-container {
     overflow-y: auto;
+    overflow-x: hidden;
     display: flex;
     flex: 1 1 auto;
     width: 100%;

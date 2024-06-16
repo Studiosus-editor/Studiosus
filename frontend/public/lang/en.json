@@ -178,7 +178,7 @@
   },
   "editor":{
     "generalToolbar": {
-      "assistant": "Start Assistant",
+      "assistant": "Start Overseer",
       "runScript": "Run code",
       "saveProject": "Save",
       "format": "Format code",
@@ -227,7 +227,12 @@
       "Assistant": "Assistant",
       "newChat": "New Chat",
       "logInToUseAssistant": "Login in to use the Studiosus assistant",
-      "signIn": "Sign in"
+      "signIn": "Sign in",
+      "assistantError": "Error sending the message, please try again later"
+    },
+    "errorChecker":{
+      "fileEmpty": "Empty YAML file!",
+      "correctSyntax":"Correct YAML syntax!"
     }
   },
   "modalPromptFolderDelete": {
@@ -390,6 +395,8 @@
   },
   "assistantOverseer":{
     "noFileToFix": "No file to fix. Please open a file first.",
-    "noContentToFix": "No content to fix. Please write some code first."
+    "noContentToFix": "No content to fix. Please write some code first.",
+    "fileIsBeingFixed": "Starting assistant...",
+    "errorFixingFile": "Error fixing file, please try again later"
   }
 }

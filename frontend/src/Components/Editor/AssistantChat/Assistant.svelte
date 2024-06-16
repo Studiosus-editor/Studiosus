@@ -38,6 +38,10 @@
       },
       credentials: "include",
     }).then((response) => {
+      addToast({
+        message: $_("assistantOverseer.errorFixingFile"),
+        type: "error",
+      });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -82,6 +86,10 @@
     })
       .then((response) => {
         if (!response.ok) {
+          addToast({
+            message: $_("editor.assistant.assistantError"),
+            type: "error",
+          });
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         return response.text();

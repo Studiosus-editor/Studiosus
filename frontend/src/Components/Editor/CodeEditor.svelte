@@ -279,8 +279,6 @@
     hljs.registerLanguage("yaml", yaml);
     editorField = document.getElementById("editor-field");
 
-    // isOverseerOpen = localStorage.getItem("isOverseerOpen");
-
     // Set the default height of the editor wrapper
     const editorWrapperElement = document.querySelector("#editor-wrapper");
     editorWrapperHeightStore.set(editorWrapperElement.offsetHeight);

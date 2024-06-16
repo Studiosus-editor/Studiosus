@@ -22,16 +22,20 @@
   function isUserLoggedIn() {
     isLoggedIn = document.cookie.includes("JSESSIONID=");
   }
+
   function handleSaveLocal() {
     dispatch("saveLocal");
   }
+
   function handleExpand() {
     dispatch("expand");
   }
+
   function handleAssistant() {
     if (isAssistantClickable) {
       dispatch("openOverseer");
       isAssistantClickable = false;
+
       setTimeout(() => {
         isAssistantClickable = true;
       }, 10000);
@@ -81,6 +85,7 @@
         class="top-button {isAssistantClickable ? 'enabled' : 'disabled'}"
         title={$_("editor.generalToolbar.assistant")}
         on:click={handleAssistant}
+        disabled={!isAssistantClickable}
       >
         <div class="title">{$_("editor.generalToolbar.assistant")}</div>
         <img src={AssistantIcon} alt="Assistant" width="25px" height="25px" />
@@ -271,19 +276,18 @@
     right: 0;
     z-index: 1;
   }
-  .enabled {
-    background-color: var(--dodger-blue);
+  .top-button.disabled {
+    background-color: grey;
+    cursor: not-allowed;
   }
-  .disabled {
-    background-color: rgb(147, 147, 165);
-    pointer-events: none;
+  .top-button.disabled:hover {
+    background-color: grey;
   }
   .dropdown-content button {
     color: var(--white);
     background-color: var(--dodger-blue);
     border: none;
     text-align: left;
-    padding: 12px 16px;
     width: 100%;
     cursor: pointer;
   }
@@ -340,7 +344,6 @@
     vertical-align: top;
     white-space: nowrap;
     margin-left: 10px;
-    margin-right: 5px;
   }
 
   .top-button:hover {
