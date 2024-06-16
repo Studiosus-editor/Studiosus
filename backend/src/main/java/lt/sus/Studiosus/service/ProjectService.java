@@ -88,6 +88,10 @@ public class ProjectService {
     Folder parentFolder = new Folder(projectName, null);
     folderRepository.save(parentFolder);
 
+    // delete any previous Initialized project if any
+    userProjectRoleRepository.deleteAllByUserAndRoleAndProjectPhase(
+        user, Role.OWNER.name(), "Initialized");
+
     Project project = new Project(projectName, "Initialized", viewerLink, editorLink, parentFolder);
 
     projectRepository.save(project);
@@ -317,6 +321,7 @@ public class ProjectService {
     logger.info("Fetched projects for user: {}", user.getEmail());
     return userProjectRoles.stream()
         .sorted(Comparator.comparing(UserProjectRole::getLastEdited).reversed())
+        .filter(upr -> upr.getProject().getPhase().equals("Finalized"))
         .map(
             upr ->
                 new ProjectRole(
@@ -343,6 +348,11 @@ public class ProjectService {
 
     project.setName(newName);
     projectRepository.save(project);
+
+    Folder rootFolder = project.getParentFolder();
+    rootFolder.setName(newName);
+    folderRepository.save(rootFolder);
+
     return project.getName();
   }
 

@@ -53,40 +53,6 @@
       console.error(e.message);
     }
   });
-
-  const handleForgotPassword = () => {
-    console.log("Forgot password clicked");
-    addToast({ message: $_("login.toastNotifications.forgotPassword") });
-
-    return fetch(backendUrl + `/api/user/forgotPassword`, {
-      method: "PUT",
-      headers: {
-        Accept: "application/json",
-      },
-      credentials: "include",
-      body: "email@address",
-    })
-      .then((response) => {
-        if (!response.ok) {
-          addToast({
-            message: message,
-            type: "error",
-          });
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then((data) => {
-        return data;
-      })
-      .catch(() => {
-        addToast({
-          message: message,
-          type: "error",
-        });
-        return null;
-      });
-  };
 </script>
 
 <div class="main-component">

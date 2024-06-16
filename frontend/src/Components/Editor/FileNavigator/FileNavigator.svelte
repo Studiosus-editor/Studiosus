@@ -75,6 +75,7 @@
     childFolders: [],
   };
 
+  const backendUrl = __BACKEND_URL__;
   const dispatch = createEventDispatcher();
 
   let projectStructure = [];
@@ -108,6 +109,7 @@
     //event listener from GeneralToolbar to listen if file uploading is called
     document.addEventListener("file-upload", handleFileUpload);
     document.addEventListener("download-project", handleProjectDownload);
+    document.addEventListener("add-to-projects", handleAddToProjects);
   });
 
   // highlights root directory if it is not forbidden to drop items there
@@ -565,6 +567,37 @@
     }
   }
 
+  async function handleAddToProjects() {
+    return fetch(
+      backendUrl + `/api/template/${params.id}/project/${$projectNameStore}`,
+      {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+        },
+        credentials: "include",
+      }
+    )
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(() => {
+        addToast({
+          message: $_("templates.templateAddedToProjects"),
+          type: "success",
+        });
+      })
+      .catch(() => {
+        addToast({
+          message: $_("templates.errorAddingTemplateToProjects"),
+          type: "error",
+        });
+      });
+  }
+
   async function getFileContent(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -690,7 +723,7 @@
       projectStructure =
         projectZipper.updateFileContentFromLocalStorage(projectStructure);
       projectZipper.addItemsToZip(projectStructure);
-      projectZipper.setZipName(projectStructure.name);
+      projectZipper.setZipName($_("editor.fileNavigator.defaultProjectName"));
       projectZipper.downloadProject();
     }
   }
@@ -756,9 +789,7 @@
       class:drag-over={isRootFolderDraggedOver}
     >
       {#if isLoading && params}
-        <h4 class="text-center">
-          {$_("editor.fileNavigator.loadingProjectStructure")}
-        </h4>
+        <!-- Do not show anything to prevent flickering -->
       {:else if errorLoadingStructure}
         <h4 class="text-center">
           {$_("editor.fileNavigator.errorLoadingProjectStructure")}
@@ -829,9 +860,6 @@
     justify-content: flex-end;
     height: 40px;
     border-bottom: 1px solid var(--silver);
-    /* -webkit-box-shadow: 49px 15px 59px 32px rgba(0, 0, 0, 0.45);
-    -moz-box-shadow: 49px 15px 59px 32px rgba(0, 0, 0, 0.45);
-    box-shadow: 49px 15px 59px 32px rgba(0, 0, 0, 0.45); */
     z-index: 2;
     background-color: var(--white);
   }
@@ -888,21 +916,16 @@
     height: 13px;
   }
 
-  /* Track */
-
   ::-webkit-scrollbar-track {
     box-shadow: inset 0 0 3px grey;
     border-radius: 10px;
   }
 
-  /* Handle */
   ::-webkit-scrollbar-thumb {
     background: var(--grey85);
     border: 1px solid var(--grey56);
     border-radius: 10px;
   }
-
-  /* Handle on hover */
   ::-webkit-scrollbar-thumb:hover {
     background: var(--grey85);
   }

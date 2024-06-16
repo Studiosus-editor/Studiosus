@@ -186,7 +186,8 @@
       "downloadFile": "Atsisiųsti failą",
       "uploadFile": "Įkelti failą",
       "expand": "Išplėsti ekraną",
-      "downloadProject": "Atsisiųsti projektą"
+      "downloadProject": "Atsisiųsti projektą",
+      "addToProjects": "Pridėti prie projektų"
     },
     "projectToolbar": {
       "nameProject": "Pavadinti Projektą",
@@ -194,6 +195,7 @@
       "createFolder": "Sukurti aplanką"
     },
     "fileNavigator": {
+      "defaultProjectName": "Mano Projektas",
       "loadingProjectStructure": "Kraunama projekto struktūra...",
       "errorLoadingProjectStructure": "Įvyko klaida kraunant projekto struktūrą"
     },
@@ -283,7 +285,8 @@
   "toastNotifications": {
     "copyToClipboard": "Nukopijuota į iškarpinę",
     "downloadFile": "Failas atsiunčiamas...",
-    "emptyFile": "Pasirinktas failas yra tuščias"
+    "emptyFile": "Pasirinktas failas yra tuščias",
+    "errorCopyingToClipboard": "Klaida kopijuojant į iškarpinę, pabandykite nukopijuoti rankiniu būdu"
   },
   "templates": {
     "templates": "Šablonai",
