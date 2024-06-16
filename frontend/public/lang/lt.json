@@ -227,7 +227,12 @@
       "Assistant": "Asistentas",
       "newChat": "Naujas pokalbis",
       "logInToUseAssistant": "Prisijunkite, kad galėtumėte naudotis Studiosus asistentu",
-      "signIn": "Prisijungti"
+      "signIn": "Prisijungti",
+      "assistantError": "Įvyko klaida, prašome bandyti dar kartą"
+    },
+    "errorChecker":{
+      "fileEmpty": "YAML failas tuščias!",
+      "correctSyntax": "Taisyklinga YAML sintaksė!"
     }
   },
   "modalPromptFolderDelete": {
@@ -390,6 +395,8 @@
   },
   "assistantOverseer":{
     "noFileToFix": "Nepasirinktas joks failas. Prašome pasirinkti failą, kurį norite taisyti.",
-    "noContentToFix": "Nepasirinktas failo turinys. Prašome pridėti turinį, kurį norite taisyti."
-  }
+    "noContentToFix": "Nepasirinktas failo turinys. Prašome pridėti turinį, kurį norite taisyti.",
+     "fileIsBeingFixed": "Failas taisomas...",
+      "errorFixingFile": "Įvyko klaida taisant failą, prašome bandyti dar kartą"
+    }
 }
