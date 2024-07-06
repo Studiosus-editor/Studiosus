@@ -2,6 +2,14 @@
 
 A web-based system that helps to write Ansible scripts
 
+![Main editor view](/img/editorScreen.png "Main editor view")
+
+![Projects view](/img/projectsPage.png "Projects view")
+
+![Project invite modal view](/img/inviteModal.png "Project invite modal view")
+
+![Templates view](/img/templatesPage.png "Templates view")
+
 _Team members:_
 
 - Čepulis Nerijus
